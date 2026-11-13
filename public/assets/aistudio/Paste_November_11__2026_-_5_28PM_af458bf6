@@ -1,0 +1,2841 @@
+Por las imágenes, te refieres a los comandos que permiten transformar fotografías de productos en piezas publicitarias, crear escenarios, cambiar perspectivas y generar creatividades sin hacer nuevas sesiones fotográficas.
+
+Hay una distinción importante: /magazinecover no es un comando universal oficial de ChatGPT. Es una instrucción o atajo de prompt que se puede utilizar para activar un tipo de creación visual.
+
+En las capturas se alcanza a identificar ese comando, pero no los otros tres del video.
+1. Los 9 comandos para fotografía de producto y publicidad
+Esta es una lista documentada de códigos para transformar una fotografía sencilla en una creatividad publicitaria. 
+stephanobrooke.ai+1
+
+Comando	Resultado
+/timesquare	Producto en una pantalla gigante de Times Square.
+/premiumshowcase	Fotografía de producto de lujo.
+/productburst	Producto rodeado de ingredientes o elementos en explosión.
+/rainforest	Producto en un escenario natural.
+/explodedviewdigitalbillboard	Despiece técnico del producto en una valla publicitaria.
+/magazinecover	Portada editorial de revista.
+/3dbillboard	Valla publicitaria tridimensional.
+/explosion	Efecto de explosión visual alrededor del producto.
+/cinematic	Fotografía publicitaria cinematográfica.
+
+2. Cuatro comandos adicionales para vender productos
+Estos son otros cuatro atajos recopilados para crear anuncios con fotografías de productos. 
+IAEmpresa
+
+Comando	Resultado
+/ugcmodel	Producto presentado por una persona, estilo contenido UGC.
+/storefront	Producto en el contexto de una tienda.
+/adspremium	Creatividad publicitaria de aspecto premium.
+/realperson	Presentación del producto con una persona realista.
+
+3. Más comandos útiles para campañas publicitarias
+Estos amplían las posibilidades para redes sociales, e-commerce y piezas de campaña.
+
+Fotografía y catálogo
+- /productshot — fotografía profesional de producto.
+- /productphotography — fotografía comercial.
+- /packshot — producto aislado y limpio.
+- /flatlay — fotografía cenital.
+- /heroimage — imagen principal de campaña.
+- /premiumshowcase — presentación de lujo.
+- /bundleshot — varios productos en una composición.
+- /retailshelf — producto en estantería comercial.
+Anuncios y formatos
+- /adcreative — anuncio publicitario completo.
+- /metaads — creatividad para Meta Ads.
+- /staticad — anuncio estático.
+- /storyad — anuncio vertical para historias.
+- /carouselad — carrusel publicitario.
+- /bannerad — banner digital.
+- /posterlayout — cartel publicitario.
+- /billboardmockup — anuncio en valla urbana.
+- /magazinead — anuncio de revista.
+- /launchteaser — imagen de expectativa para lanzamiento.
+- /discountburst — anuncio con descuento.
+- /seasonalcampaign — campaña de temporada.
+
+Cognenza+1
+4. Cómo utilizarlos en ChatGPT
+
+
+
+
+
+
+
+
+
+
+Paso 1. Sube una fotografía
+
+Puede ser una foto tomada con tu celular. Procura que el producto se vea claramente.
+
+
+
+
+
+
+
+
+
+
+
+
+Paso 2. Escribe el comando
+
+Por ejemplo: /premiumshowcase
+
+
+
+
+
+
+
+
+
+
+
+
+Paso 3. Genera variaciones
+
+Pide nuevos escenarios, ángulos, iluminación y composiciones.
+
+
+
+5. Mi recomendación: una plantilla más profesional
+No te limites a escribir el código. Puedes acompañarlo de instrucciones para obtener resultados más controlados:
+PROMPT MAESTRO — PRODUCT ADS
+
+/premiumshowcase
+
+Utiliza la fotografía adjunta como referencia principal y crea una campaña publicitaria profesional del producto.
+
+Requisitos:
+- Conserva exactamente el diseño, empaque, colores, proporciones y características del producto original.
+- Crea un escenario publicitario de alta calidad.
+- Iluminación cinematográfica de estudio.
+- Composición editorial sofisticada.
+- Perspectiva y profundidad fotográfica realistas.
+- Calidad de campaña comercial internacional.
+- Formato vertical 4:5.
+- No inventar textos, etiquetas, marcas ni características del producto.
+Genera una propuesta visual diferente, manteniendo la identidad original del producto.
+
+
+
+Una aclaración importante: estos códigos son atajos de lenguaje, no funciones secretas ni comandos oficiales de OpenAI. Puedes escribir la descripción completa sin la barra y obtener resultados equivalentes. 
+stephanobrooke.ai+1
+
+
+Para Núcleo Colectivo, podemos convertir esta recopilación en una biblioteca de prompts ADS con categorías, ejemplos visuales y plantillas reutilizables para talleres de inteligencia artificial, diseño y comunicación publicitaria. Así tendríamos nuestro propio pequeño laboratorio de dirección de arte con IA.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Muchos más comandos para imagen y fotografía, todo lo que puedas expandir, también tipos de camara , color, lentes etc
+
+
+
+
+
+
+
+
+
+
+
+
+
+Vamos a ampliar esto hasta convertirlo en un diccionario maestro de comandos para fotografía, dirección de arte, cinematografía y generación de imágenes con IA.
+
+La idea es que tengas una biblioteca que puedas utilizar en ChatGPT, especialmente para trabajar con generación de imágenes, fotografía comercial, campañas publicitarias, retratos, diseño editorial, arte conceptual y producción audiovisual.
+
+Una precisión: los códigos con / que aparecen a continuación son atajos de prompt que vamos a organizar, no comandos nativos oficiales de ChatGPT. Puedes escribirlos con la barra o utilizar directamente sus descripciones.
+DICCIONARIO MAESTRO — IA VISUAL
+VISUAL PROMPT LIBRARY
+NÚCLEO COLECTIVO · ART & AI
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+12
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+12 familias · Más de 180 instrucciones y parámetros visuales
+
+Fotografía · Cámaras · Óptica · Iluminación · Color · Composición · Texturas · Estética · Postproducción · Publicidad · Cine · Arte experimental
+
+01. Tipos de fotografía y géneros
+Estos términos definen qué clase de fotografía queremos producir.
+Comando	Lenguaje visual
+/photorealistic	Fotografía fotorrealista
+/hyperrealism	Hiperrealismo
+/editorial	Fotografía editorial
+/commercial	Fotografía comercial
+/fineart	Fotografía artística
+/documentary	Fotografía documental
+/cinematic	Fotografía cinematográfica
+/fashion	Fotografía de moda
+/beauty	Fotografía de belleza
+/portrait	Retrato fotográfico
+/environmentalportrait	Retrato ambiental
+/streetphotography	Fotografía callejera
+/architecture	Fotografía arquitectónica
+/interiorphotography	Fotografía de interiores
+/landscape	Fotografía de paisaje
+/naturephotography	Fotografía de naturaleza
+/wildlife	Fotografía de fauna
+/productphotography	Fotografía de producto
+/foodphotography	Fotografía gastronómica
+/automotive	Fotografía automotriz
+/stilllife	Naturaleza muerta
+/macro	Fotografía macro
+/aerialphotography	Fotografía aérea
+/underwater	Fotografía submarina
+/nightphotography	Fotografía nocturna
+/concertphotography	Fotografía de conciertos
+/sportsphotography	Fotografía deportiva
+/conceptualphotography	Fotografía conceptual
+/experimentalphotography	Fotografía experimental
+/surrealphotography	Fotografía surrealista
+/analogphotography	Fotografía analógica
+/minimalphotography	Fotografía minimalista
+
+02. Tipos de cámaras y sistemas fotográficos
+Aquí empezamos a controlar el carácter de la imagen.
+
+REFERENCIAS DE EQUIPOS FOTOGRÁFICOS
+
+
+
+
+
+
+
+
+
+
+Full Frame
+
+Sony A7R V, Canon EOS R5, Nikon Z8. Alta resolución, versatilidad y profundidad de campo controlable.
+
+
+
+
+
+
+
+
+
+
+
+Medium Format
+
+Hasselblad X2D, Fujifilm GFX100 II. Gran detalle, tonalidad y riqueza de archivos.
+
+
+
+
+
+
+
+
+
+
+
+Rangefinder
+
+Leica M11. Fotografía callejera, documental y lenguaje óptico característico.
+
+
+
+
+
+
+
+
+
+
+
+Digital Technical
+
+Phase One IQ4. Fotografía de estudio, arquitectura y reproducción de detalle.
+
+
+
+
+
+
+
+
+
+
+
+Medium Format Film
+
+Hasselblad 500C/M. Retrato, moda y fotografía analógica de formato medio.
+
+
+
+
+
+
+
+
+
+
+
+35mm Film
+
+Canon AE-1, Nikon FM2. Grano, imperfecciones y estética analógica.
+
+
+Comandos de cámara
+- /fullframe
+- /mediumformat
+- /largeformat
+- /mirrorless
+- /dslr
+- /rangefinder
+- /analogcamera
+- /35mmfilm
+- /120film
+- /instantcamera
+- /polaroid
+- /compactcamera
+- /technicalcamera
+- /cinemacamera
+- /dronecamera
+- /actioncamera
+- /vintagecamera
+Marcas y referencias que puedes escribir directamente:
+- Sony Alpha
+- Canon EOS R
+- Nikon Z
+- Fujifilm GFX
+- Fujifilm X
+- Leica M
+- Hasselblad X
+- Phase One
+- ARRI Alexa 35
+- RED V-Raptor
+- Blackmagic URSA
+Ejemplo: Shot on Hasselblad X2D, medium format, ultra-detailed editorial photography.
+
+Importante: nombrar una cámara no garantiza que el modelo reproduzca exactamente su sensor o su comportamiento óptico. Es una referencia estética.
+03. Lentes y distancias focales
+Uno de los apartados más importantes. El lente modifica la perspectiva, el campo visual, la compresión y la profundidad de campo.
+
+
+
+
+
+
+
+
+
+
+14 mm — Ultra Wide
+
+Arquitectura, espacios amplios y perspectiva dramática.
+
+
+
+
+
+
+
+
+
+
+
+24 mm — Wide Angle
+
+Reportaje, paisaje y retrato ambiental.
+
+
+
+
+
+
+
+
+
+
+
+35 mm — Documentary
+
+Fotografía callejera, narrativa y contexto.
+
+
+
+
+
+
+
+
+
+
+
+50 mm — Standard
+
+Perspectiva natural y fotografía versátil.
+
+
+
+
+
+
+
+
+
+
+
+85 mm — Portrait
+
+Retratos, separación del fondo y desenfoque.
+
+
+
+
+
+
+
+
+
+
+
+135 mm — Telephoto
+
+Compresión visual y retrato editorial.
+
+
+
+
+
+
+
+
+
+
+
+100 mm — Macro
+
+Detalles, texturas y pequeños objetos.
+
+
+
+
+
+
+
+
+
+
+
+200 mm — Telephoto
+
+Fauna, deportes y detalles a distancia.
+
+
+Comandos de óptica
+- /ultrawide
+- /wideangle
+- /standardlens
+- /portraitlens
+- /telephoto
+- /supertelephoto
+- /macro lens
+- /fisheye
+- /tiltshift
+- /anamorphic
+- /vintageglass
+- /prime lens
+- /zoomlens
+- /softfocus
+- /probe lens
+- /petzvallens
+Apertura y profundidad de campo
+Parámetro	Efecto visual
+f/1.2	Desenfoque muy pronunciado
+f/1.4	Bokeh y poca profundidad de campo
+f/1.8	Retrato con fondo desenfocado
+f/2.8	Separación del sujeto y versatilidad
+f/4	Profundidad moderada
+f/5.6	Mayor zona enfocada
+f/8	Nitidez amplia
+f/11	Gran profundidad de campo
+f/16	Paisaje y arquitectura con gran zona enfocada
+
+Otros términos:
+- /shallowdof — poca profundidad de campo.
+- /deepdof — gran profundidad de campo.
+- /bokeh — desenfoque estético.
+- /creamybokeh — bokeh suave.
+- /foregroundblur — primer plano desenfocado.
+- /backgroundblur — fondo desenfocado.
+- /selectivefocus — enfoque selectivo.
+- /rackfocus — transición de enfoque cinematográfica.
+
+04. Parámetros técnicos de cámara
+Estos valores sirven para describir cómo se captura una fotografía.
+
+Velocidad de obturación — Shutter Speed
+Valor	Efecto
+1/30s	Movimiento visible, posible trepidación
+1/60s	Movimiento moderado
+1/125s	Fotografía general
+1/250s	Congelación moderada
+1/500s	Acción rápida
+1/1000s	Movimiento congelado
+1/2000s	Acción muy rápida
+1/4000s	Movimiento extremadamente congelado
+1s	Exposición larga
+10s	Estelas y movimiento
+30s	Exposición prolongada
+
+Comandos:
+- /motionfreeze
+- /longexposure
+- /slowshutter
+- /motionblur
+- /lighttrails
+- /panning
+- /timelapse
+- /bulbexposure
+ISO y sensibilidad
+- /lowiso — ISO 100, imagen limpia.
+- /iso200 — sensibilidad baja.
+- /iso400 — sensibilidad moderada.
+- /iso800 — condiciones de luz reducida.
+- /iso1600 — mayor sensibilidad y ruido.
+- /iso3200 — estética de baja iluminación.
+- /highiso — ruido digital visible.
+- /filmgrain — grano fotográfico.
+Balance de blancos y temperatura
+Parámetro	Temperatura aproximada
+Luz cálida de vela	1.800–2.000 K
+Tungsteno	3.200 K
+Luz fluorescente	4.000 K
+Luz neutra	5.000 K
+Luz día	5.500 K
+Nublado	6.500 K
+Sombra	7.000–8.000 K
+
+Comandos:
+- /warmtemperature
+- /cooltemperature
+- /neutralwhitebalance
+- /daylight
+- /tungsten
+- /goldenhour
+- /bluehour
+- /mixedlighting
+- /customwhitebalance
+Puedes pedir: Neutral white balance, 5500K, natural skin tones, no yellow color cast.
+05. Iluminación fotográfica
+La iluminación es uno de los elementos que más transforma una imagen.
+
+
+
+
+
+
+
+
+
+
+Rembrandt Lighting
+
+Luz lateral con triángulo iluminado en la mejilla.
+
+
+
+
+
+
+
+
+
+
+
+Butterfly Lighting
+
+Luz frontal superior, sombra debajo de la nariz.
+
+
+
+
+
+
+
+
+
+
+
+Split Lighting
+
+Mitad del rostro iluminada y mitad en sombra.
+
+
+
+
+
+
+
+
+
+
+
+Loop Lighting
+
+Sombra lateral pequeña de la nariz.
+
+
+
+
+
+
+
+
+
+
+
+High Key
+
+Imagen luminosa, sombras suaves y fondo claro.
+
+
+
+
+
+
+
+
+
+
+
+Low Key
+
+Predominio de sombras y contraste.
+
+
+
+
+
+
+
+
+
+
+
+Backlight
+
+Iluminación desde atrás del sujeto.
+
+
+
+
+
+
+
+
+
+
+
+Rim Light
+
+Luz de contorno que separa al sujeto del fondo.
+
+
+Comandos de iluminación
+- /softlight
+- /hardlight
+- /dramaticlighting
+- /naturalwindowlight
+- /directionallight
+- /diffusedlight
+- /backlighting
+- /sidelighting
+- /rimlighting
+- /toplighting
+- /underlighting
+- /volumetriclighting
+- /chiaroscuro
+- /studioflash
+- /beautydish
+- /softbox
+- /striplight
+- /ringlight
+- /negativefill
+- /bounceflash
+- /practicallighting
+- /neonlighting
+- /candlelight
+- /moonlight
+- /sunlight
+- /godrays
+- /lightleaks
+Esquemas de iluminación
+- /one-light-setup — una fuente de luz.
+- /two-light-setup — luz principal y relleno.
+- /three-point-lighting — principal, relleno y contraluz.
+- /four-point-lighting — cuatro fuentes controladas.
+- /clamshell-lighting — iluminación de belleza desde arriba y abajo.
+- /crosslighting — iluminación cruzada.
+- /split-color-lighting — dos colores opuestos.
+- /motivatedlighting — iluminación que simula fuentes reales del entorno.
+06. Colorimetría y paletas de color
+Este apartado es especialmente importante para mantener una identidad visual coherente en campañas, retratos y proyectos audiovisuales.
+
+
+
+
+
+
+
+
+
+
+Teal & Orange
+
+Cian y naranja. Estética cinematográfica.
+
+
+
+
+
+
+
+
+
+
+
+Monochromatic Blue
+
+Azules profundos y fríos.
+
+
+
+
+
+
+
+
+
+
+
+Earth Tones
+
+Terracota, arena, marrones y ocres.
+
+
+
+
+
+
+
+
+
+
+
+Neon Bicolor
+
+Cian y magenta eléctrico.
+
+
+
+
+
+
+
+
+
+
+
+Desaturated
+
+Colores reducidos y atmósfera sobria.
+
+
+
+
+
+
+
+
+
+
+
+High Saturation
+
+Colores intensos y expresivos.
+
+
+Comandos de color
+- /colorgrading
+- /colorcorrection
+- /cinematiccolor
+- /colorharmony
+- /monochromatic
+- /complementarycolors
+- /analogouscolors
+- /triadiccolors
+- /splitcomplementary
+- /desaturated
+- /oversaturated
+- /pasteltones
+- /earthtones
+- /jeweltones
+- /neonpalette
+- /mutedcolors
+- /vibrantcolors
+- /duotone
+- /tritone
+- /splittoning
+- /crossprocessing
+- /bleachbypass
+- /mattefinish
+- /highcontrast
+- /lowcontrast
+- /colorisolation
+- /selectivecolor
+Paletas específicas que puedes pedir
+Paleta	Colores
+Teal & Orange	#007F86 · #E88943
+Cyberpunk	#00F0FF · #FF00A8
+Forest	#173D32 · #79966B
+Desert	#C28E61 · #E6C9A2
+Nordic	#DDE4E5 · #89999F
+Burgundy	#5A172C · #B66A76
+Midnight	#101B37 · #416A9A
+Monochrome	#111111 · #F0F0F0
+Olive	#626B3F · #B6AA7D
+Electric	#1835FF · #00D9FF
+
+Puedes incluir códigos HEX para orientar la generación, aunque no garantizan una reproducción exacta.
+07. Composición fotográfica y encuadres
+
+
+
+
+
+
+
+
+
+
+Rule of Thirds
+
+Regla de los tercios.
+
+
+
+
+
+
+
+
+
+
+
+Symmetry
+
+Composición simétrica.
+
+
+
+
+
+
+
+
+
+
+
+Leading Lines
+
+Líneas que conducen la mirada.
+
+
+
+
+
+
+
+
+
+
+
+Natural Framing
+
+Encuadre dentro del encuadre.
+
+
+Comandos de composición
+- /ruleofthirds
+- /goldenratio
+- /goldenspiral
+- /centeredcomposition
+- /symmetricalcomposition
+- /asymmetricalcomposition
+- /leadinglines
+- /diagonalcomposition
+- /negative_space
+- /minimalcomposition
+- /layeredcomposition
+- /framing
+- /foregroundinterest
+- /depthcomposition
+- /dynamiccomposition
+- /visualbalance
+- /offcenter
+- /overheadshot
+- /flatlay
+- /dutchangle
+- /birdseyeview
+- /worms-eye-view
+Tipos de plano
+- /extremecloseup — detalle extremo.
+- /closeup — primer plano.
+- /mediumcloseup — primer plano medio.
+- /mediumshot — plano medio.
+- /mediumlongshot — plano americano aproximado.
+- /fullbodyshot — cuerpo completo.
+- /wideshot — plano general.
+- /extremewide — gran plano general.
+- /establishingshot — plano de establecimiento.
+- /overtheshoulder — sobre el hombro.
+- /pointofview — punto de vista subjetivo.
+- /profileportrait — perfil.
+- /threequarterportrait — retrato tres cuartos.
+- /silhouetteportrait — retrato en silueta.
+08. Estéticas fotográficas y referencias artísticas
+
+
+
+
+
+
+
+
+
+
+Film Noir
+
+
+
+
+
+
+
+
+
+
+
+Neo Noir
+
+
+
+
+
+
+
+
+
+
+
+Retro 80s
+
+
+
+
+
+
+
+
+
+
+
+Retro 90s
+
+
+
+
+
+
+
+
+
+
+
+Symmetrical Cinema
+
+
+
+
+
+
+
+
+
+
+
+Surrealism
+
+
+Comandos de estilo
+- /filmnoir
+- /neonoir
+- /cyberpunk
+- /solarpunk
+- /retrofuturism
+- /afrofuturism
+- /brutalism
+- /minimalism
+- /maximalism
+- /surrealism
+- /dadaism
+- /bauhaus
+- /constructivism
+- /popart
+- /vaporwave
+- /synthwave
+- /darkacademia
+- /lightacademia
+- /cottagecore
+- /wabisabi
+- /japandi
+- /editorialminimalism
+- /luxuryeditorial
+- /grunge
+- /punk
+- /gothic
+- /dreamcore
+- /liminalspace
+- /ethereal
+- /biomorphic
+- /organicmodern
+- /experimentalanalog
+09. Películas fotográficas y texturas analógicas
+
+
+
+
+
+
+
+
+
+
+Kodak Portra 400
+
+Retratos, piel natural y tonos suaves.
+
+
+
+
+
+
+
+
+
+
+
+Kodak Ektar 100
+
+Color intenso y detalle.
+
+
+
+
+
+
+
+
+
+
+
+Kodak Tri-X 400
+
+Blanco y negro documental.
+
+
+
+
+
+
+
+
+
+
+
+Fujifilm Velvia 50
+
+Saturación y contraste.
+
+
+
+
+
+
+
+
+
+
+
+Ilford HP5 Plus
+
+Blanco y negro versátil y grano.
+
+
+
+
+
+
+
+
+
+
+
+CineStill 800T
+
+Nocturnidad, luces artificiales y halos.
+
+
+Comandos de textura
+- /filmgrain
+- /finegrain
+- /coarsegrain
+- /halation
+- /lightleak
+- /filmfade
+- /vintagefilm
+- /expiredfilm
+- /dustandscratches
+- /analogimperfections
+- /chromaticaberration
+- /vignetting
+- /lensflare
+- /softglow
+- /bloom
+- /motionblur
+- /doubleexposure
+- /photochemicaltexture
+- /silvergelatin
+- /polaroidtexture
+10. Postproducción y acabado fotográfico
+Aquí controlamos cómo debe verse la imagen después de la captura.
+- /rawphotography — apariencia de archivo RAW.
+- /professionalretouch — retoque profesional.
+- /skinretouch — retoque de piel.
+- /naturaltexture — conservar textura real.
+- /skinpores — poros visibles.
+- /smoothskin — piel suavizada.
+- /dodgeandburn — modelado de luces y sombras.
+- /frequencyseparation — separación de frecuencias.
+- /sharpening — nitidez.
+- /selectivesharpening — nitidez localizada.
+- /denoise — reducción de ruido.
+- /highdynamicrange — rango dinámico amplio.
+- /hdrnatural — HDR natural.
+- /tonemapping — mapeo tonal.
+- /lenscorrection — corrección óptica.
+- /perspectivecorrection — corrección de perspectiva.
+- /chromaticaberrationcorrection — corrección de aberración cromática.
+- /colorgradingcinema — etalonaje cinematográfico.
+- /mattecolorgrading — acabado mate.
+- /glossyfinish — acabado brillante.
+- /softfocusfinish — acabado suave.
+
+11. Cinematografía y movimientos de cámara
+Aunque estos términos vienen del lenguaje audiovisual, también sirven para crear imágenes que parezcan fotogramas de una película.
+
+
+
+
+
+
+
+
+
+
+Dolly In
+
+Cámara acercándose al sujeto.
+
+
+
+
+
+
+
+
+
+
+
+Dolly Out
+
+Cámara alejándose.
+
+
+
+
+
+
+
+
+
+
+
+Tracking Shot
+
+Cámara siguiendo al sujeto.
+
+
+
+
+
+
+
+
+
+
+
+Crane Shot
+
+Movimiento vertical de cámara.
+
+
+Movimientos y perspectivas
+- /dollyin
+- /dollyout
+- /tracking
+- /orbitshot
+- /crabshot
+- /craneup
+- /cranedown
+- /panleft
+- /panright
+- /tiltup
+- /tiltdown
+- /handheld
+- /steadicam
+- /gimbal
+- /droneshot
+- /topdownshot
+- /aerialshot
+- /fpvshot
+- /parallax
+- /zoomin
+- /zoomout
+- /vertigoeffect
+- /bullet time
+- /longtake
+- /onepointperspective
+Para imágenes estáticas, estos comandos describen el encuadre o la sensación de movimiento; no producen por sí mismos una animación.
+12. Fotografía publicitaria y dirección de arte
+
+
+
+
+
+
+
+
+
+
+Luxury Advertising
+
+
+
+
+
+
+
+
+
+
+
+Clean Advertising
+
+
+
+
+
+
+
+
+
+
+
+Dynamic Product
+
+
+
+
+
+
+
+
+
+
+
+Conceptual Advertising
+
+
+Comandos publicitarios
+- /adcreative
+- /productshot
+- /packshot
+- /heroimage
+- /premiumshowcase
+- /luxurycampaign
+- /magazinecover
+- /billboardmockup
+- /3dbillboard
+- /timesquare
+- /productburst
+- /explodedview
+- /floatingproduct
+- /splashphotography
+- /liquidart
+- /ingredientstyling
+- /macroproduct
+- /beautycampaign
+- /fashioncampaign
+- /campaignvisual
+- /brandstorytelling
+- /commercialeditorial
+- /ecommercephotography
+- /catalogphotography
+- /lifestyleadvertising
+- /socialmediaad
+- /ugcstyle
+- /keyvisual
+- /brandactivation
+- /launchcampaign
+13. Fotografía de retrato y piel
+Especialmente útil para fotografía de personas, retratos editoriales y campañas institucionales.
+- /naturalportrait
+- /cinematicportrait
+- /editorialportrait
+- /beautyportrait
+- /environmentalportrait
+- /dramaticportrait
+- /intimateportrait
+- /candidportrait
+- /fashionportrait
+- /headshot
+- /corporateportrait
+- /blackandwhiteportrait
+- /silhouetteportrait
+- /doubleexposureportrait
+- /closeupportrait
+- /freckles
+- /naturalpores
+- /skintexture
+- /realisticskin
+- /naturaleyes
+- /catchlight
+- /hairdetail
+- /subtleretouch
+- /naturalexpression
+14. Arte digital, ilustración y experimentación
+Para salir de la fotografía convencional y entrar en el terreno de la creación artística.
+- /3drender
+- /photobashing
+- /digitalcollage
+- /mixedmedia
+- /generativeart
+- /proceduralart
+- /abstractart
+- /digitalpainting
+- /mattepainting
+- /conceptart
+- /surrealcomposition
+- /glitchart
+- /datamosh
+- /pixelart
+- /lowpoly
+- /voxels
+- /isometricart
+- /volumetricart
+- /organicforms
+- /biomorphicart
+- /generativesculpture
+- /3dtypography
+- /holographic
+- /iridescent
+- /chromatic
+- /liquidmetal
+- /glassmorphism
+- /translucentmaterials
+- /photogrammetry
+- /pointcloud
+- /particlevisualization
+- /fractalart
+
+15. Biblioteca de combinaciones profesionales
+La verdadera potencia aparece cuando combinamos varios parámetros. Aquí tienes algunas recetas para probar.
+A. Retrato cinematográfico Neo Noir
+
+
+
+
+
+
+
+
+primevideo.com
+
+
+Retrato
+/cinematicportrait
+/neonoir
+/fullframe
+/85mm
+/f1.8
+/splitlighting
+/lowkey
+/tealandorange
+/naturaltexture
+/shallowdof
+
+
+
+
+B. Fotografía de producto de lujo
+
+
+
+
+
+
+
+
+tenorshare.ai
+
+
+Publicidad
+/premiumshowcase
+/mediumformat
+/100mm
+/f8
+/studioflash
+/rimlighting
+/luxuryeditorial
+/highcontrast
+/photorealistic
+
+
+
+
+C. Fotografía documental analógica
+
+
+
+
+
+
+
+
+stanjohnson.co
+
+
+Documental
+/documentary
+/35mmfilm
+/35mm
+/fujifilmstyle
+/availablelight
+/filmgrain
+/naturalcolors
+/candid
+/authentic
+
+
+
+
+D. Fotografía macro experimental
+
+
+
+
+
+
+
+
+
+
+Experimental
+/macro
+/100mmmacro
+/f2.8
+/extremecloseup
+/softlight
+/iridescent
+/abstract
+/highdetail
+/photorealistic
+
+
+
+
+E. Paisaje cinematográfico
+
+
+
+
+
+
+
+
+fstoppers.com
+
+
+Paisaje
+/landscape
+/mediumformat
+/24mm
+/f11
+/goldenhour
+/volumetriclighting
+/cinematiccolor
+/deepdof
+/highdynamicrange
+
+
+
+
+16. Plantilla universal para crear tus propios prompts
+Esta es la estructura que recomiendo utilizar. Permite controlar prácticamente todos los aspectos de una imagen.
+MASTER PROMPT — PHOTOGRAPHY & VISUAL ART
+01. SUBJECT
+Describe el sujeto principal, objeto o escena.
+
+02. PHOTOGRAPHY GENRE
+/photorealistic /editorial /commercial /fineart /documentary
+
+03. CAMERA
+Camera: [Sony A7R V / Hasselblad X2D / Canon EOS R5]
+Sensor: [Full Frame / Medium Format / 35mm Film]
+
+04. LENS
+Lens: [24mm / 35mm / 50mm / 85mm / 100mm Macro]
+Aperture: [f/1.4 / f/2.8 / f/5.6 / f/8]
+Depth of field: [Shallow / Deep]
+
+05. CAMERA SETTINGS
+ISO: [100 / 400 / 800]
+Shutter speed: [1/125 / 1/500]
+White balance: [Neutral / Warm / Cool]
+Exposure: [Correct / Underexposed / Overexposed]
+
+06. LIGHTING
+/softlight /hardlight /backlighting /rimlighting /chiaroscuro
+
+Describe direction, intensity, source and diffusion.
+
+07. COLOR PALETTE
+Primary colors: [HEX]
+Secondary colors: [HEX]
+Color grading: [Teal & Orange / Neutral / Analog / Monochrome]
+
+08. COMPOSITION
+/ruleofthirds /symmetry /negative_space /leadinglines
+
+Shot: [Close-up / Medium / Wide / Full body]
+Camera angle: [Eye level / Low angle / High angle]
+
+09. VISUAL STYLE
+[Neo Noir / Editorial / Minimalism / Surrealism / Retro / Cinematic]
+
+10. TEXTURE
+/filmgrain /naturaltexture /softglow /halation /sharpdetails
+
+11. POSTPRODUCTION
+/rawphotography /professionalretouch /naturalcolors /highdynamicrange
+
+12. OUTPUT
+Aspect ratio: [1:1 / 4:5 / 3:2 / 16:9 / 9:16]
+Resolution: [Desired output]
+Quality: High visual detail.
+
+13. NEGATIVE INSTRUCTIONS
+Avoid: plastic skin, artificial lighting, distorted anatomy, incorrect product details, oversaturation, excessive sharpening, unwanted text, watermarks and logos.
+
+FINAL INSTRUCTION
+Create a coherent, visually sophisticated image. Maintain consistency between camera, optics, lighting, color, composition and photographic style. Prioritize realism, visual intention and professional art direction.
+
+
+
+17. Comandos negativos: qué evitar
+Una buena imagen también depende de lo que le pedimos que no haga.
+Comando	Qué evita
+/noartificialskin	Piel artificial
+/nofakebokeh	Desenfoque falso
+/nooversharpening	Exceso de nitidez
+/noplastictexture	Textura plástica
+/nocolorcast	Dominantes de color
+/nobandoverexposure	Luces quemadas
+/nounderexposure	Sombras sin detalle
+/noblurryface	Rostros borrosos
+/nodeformedhands	Manos deformadas
+/nosextraobjects	Objetos adicionales
+/nophysicaldistortion	Distorsiones no deseadas
+/nocompressionartifacts	Artefactos de compresión
+/notext	Sin texto
+/nowatermark	Sin marcas de agua
+
+Estos también son atajos descriptivos: para mayor control, escribe la instrucción negativa completa.
+
+18. Laboratorio interactivo de combinaciones
+Podemos comenzar a utilizar esta biblioteca como herramienta de aprendizaje y dirección de arte. Prueba a seleccionar los parámetros y construir tu propio prompt.
+Visual Prompt Builder
+CONSTRUCTOR DE PROMPTS · NÚCLEO COLECTIVO
+¿Qué quieres fotografiar?
+
+Género fotográficoEditorial cinematográfica
+
+CámaraHasselblad X2D
+
+Lente
+24mm
+
+35mm
+
+50mm
+
+85mm
+
+100mm
+
+135mm
+
+
+IluminaciónRembrandt
+
+Paleta de colorNeutros cinematográficos
+
+EstéticaNeo Noir
+
+Formato
+1:14:53:216:99:16
+
+
+
+Tu prompt generado
+Crea una imagen de Retrato de una persona. Género: Editorial cinematográfica. Cámara de referencia: Hasselblad X2D. Óptica: 85mm. Iluminación: Rembrandt. Paleta: Neutros cinematográficos. Estética: Neo Noir. Formato: 4:5. Fotografía de alta calidad, composición intencional, detalle realista, coherencia óptica y tratamiento profesional del color.
+
+ Copiar prompt Generar imagen
+
+
+19. Cómo organizar esta biblioteca para aprender y experimentar
+Mi propuesta es convertirla en una biblioteca de consulta permanente, con una estructura de 6 módulos:
+1. Fotografía: géneros, planos, composición y narrativa.
+2. Tecnología fotográfica: cámaras, sensores, lentes, apertura, ISO y obturación.
+3. Iluminación: esquemas, fuentes, temperatura y dirección de luz.
+4. Color: teoría, paletas, perfiles, corrección y etalonaje.
+5. Dirección de arte: estilos, referencias, texturas y publicidad.
+6. Postproducción e IA: retoque, generación, consistencia y experimentación.
+Para profundizar en la parte técnica, son excelentes referencias Adobe Lightroom (Lightroom), ARRI (ARRI), ZEISS (ZEISS) y Kodak (Kodak).
+
+Una idea para Núcleo Colectivo: hacer de esta biblioteca un Visual Prompt Lab: un repositorio donde cada comando tenga su definición, parámetros técnicos, imagen de referencia, prompt de ejemplo y resultado generado. Así no solo aprendemos a pedir imágenes a la IA: aprendemos lenguaje fotográfico, cultura visual y dirección de arte.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Falta para video
+
+
+
+
+
+
+
+
+
+
+
+
+
+¡Exactamente! Nos falta todo el universo audiovisual: video, cinematografía, dirección de fotografía, movimientos de cámara, animación, edición, efectos visuales, sonido y color para cine.
+
+Vamos a añadir un módulo completo a la biblioteca de Núcleo Colectivo: VIDEO PROMPT LIBRARY.
+
+Una diferencia fundamental: en video no basta con describir cómo se ve una imagen. También debemos especificar qué sucede, cómo se mueve, durante cuánto tiempo, cómo se desplaza la cámara y cómo termina la secuencia.
+20. VIDEO PROMPT LIBRARY
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+10
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Cinematography & Motion Design
+Dirección de fotografía · Cámara · Movimiento · Animación · Edición · VFX · Sonido
+
+01. Géneros y tipos de video
+Comando	Aplicación
+/cinematicvideo	Video cinematográfico
+/commercialfilm	Comercial publicitario
+/brandfilm	Película de marca
+/documentaryfilm	Documental
+/fashionfilm	Cine de moda
+/musicvideo	Videoclip musical
+/artfilm	Cine experimental
+/shortfilm	Cortometraje
+/productvideo	Video de producto
+/corporatevideo	Video institucional
+/promovideo	Video promocional
+/socialvideo	Contenido para redes
+/travelvideo	Video de viajes
+/naturefilm	Naturaleza
+/architecturefilm	Arquitectura
+/foodcommercial	Publicidad gastronómica
+/behindthescenes	Detrás de cámaras
+/motiongraphics	Gráficos en movimiento
+/experimentalvideo	Video experimental
+/immersivevideo	Video inmersivo
+/loopvideo	Video en bucle
+/visualpoetry	Poesía visual
+/generativevideo	Video generativo
+
+02. Cámaras cinematográficas
+
+
+
+
+
+
+
+
+
+
+ARRI Alexa 35
+
+Cine profesional, color y rango dinámico.
+
+
+
+
+
+
+
+
+
+
+
+RED V-Raptor
+
+Producción de alta resolución y efectos visuales.
+
+
+
+
+
+
+
+
+
+
+
+Blackmagic URSA
+
+Cine digital y producción independiente.
+
+
+
+
+
+
+
+
+
+
+
+Sony Venice 2
+
+Cine de alta gama y grandes producciones.
+
+
+
+
+
+
+
+
+
+
+
+Canon Cinema EOS
+
+Producción audiovisual profesional.
+
+
+
+
+
+
+
+
+
+
+
+DJI Ronin 4D
+
+Estabilización y movimiento integrado.
+
+
+Comandos de cámara
+- /arri-alexa-35
+- /arri-alexa-mini
+- /red-vraptor
+- /red-komodo
+- /sony-venice-2
+- /sony-fx6
+- /sony-fx3
+- /blackmagic-ursa
+- /blackmagic-pocket-6k
+- /canon-cinema-eos
+- /panavision
+- /dji-ronin-4d
+- /gopro-cinema
+- /imax-cinematography
+03. Lentes cinematográficos
+Referencia	Característica
+/anamorphic-lens	Desenfoque ovalado y destellos anamórficos
+/spherical-lens	Perspectiva óptica convencional
+/vintage-cinema-lens	Imperfecciones ópticas vintage
+/master-prime	Óptica cinematográfica de alta calidad
+/cooke-lens	Carácter óptico cálido y orgánico
+/arri-signature-prime	Imagen cinematográfica refinada
+/probe-lens	Perspectivas macro extremas
+/macro-cinema-lens	Detalles y texturas
+/wide-cinema-lens	Espacios y perspectiva
+/telephoto-cinema	Compresión de planos
+/fisheye-cinema	Perspectiva extrema
+/tilt-shift-cinema	Control de perspectiva y enfoque
+
+Distancias focales cinematográficas
+- /14mm
+- /18mm
+- /21mm
+- /24mm
+- /28mm
+- /32mm
+- /35mm
+- /40mm
+- /50mm
+- /65mm
+- /75mm
+- /85mm
+- /100mm
+- /135mm
+- /200mm
+Ejemplo:
+
+ARRI Alexa 35, Cooke anamorphic 40mm, T2.3, cinematic shallow depth of field, organic lens flares.
+04. Movimientos de cámara (Camera Movement)
+Este es uno de los módulos más importantes para crear videos con IA. Permite dirigir la cámara como si estuviéramos en un rodaje.
+
+
+
+
+
+
+
+
+
+
+Dolly In
+
+La cámara se acerca físicamente al sujeto.
+
+
+
+
+
+
+
+
+
+
+
+Orbit Shot
+
+La cámara gira alrededor del sujeto.
+
+
+
+
+
+
+
+
+
+
+
+Crane Shot
+
+Movimiento vertical mediante grúa.
+
+
+
+
+
+
+
+
+
+
+
+FPV Flythrough
+
+Vuelo dinámico atravesando espacios.
+
+
+Movimientos físicos
+Comando	Movimiento
+/dolly-in	Acercamiento físico
+/dolly-out	Alejamiento físico
+/tracking-shot	Seguimiento del sujeto
+/side-tracking	Seguimiento lateral
+/orbit-shot	Órbita alrededor del sujeto
+/arc-shot	Movimiento en arco
+/crane-up	Elevación de cámara
+/crane-down	Descenso de cámara
+/pedestal-up	Elevación vertical
+/pedestal-down	Descenso vertical
+/truck-left	Desplazamiento lateral izquierdo
+/truck-right	Desplazamiento lateral derecho
+/push-in	Empuje de cámara hacia delante
+/pull-out	Retirada de cámara
+/whip-pan	Paneo rápido
+/pan-left	Paneo izquierdo
+/pan-right	Paneo derecho
+/tilt-up	Inclinación hacia arriba
+/tilt-down	Inclinación hacia abajo
+/roll-camera	Giro sobre el eje óptico
+/handheld-camera	Cámara en mano
+/steadicam	Movimiento estabilizado
+/gimbal-shot	Movimiento fluido estabilizado
+/dutch-roll	Inclinación y giro
+/360-orbit	Vuelta completa alrededor del sujeto
+
+Movimientos aéreos y especiales
+- /drone-shot
+- /fpv-drone
+- /aerial-tracking
+- /top-down-flight
+- /low-altitude-flight
+- /flythrough
+- /flyover
+- /reveal-shot
+- /parallax-movement
+- /bullet-time
+- /snorricam
+- /helicopter-shot
+- /underwater-tracking
+05. Movimientos de lente y enfoque
+No todos los movimientos de cámara son desplazamientos físicos. También podemos transformar el encuadre mediante la óptica.
+- /zoom-in — acercamiento óptico.
+- /zoom-out — alejamiento óptico.
+- /crash-zoom — zoom repentino.
+- /slow-zoom — zoom lento.
+- /dolly-zoom — efecto vértigo.
+- /rack-focus — cambio de foco entre planos.
+- /focus-pull — transición de enfoque controlada.
+- /focus-transition — transición de foco.
+- /shallow-focus — poca profundidad de campo.
+- /deep-focus — gran profundidad de campo.
+- /foreground-to-background-focus — cambio del primer plano al fondo.
+- /lens-breathing — variación aparente del encuadre al enfocar.
+- /anamorphic-flare — destello anamórfico.
+- /cinematic-bokeh — desenfoque cinematográfico.
+06. Velocidad, tiempo y movimiento
+
+
+
+
+
+
+
+
+
+
+High Speed
+
+Congelación extrema del movimiento.
+
+
+
+
+
+
+
+
+
+
+
+Slow Motion
+
+Movimiento lento y elegante.
+
+
+
+
+
+
+
+
+
+
+
+Timelapse
+
+Tiempo acelerado.
+
+
+
+
+
+
+
+
+
+
+
+Long Exposure
+
+Estelas y movimiento prolongado.
+
+
+Comandos
+- /slowmotion
+- /super-slowmotion
+- /ultra-slowmotion
+- /highspeed
+- /speedramp
+- /timelapse
+- /hyperlapse
+- /motionblur
+- /longexposure
+- /stopmotion
+- /freeze-frame
+- /time-remapping
+- /reverse-motion
+- /frame-interpolation
+- /real-time-motion
+- /accelerated-motion
+- /variable-speed
+- /seamless-loop
+Referencias de velocidad
+FPS	Aplicación
+12 fps	Animación artesanal
+24 fps	Cine tradicional
+25 fps	Producción PAL
+30 fps	Video digital
+50 fps	Cámara lenta moderada
+60 fps	Movimiento fluido
+120 fps	Cámara lenta
+240 fps	Cámara lenta extrema
+1000 fps	Alta velocidad especializada
+
+Importante: la velocidad de reproducción depende de los FPS de captura y entrega. Pedir 120 fps no significa que cualquier generador vaya a producir realmente 120 cuadros por segundo.
+07. Iluminación cinematográfica
+- /cinematic-lighting
+- /motivated-lighting
+- /practical-lights
+- /volumetric-light
+- /atmospheric-fog
+- /haze
+- /smoke
+- /god-rays
+- /backlight
+- /rim-light
+- /silhouette
+- /low-key-cinema
+- /high-key-cinema
+- /hard-light
+- /soft-light
+- /negative-fill
+- /bounce-light
+- /flickering-light
+- /neon-light
+- /tungsten-light
+- /moonlight
+- /golden-hour-light
+- /blue-hour-light
+- /mixed-color-light
+- /candlelight
+- /firelight
+- /underwater-lighting
+08. Color cinematográfico y Film Look
+
+
+
+
+
+
+
+
+
+
+Kodak 2383
+
+Referencia de acabado de película.
+
+
+
+
+
+
+
+
+
+
+
+ARRI Look
+
+Referencia de reproducción cinematográfica.
+
+
+
+
+
+
+
+
+
+
+
+Bleach Bypass
+
+Contraste alto y saturación reducida.
+
+
+
+
+
+
+
+
+
+
+
+Teal & Orange
+
+Contraste entre tonos fríos y cálidos.
+
+
+Comandos de color
+- /cinematic-color-grading
+- /film-look
+- /kodak-2383
+- /kodak-5219
+- /kodak-5207
+- /fuji-eterna
+- /arri-logc
+- /arri-reveal
+- /redlog
+- /davinci-resolve-look
+- /teal-orange
+- /bleach-bypass
+- /cross-processing
+- /film-emulation
+- /analog-color
+- /vintage-color
+- /muted-colors
+- /desaturated-look
+- /high-saturation
+- /monochromatic
+- /duotone
+- /split-toning
+- /warm-highlights
+- /cool-shadows
+- /neutral-skin-tones
+- /soft-highlight-rolloff
+- /deep-black-levels
+- /film-grain
+- /halation
+- /bloom
+- /light-leaks
+Perfiles y conceptos técnicos
+- LOG / LogC: captura con curva logarítmica para conservar información tonal.
+- RAW: grabación con datos de imagen de mayor flexibilidad de procesamiento.
+- Rec.709: espacio de visualización SDR habitual.
+- Rec.2020: espacio de color de amplia gama.
+- DCI-P3: gama de color utilizada en cine digital.
+- HDR10: formato de alto rango dinámico.
+- ACES: sistema de gestión de color para producción audiovisual.
+Estos últimos son estándares y procesos técnicos, no estilos visuales.
+09. Planos y lenguaje narrativo cinematográfico
+Comando	Descripción
+/extreme-wide-shot	Plano general extremo
+/establishing-shot	Presentación del espacio
+/wide-shot	Plano general
+/full-shot	Cuerpo completo
+/medium-long-shot	Plano americano
+/medium-shot	Plano medio
+/medium-close-up	Primer plano medio
+/close-up	Primer plano
+/extreme-close-up	Primerísimo primer plano
+/insert-shot	Detalle de un objeto
+/cutaway	Plano complementario
+/over-the-shoulder	Sobre el hombro
+/point-of-view	Punto de vista subjetivo
+/two-shot	Dos personajes
+/profile-shot	Perfil
+/low-angle	Contrapicado
+/high-angle	Picado
+/birds-eye-view	Vista cenital
+/worms-eye-view	Vista desde abajo
+/dutch-angle	Horizonte inclinado
+/symmetrical-shot	Composición simétrica
+/single-take	Toma continua
+
+10. Transiciones y edición de video
+- /hard-cut — corte directo.
+- /match-cut — corte por semejanza visual.
+- /jump-cut — salto temporal.
+- /crossfade — fundido entre planos.
+- /dissolve — disolvencia.
+- /fade-in — aparición gradual.
+- /fade-out — desaparición gradual.
+- /wipe-transition — transición por barrido.
+- /whip-transition — transición mediante paneo rápido.
+- /zoom-transition — transición con zoom.
+- /morph-transition — transformación entre imágenes.
+- /glitch-transition — transición digital.
+- /light-flash-transition — destello.
+- /mask-transition — transición por máscara.
+- /seamless-transition — transición imperceptible.
+- /speed-ramp-transition — transición de velocidad.
+- /match-motion — continuidad del movimiento.
+- /continuous-shot — continuidad de toma.
+- /montage — montaje de planos.
+- /parallel-editing — montaje paralelo.
+- /cross-cutting — alternancia de acciones.
+11. Efectos visuales y simulación física (VFX)
+
+
+
+
+
+
+
+
+
+
+Particles
+
+
+
+
+
+
+
+
+
+
+
+Fluid Simulation
+
+
+
+
+
+
+
+
+
+
+
+Smoke Simulation
+
+
+
+
+
+
+
+
+
+
+
+Holographic Effects
+
+
+Comandos VFX
+- /cgi
+- /vfx
+- /compositing
+- /green-screen
+- /chromakey
+- /motion-tracking
+- /camera-tracking
+- /matchmoving
+- /rotoscoping
+- /particle-simulation
+- /fluid-simulation
+- /cloth-simulation
+- /rigid-body-simulation
+- /soft-body-simulation
+- /destruction-simulation
+- /smoke-simulation
+- /fire-simulation
+- /water-simulation
+- /explosion-vfx
+- /hologram
+- /digital-glitch
+- /datamosh
+- /volumetric-effects
+- /digital-doubles
+- /environment-extension
+- /virtual-production
+- /3d-render
+- /photorealistic-cgi
+12. Animación y motion design
+- /2danimation
+- /3danimation
+- /motiondesign
+- /kinetictypography
+- /typographic-animation
+- /logo-animation
+- /character-animation
+- /morphing
+- /shape-animation
+- /abstract-motion
+- /generative-motion
+- /particle-animation
+- /fluid-animation
+- /loop-animation
+- /procedural-animation
+- /stopmotion-animation
+- /claymation
+- /cutout-animation
+- /cel-animation
+- /rotoscope-animation
+- /parallax-animation
+- /liquid-motion
+- /organic-motion
+- /wireframe-animation
+- /geometric-animation
+13. Sonido y diseño sonoro
+Para videos completos, la dimensión sonora también debe formar parte del prompt.
+- /sound-design
+- /cinematic-soundscape
+- /ambient-sound
+- /foley
+- /field-recording
+- /sound-effects
+- /room-tone
+- /atmospheric-audio
+- /spatial-audio
+- /stereo-audio
+- /surround-sound
+- /immersive-audio
+- /diegetic-sound
+- /non-diegetic-sound
+- /voice-over
+- /narration
+- /dialogue
+- /soundtrack
+- /generative-music
+- /ambient-music
+- /synth-textures
+- /cinematic-impact
+- /audio-reactive
+- /synchronized-sound
+
+21. Parámetros de movimiento y continuidad
+Esta sección es especialmente importante para evitar los videos típicos de IA donde los objetos cambian de forma, los personajes se transforman o la cámara se mueve sin sentido.
+
+Control de movimiento
+Instrucción	Función
+slow movement	Movimiento lento
+subtle movement	Movimiento sutil
+fluid motion	Movimiento fluido
+organic motion	Movimiento orgánico
+continuous movement	Movimiento continuo
+realistic physics	Física realista
+natural inertia	Inercia natural
+consistent velocity	Velocidad constante
+smooth acceleration	Aceleración progresiva
+smooth deceleration	Desaceleración progresiva
+precise camera path	Trayectoria definida
+stable framing	Encuadre estable
+consistent perspective	Perspectiva constante
+temporal consistency	Consistencia temporal
+character consistency	Consistencia del personaje
+object permanence	Permanencia de objetos
+realistic motion blur	Desenfoque de movimiento realista
+
+Control de continuidad
+- Mantener la identidad del personaje.
+- Conservar vestuario, proporciones y rasgos.
+- No modificar la geometría de los objetos.
+- Mantener la dirección de la luz.
+- Conservar la arquitectura y el escenario.
+- Evitar apariciones y desapariciones espontáneas.
+- Mantener continuidad entre fotogramas.
+- Evitar movimientos bruscos involuntarios.
+- Mantener la trayectoria de cámara.
+22. Estructura profesional de un prompt para video
+Esta es la plantilla que te recomiendo guardar. Es más completa que simplemente escribir /cinematicvideo.
+MASTER VIDEO PROMPT — CINEMATOGRAPHY
+01. SCENE
+Describe el lugar, ambiente, época y contexto.
+02. SUBJECT
+Describe el personaje, objeto o elemento principal.
+03. ACTION
+Describe exactamente qué sucede y cómo se desarrolla la acción.
+04. CAMERA
+Camera: ARRI Alexa 35 / RED V-Raptor / Sony Venice 2.
+05. LENS
+Lens: 24mm / 35mm / 50mm / 85mm / Anamorphic.
+Aperture: T2.8.
+Depth of field: Shallow / Deep.
+06. CAMERA MOVEMENT
+Movement: Dolly in / Orbit / Tracking / Crane / Handheld.
+Direction: Left / Right / Forward / Backward.
+Speed: Slow / Moderate / Fast.
+Trajectory: Describe the camera path.
+07. SHOT SIZE
+Extreme wide / Wide / Medium / Close-up / Extreme close-up.
+08. LIGHTING
+Soft light / Hard light / Backlight / Rim light / Volumetric lighting.
+Describe direction, intensity and quality.
+09. COLOR GRADING
+Kodak 2383 / Teal & Orange / Neutral / Film Look.
+Specify highlights, shadows and saturation.
+10. MOTION
+Natural movement, realistic physics, smooth transitions, consistent velocity.
+11. TEMPORAL STRUCTURE
+Duration: [Seconds].
+Beginning: [Initial action].
+Middle: [Development].
+Ending: [Final action].
+12. ATMOSPHERE
+Fog / Rain / Dust / Smoke / Particles / Wind / Reflections.
+13. SOUND DESIGN
+Ambient sound / Foley / Music / Voice-over / Silence.
+14. FORMAT
+Aspect ratio: 16:9 / 9:16 / 1:1.
+Frame rate: 24 / 25 / 30 / 60 fps.
+Resolution: 1080p / 4K.
+15. CONTINUITY
+Maintain subject identity, object geometry, environment, lighting and visual consistency throughout the sequence.
+16. NEGATIVE INSTRUCTIONS
+No morphing, flickering, warping, unstable geometry, unwanted cuts, random camera movement or artificial motion.
+FINAL DIRECTION
+Create a coherent cinematic sequence with professional cinematography, intentional camera movement, realistic motion and carefully controlled visual storytelling.
+
+
+
+23. Cinco recetas audiovisuales para experimentar
+A. Recorrido cinematográfico en una obra de arte
+
+
+
+
+
+
+
+
+2025.bodw.com
+
+
+/artfilm
+/orbit-shot
+/slow-motion
+/anamorphic-lens
+/volumetric-light
+/cinematic-color-grading
+
+Camera slowly circles around the artwork,
+revealing its details and spatial dimensions.
+Smooth continuous movement, no cuts.
+
+
+Aplicación: instalaciones y exposiciones de Núcleo Colectivo.
+
+
+B. Publicidad de producto
+
+
+
+
+
+
+
+
+linkedin.com
+
+
+/commercialfilm
+/productvideo
+/macro-cinema-lens
+/highspeed
+/fluid-simulation
+/rim-light
+
+Product rotates slowly while liquid
+splashes in dramatic slow motion.
+Dynamic camera orbit, realistic physics.
+
+
+
+
+C. Video de arquitectura
+
+
+
+
+
+
+
+
+talmolab.org
+
+
+/architecturefilm
+/drone-shot
+/aerial-tracking
+/wide-cinema-lens
+/golden-hour-light
+/deep-focus
+
+Drone approaches the building,
+slowly revealing its architecture.
+Smooth movement, realistic scale.
+
+
+
+
+D. Video experimental generativo
+
+
+
+
+
+
+
+
+
+
+/generativevideo
+/particle-simulation
+/fluid-animation
+/abstract-motion
+/volumetric-effects
+/audio-reactive
+
+Organic particles form evolving structures,
+flowing and transforming continuously.
+Dark atmosphere, cyan and electric blue.
+
+
+
+
+E. Loop audiovisual infinito
+
+
+
+
+
+
+
+
+artlist.io
+
+
+/loopvideo
+/orbit-shot
+/slow-motion
+/volumetric-light
+/organic-motion
+/seamless-loop
+
+Continuous circular camera movement.
+The final frame must match the first.
+No visible transition or abrupt movement.
+
+
+Aplicación: pantallas, instalaciones interactivas y videowalls.
+
+
+24. Formatos y relaciones de aspecto
+Formato	Uso
+16:9	YouTube, cine y pantallas
+9:16	Reels, TikTok, Shorts
+1:1	Redes sociales
+4:5	Instagram vertical
+2.39:1	Cinemascope
+2.35:1	Panorámico cinematográfico
+1.85:1	Cine panorámico
+4:3	Formato clásico
+3:2	Fotografía
+21:9	Pantallas ultrapanorámicas
+360°	Video esférico
+180° VR	Video inmersivo estereoscópico
+
+25. Herramientas para producción audiovisual con IA
+Estas plataformas pueden complementar los prompts y permiten experimentar con diferentes formas de producción.
+
+
+
+
+
+
+
+
+
+
+Runway
+
+Generación de video, control de movimiento y herramientas de edición.
+Sitio oficial
+
+
+
+
+
+
+
+
+
+
+
+
+Kling AI
+
+Generación de clips, animación de imágenes y movimientos de cámara.
+Sitio oficial
+
+
+
+
+
+
+
+
+
+
+
+
+Luma AI
+
+Generación de secuencias y exploración visual tridimensional.
+Sitio oficial
+
+
+
+
+
+
+
+
+
+
+
+
+Adobe Firefly
+
+Generación audiovisual y herramientas creativas de Adobe.
+Sitio oficial
+
+
+
+
+
+
+
+
+
+
+
+
+Google Veo
+
+Generación de video mediante instrucciones y referencias visuales.
+Información oficial
+
+
+
+
+
+
+
+
+
+
+
+
+DaVinci Resolve
+
+Montaje, color grading, efectos visuales y postproducción de sonido.
+Sitio oficial
+
+
+Los comandos de esta biblioteca son instrucciones creativas transferibles. Cada plataforma admite controles y parámetros diferentes; no todos los movimientos, FPS o efectos se pueden ejecutar literalmente en todos los modelos.
+
+26. Propuesta: crear nuestro propio laboratorio de prompts audiovisuales
+Para Núcleo Colectivo, recomiendo consolidar todo en una biblioteca estructurada y editable, no solamente como una lista de códigos.
+NÚCLEO COLECTIVO
+VISUAL & MOTION PROMPT LAB
+Propuesta de estructura
+01
+
+Photography
+
+Cámaras, lentes y luz
+
+
+02
+
+Color Science
+
+Colorimetría y film look
+
+
+03
+
+Cinematography
+
+Planos y movimientos
+
+
+04
+
+Motion Design
+
+Animación y gráficos
+
+
+05
+
+VFX & 3D
+
+Simulación y efectos
+
+
+06
+
+Sound Design
+
+Audio y atmósferas
+
+
+07
+
+AI Production
+
+Modelos y workflows
+
+
+08
+
+Prompt Builder
+
+Constructor de prompts
+
+
+
+Cada ficha debería contener:
+- Nombre y definición del comando.
+- Parámetros técnicos.
+- Ejemplo de prompt en español e inglés.
+- Referencia visual.
+- Resultado esperado.
+- Compatibilidad con herramientas de IA.
+
+Mi siguiente paso recomendado: desarrollar una versión web interactiva de esta biblioteca, con buscador, filtros por fotografía y video, combinación de comandos y botón para copiar prompts. Sería un recurso de aprendizaje y una herramienta de producción para los talleres de Núcleo Colectivo

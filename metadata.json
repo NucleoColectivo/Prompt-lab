@@ -1,0 +1,7 @@
+{
+  "name": "Núcleo Colectivo — Visual & Motion Prompt Lab",
+  "description": "Laboratorio maestro interactivo de prompts para fotografía, cinematografía, video y dirección de arte con IA.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
+
