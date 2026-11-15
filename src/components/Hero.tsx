@@ -15,7 +15,7 @@ export const Hero: React.FC<HeroProps> = ({
   onExploreGuide,
 }) => {
   return (
-    <section className="relative w-full min-h-[84vh] sm:min-h-[88vh] flex items-end overflow-hidden bg-[#101014] border-b border-[#26262E]">
+    <section className="relative w-full min-h-[76vh] sm:min-h-[86vh] flex items-end overflow-hidden bg-[#101014] border-b border-[#26262E]">
       {/* Full-Screen Background Studio Image */}
       <img
         src="/images/hero_cinematic_studio_1794436191894.jpg"
@@ -35,10 +35,10 @@ export const Hero: React.FC<HeroProps> = ({
       />
 
       {/* Content Overlay */}
-      <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 pt-24 pb-10 sm:pb-12 space-y-10">
-        <div className="max-w-3xl space-y-5">
+      <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 pt-16 sm:pt-24 pb-8 sm:pb-12 space-y-8 sm:space-y-10">
+        <div className="max-w-3xl space-y-4 sm:space-y-5">
           {/* Unboxed Architectural Eyebrow */}
-          <div className="flex flex-wrap items-center gap-2 text-xs uppercase tracking-widest text-[#F8C300] font-mono-code font-bold">
+          <div className="flex flex-wrap items-center gap-2 text-[11px] sm:text-xs uppercase tracking-widest text-[#F8C300] font-mono-code font-bold">
             <span>NÚCLEO COLECTIVO</span>
             <span aria-hidden="true" className="text-[#787670]">·</span>
             <span>VISUAL PROMPT LAB</span>
@@ -47,7 +47,7 @@ export const Hero: React.FC<HeroProps> = ({
           </div>
 
           {/* Editorial Manifesto Headline */}
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-[#F4F2ED] font-display-sans leading-[1.06] text-balance">
+          <h1 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-[#F4F2ED] font-display-sans leading-[1.08] text-balance">
             Las ideas también tienen{' '}
             <span className="font-serif-title italic font-semibold text-[#F8C300]">
               un lenguaje visual
@@ -55,16 +55,16 @@ export const Hero: React.FC<HeroProps> = ({
           </h1>
 
           {/* Clear Explanatory Lead */}
-          <p className="text-base sm:text-lg text-[#D8D5CD] leading-relaxed max-w-2xl font-normal">
+          <p className="text-sm sm:text-lg text-[#D8D5CD] leading-relaxed max-w-2xl font-normal">
             Descubre, comprende, construye y transforma prompts para fotografía, cinematografía y arte digital con inteligencia artificial. Explora la galería curada en 8 colecciones, experimenta en el constructor de 12 módulos y practica en 31 aplicaciones reales sin configurar claves API.
           </p>
 
           {/* Primary Actions (Focal Anchor: Galería Visual #1) */}
-          <div className="flex flex-wrap items-center gap-3 pt-2">
+          <div className="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-2.5 sm:gap-3 pt-2">
             <button
               type="button"
               onClick={onOpenGallery}
-              className="px-5 py-3 text-xs sm:text-sm font-bold uppercase tracking-wider text-[#101014] bg-[#F8C300] hover:bg-[#e5b400] active:scale-95 rounded-lg transition-all flex items-center gap-2 shadow-md whitespace-nowrap shrink-0"
+              className="w-full sm:w-auto justify-center px-5 py-3 min-h-[44px] text-xs sm:text-sm font-bold uppercase tracking-wider text-[#101014] bg-[#F8C300] hover:bg-[#e5b400] active:scale-95 rounded-lg transition-all flex items-center gap-2 shadow-md whitespace-nowrap shrink-0"
             >
               <Images className="w-4 h-4" />
               <span>Explorar Galería Visual</span>
@@ -74,7 +74,7 @@ export const Hero: React.FC<HeroProps> = ({
             <button
               type="button"
               onClick={onScrollToBuilder}
-              className="px-5 py-3 text-xs sm:text-sm font-semibold uppercase tracking-wider text-[#F4F2ED] bg-[#18181F]/85 hover:bg-[#326BFF] border border-white/25 hover:border-[#326BFF] backdrop-blur-sm rounded-lg transition-all flex items-center gap-2 whitespace-nowrap shrink-0"
+              className="w-full sm:w-auto justify-center px-5 py-3 min-h-[44px] text-xs sm:text-sm font-semibold uppercase tracking-wider text-[#F4F2ED] bg-[#18181F]/85 hover:bg-[#326BFF] border border-white/25 hover:border-[#326BFF] backdrop-blur-sm rounded-lg transition-all flex items-center gap-2 whitespace-nowrap shrink-0"
             >
               <Sparkles className="w-4 h-4 text-[#F8C300]" />
               <span>Constructor (12 Módulos)</span>
@@ -83,7 +83,7 @@ export const Hero: React.FC<HeroProps> = ({
             <button
               type="button"
               onClick={onScrollToDictionary}
-              className="px-5 py-3 text-xs sm:text-sm font-semibold uppercase tracking-wider text-[#D8D5CD] hover:text-[#F4F2ED] bg-[#101014]/70 hover:bg-[#18181F] border border-white/15 backdrop-blur-sm rounded-lg transition-all flex items-center gap-2 whitespace-nowrap shrink-0"
+              className="w-full sm:w-auto justify-center px-5 py-3 min-h-[44px] text-xs sm:text-sm font-semibold uppercase tracking-wider text-[#D8D5CD] hover:text-[#F4F2ED] bg-[#101014]/70 hover:bg-[#18181F] border border-white/15 backdrop-blur-sm rounded-lg transition-all flex items-center gap-2 whitespace-nowrap shrink-0"
             >
               <Layers className="w-4 h-4 text-[#7545D6]" />
               <span>Biblioteca (26 Módulos)</span>
@@ -93,7 +93,7 @@ export const Hero: React.FC<HeroProps> = ({
               <button
                 type="button"
                 onClick={onExploreGuide}
-                className="px-3.5 py-3 text-xs font-mono-code uppercase tracking-wider text-[#F8C300] hover:text-[#F4F2ED] flex items-center gap-1.5 whitespace-nowrap shrink-0"
+                className="w-full sm:w-auto justify-center px-3.5 py-2.5 min-h-[44px] text-xs font-mono-code uppercase tracking-wider text-[#F8C300] hover:text-[#F4F2ED] flex items-center gap-1.5 whitespace-nowrap shrink-0"
               >
                 <Compass className="w-4 h-4" />
                 <span>Mapa del laboratorio</span>
@@ -103,7 +103,7 @@ export const Hero: React.FC<HeroProps> = ({
         </div>
 
         {/* Bottom Architectural Metrics & Studio Spec Bar */}
-        <div className="pt-6 border-t border-white/15 grid grid-cols-2 md:grid-cols-4 gap-6 text-[#D8D5CD]">
+        <div className="pt-6 border-t border-white/15 grid grid-cols-1 min-[420px]:grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 text-[#D8D5CD]">
           <div className="flex flex-col">
             <span className="text-2xl sm:text-3xl font-bold font-mono-code text-[#F8C300] tabular-nums">
               8 Colecciones

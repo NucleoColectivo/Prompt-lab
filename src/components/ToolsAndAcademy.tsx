@@ -14,20 +14,20 @@ import {
 } from 'lucide-react';
 import {
   AI_TOOLS_DIRECTORY,
-  CREATIVE_CHALLENGES,
   BILINGUAL_GLOSSARY,
   AiToolEntry,
 } from '../data/extendedModulesData';
+import { FULL_CREATIVE_CHALLENGES } from '../data/creativeStudiosData';
 import type { ModuleId } from '../data/modulesData';
 import {
   FOUR_LIGHTS_CHALLENGE_SERIES,
-  FOCAL_WORKSHOP_SERIES,
 } from '../data/visualLibraryRegistry';
 import { ResilientImage } from './ResilientImage';
 import { ToolBrandLogo } from './ToolBrandLogo';
 
 interface ToolsAndAcademyProps {
   onJumpToSection: (sectionId: string, moduleId?: ModuleId) => void;
+  defaultTab?: 'tools' | 'challenges' | 'glossary';
 }
 
 const LEARNING_PATHS = [
@@ -81,12 +81,19 @@ const TOOL_AREAS: ('Todas' | AiToolEntry['area'])[] = [
   'Diseño',
 ];
 
-export const ToolsAndAcademy: React.FC<ToolsAndAcademyProps> = ({ onJumpToSection }) => {
-  const [activeTab, setActiveTab] = useState<'tools' | 'challenges' | 'glossary'>('tools');
+export const ToolsAndAcademy: React.FC<ToolsAndAcademyProps> = ({
+  onJumpToSection,
+  defaultTab = 'tools',
+}) => {
+  const [activeTab, setActiveTab] = useState<'tools' | 'challenges' | 'glossary'>(defaultTab);
   const [areaFilter, setAreaFilter] = useState<'Todas' | AiToolEntry['area']>('Todas');
   const [toolQuery, setToolQuery] = useState('');
   const [glossaryQuery, setGlossaryQuery] = useState('');
   const [copiedId, setCopiedId] = useState<string | null>(null);
+
+  useEffect(() => {
+    setActiveTab(defaultTab);
+  }, [defaultTab]);
 
   const [completedSteps, setCompletedSteps] = useState<Record<string, boolean>>(() => {
     try {
@@ -141,17 +148,17 @@ export const ToolsAndAcademy: React.FC<ToolsAndAcademyProps> = ({ onJumpToSectio
   }, [glossaryQuery]);
 
   const downloadChallengesGuide = () => {
-    const txt = CREATIVE_CHALLENGES.map(
+    const txt = FULL_CREATIVE_CHALLENGES.map(
       (c) =>
-        `${c.code} · ${c.title} (${c.level} · ${c.duration})\nObjetivo: ${c.objective}\nPasos:\n${c.steps
+        `${c.code} · ${c.title} (${c.level} · ${c.duration})\nMateriales: ${c.materials.join(', ')}\nObjetivo: ${c.objective}\nPasos:\n${c.steps
           .map((s, i) => `  ${i + 1}. ${s}`)
-          .join('\n')}\nResultado esperado: ${c.outcome}\n`
+          .join('\n')}\nPrompt modelo:\n  ${c.promptTemplate}\nResultado esperado: ${c.outcome}\n`
     ).join('\n--------------------------------------------\n');
     const blob = new Blob([txt], { type: 'text/plain;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'nucleo_colectivo_retos_taller.txt';
+    a.download = 'nucleo_colectivo_6_retos_taller.txt';
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -214,7 +221,7 @@ export const ToolsAndAcademy: React.FC<ToolsAndAcademyProps> = ({ onJumpToSectio
           {(
             [
               { id: 'tools', label: `Apps IA (${AI_TOOLS_DIRECTORY.length})`, icon: Wrench },
-              { id: 'challenges', label: 'Retos Creativos & Rutas', icon: Trophy },
+              { id: 'challenges', label: `6 Retos Creativos & Rutas`, icon: Trophy },
               { id: 'glossary', label: `Diccionario Bilingüe ES–EN (${BILINGUAL_GLOSSARY.length})`, icon: Languages },
             ] as const
           ).map((tab) => {
@@ -437,149 +444,150 @@ export const ToolsAndAcademy: React.FC<ToolsAndAcademyProps> = ({ onJumpToSectio
               </div>
             </div>
 
-            {/* Interactive Challenges Checklist */}
+            {/* Interactive Challenges Checklist (6 Full Retos) */}
             <div className="space-y-4">
               <h3 className="text-xl font-bold font-serif-title text-stone-900 dark:text-stone-100">
-                Retos Creativos de Taller (Marca tu progreso)
+                Retos Creativos de Taller (01–06 · Marca tu progreso)
               </h3>
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-                {CREATIVE_CHALLENGES.map((ch) => {
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {FULL_CREATIVE_CHALLENGES.map((ch) => {
                   const doneCount = ch.steps.filter((_, idx) => completedSteps[`${ch.id}-${idx}`]).length;
+                  const targetHash =
+                    ch.labTarget === 'restauracion'
+                      ? 'restauracion'
+                      : ch.labTarget === 'producto'
+                      ? 'producto-lab'
+                      : ch.labTarget === 'dibujo'
+                      ? 'dibujo-a-imagen'
+                      : ch.labTarget === 'web'
+                      ? 'web-lab'
+                      : ch.labTarget === 'principiante'
+                      ? 'mi-primera-imagen'
+                      : 'laboratorios';
                   return (
                     <div
                       key={ch.id}
-                      className="p-5 rounded-xl bg-[#FAF8F5] dark:bg-stone-950 border border-stone-200 dark:border-stone-800 space-y-3"
+                      className="rounded-xl overflow-hidden bg-[#FAF8F5] dark:bg-stone-950 border border-stone-200 dark:border-stone-800 flex flex-col justify-between"
                     >
-                      <div className="flex items-center justify-between text-[11px] font-mono-code">
-                        <span className="font-bold text-amber-700 dark:text-amber-400">
-                          {ch.code} · {ch.level} · {ch.duration}
-                        </span>
-                        <span className="text-stone-500">
-                          {doneCount}/{ch.steps.length} completados
-                        </span>
-                      </div>
-
-                      <h4 className="text-lg font-bold font-serif-title text-stone-900 dark:text-stone-100">
-                        {ch.title}
-                      </h4>
-                      <p className="text-xs text-stone-600 dark:text-stone-400">{ch.objective}</p>
-
-                      {ch.id === 'reto-01' && (
-                        <div className="pt-1 space-y-2">
-                          <div className="flex items-center justify-between text-[10px] font-mono-code uppercase tracking-wider text-amber-700 dark:text-amber-400 font-bold">
-                            <span>Referencia controlada · Misma persona, 4 luces</span>
-                            <span className="text-stone-500 font-normal">Clic para copiar luz</span>
-                          </div>
-                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                            {FOUR_LIGHTS_CHALLENGE_SERIES.map((item) => (
-                              <button
-                                key={item.id}
-                                type="button"
-                                onClick={() => handleCopy(item.promptSnippet, `reto1-${item.id}`)}
-                                className="group text-left rounded-lg overflow-hidden border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 hover:border-amber-500 transition-colors"
-                              >
-                                <ResilientImage
-                                  src={item.image}
-                                  alt={item.alt}
-                                  aspectRatio="3:4"
-                                  objectPosition="top"
-                                  className="group-hover:scale-105 transition-transform duration-300"
-                                />
-                                <div className="p-1.5">
-                                  <div className="text-[10px] font-mono-code font-bold text-stone-900 dark:text-stone-100 truncate">
-                                    {copiedId === `reto1-${item.id}` ? 'Copiado ✓' : item.code}
-                                  </div>
-                                  <div className="text-[10px] text-stone-500 truncate">{item.label.split(' ')[0]}</div>
-                                </div>
-                              </button>
-                            ))}
+                      <div>
+                        <div className="relative h-44 bg-[#101014] overflow-hidden">
+                          <ResilientImage
+                            src={ch.coverImage}
+                            alt={`Portada de ${ch.code}: ${ch.title}`}
+                            aspectRatio="16:9"
+                            objectPosition="top"
+                            containerClassName="w-full h-full"
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-t from-[#101014]/85 via-[#101014]/20 to-transparent pointer-events-none" />
+                          <div className="absolute bottom-2.5 left-4 right-4 flex items-center justify-between text-[11px] font-mono-code">
+                            <span className="font-bold text-[#F8C300]">
+                              {ch.code} · {ch.level} · {ch.duration}
+                            </span>
+                            <span className="text-[#F4F2ED] tabular-nums">
+                              {doneCount}/{ch.steps.length} completados
+                            </span>
                           </div>
                         </div>
-                      )}
 
-                      {ch.id === 'reto-02' && (
-                        <div className="pt-1 space-y-2">
-                          <div className="flex items-center justify-between text-[10px] font-mono-code uppercase tracking-wider text-amber-700 dark:text-amber-400 font-bold">
-                            <span>Progresión óptica · Mismo taller, 24 a 135mm</span>
-                            <span className="text-stone-500 font-normal">Clic para copiar lente</span>
+                        <div className="p-5 space-y-3">
+                          <h4 className="text-lg font-bold font-serif-title text-stone-900 dark:text-stone-100">
+                            {ch.title}
+                          </h4>
+                          <p className="text-xs text-stone-600 dark:text-stone-400 leading-relaxed">
+                            {ch.objective}
+                          </p>
+                          <div className="text-[11px] font-mono-code text-stone-500 dark:text-stone-400">
+                            <strong>Materiales:</strong> {ch.materials.join(' · ')}
                           </div>
-                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                            {FOCAL_WORKSHOP_SERIES.map((item) => (
+
+                          {ch.id === 'reto-01' && (
+                            <div className="pt-1 space-y-2">
+                              <div className="flex items-center justify-between text-[10px] font-mono-code uppercase tracking-wider text-amber-700 dark:text-amber-400 font-bold">
+                                <span>Referencia controlada · Misma persona, 4 luces</span>
+                                <span className="text-stone-500 font-normal">Clic para copiar luz</span>
+                              </div>
+                              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                                {FOUR_LIGHTS_CHALLENGE_SERIES.map((item) => (
+                                  <button
+                                    key={item.id}
+                                    type="button"
+                                    onClick={() => handleCopy(item.promptSnippet, `reto1-${item.id}`)}
+                                    className="group text-left rounded-lg overflow-hidden border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 hover:border-amber-500 transition-colors"
+                                  >
+                                    <ResilientImage
+                                      src={item.image}
+                                      alt={item.alt}
+                                      aspectRatio="3:4"
+                                      objectPosition="top"
+                                      className="group-hover:scale-105 transition-transform duration-300"
+                                    />
+                                    <div className="p-1.5">
+                                      <div className="text-[10px] font-mono-code font-bold text-stone-900 dark:text-stone-100 truncate">
+                                        {copiedId === `reto1-${item.id}` ? 'Copiado ✓' : item.code}
+                                      </div>
+                                      <div className="text-[10px] text-stone-500 truncate">{item.label.split(' ')[0]}</div>
+                                    </div>
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+
+                          <div className="space-y-1.5 pt-1">
+                            {ch.steps.map((step, idx) => {
+                              const key = `${ch.id}-${idx}`;
+                              const checked = Boolean(completedSteps[key]);
+                              return (
+                                <button
+                                  key={key}
+                                  type="button"
+                                  onClick={() => toggleStep(key)}
+                                  className={`w-full text-left p-2.5 rounded-lg border text-xs flex items-start gap-2.5 transition-colors ${
+                                    checked
+                                      ? 'bg-emerald-50/70 dark:bg-emerald-950/20 border-emerald-300 dark:border-emerald-800 text-stone-700 dark:text-stone-300 line-through'
+                                      : 'bg-white dark:bg-stone-900 border-stone-200 dark:border-stone-800 text-stone-800 dark:text-stone-200 hover:border-amber-400'
+                                  }`}
+                                >
+                                  {checked ? (
+                                    <CheckSquare className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                                  ) : (
+                                    <Square className="w-4 h-4 text-stone-400 shrink-0 mt-0.5" />
+                                  )}
+                                  <span>{step}</span>
+                                </button>
+                              );
+                            })}
+                          </div>
+
+                          <div className="p-3 rounded-lg bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 space-y-1.5">
+                            <div className="flex items-center justify-between text-[10px] font-mono-code font-bold text-amber-700 dark:text-amber-400">
+                              <span>PROMPT BASE DEL RETO</span>
                               <button
-                                key={item.id}
                                 type="button"
-                                onClick={() => handleCopy(item.promptSnippet, `reto2-${item.id}`)}
-                                className="group text-left rounded-lg overflow-hidden border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 hover:border-amber-500 transition-colors"
+                                onClick={() => handleCopy(ch.promptTemplate, `ch-pr-${ch.id}`)}
+                                className="inline-flex items-center gap-1 text-[#326BFF] dark:text-[#F8C300] hover:underline"
                               >
-                                <ResilientImage
-                                  src={item.image}
-                                  alt={item.alt}
-                                  aspectRatio="3:2"
-                                  objectPosition="top"
-                                  className="group-hover:scale-105 transition-transform duration-300"
-                                />
-                                <div className="p-1.5">
-                                  <div className="text-[10px] font-mono-code font-bold text-stone-900 dark:text-stone-100 truncate">
-                                    {copiedId === `reto2-${item.id}` ? 'Copiado ✓' : item.code}
-                                  </div>
-                                  <div className="text-[10px] text-stone-500 truncate">{item.label}</div>
-                                </div>
+                                {copiedId === `ch-pr-${ch.id}` ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
+                                <span>{copiedId === `ch-pr-${ch.id}` ? 'Copiado' : 'Copiar'}</span>
                               </button>
-                            ))}
+                            </div>
+                            <p className="text-[11px] font-mono-code text-stone-700 dark:text-stone-300 leading-relaxed">
+                              {ch.promptTemplate}
+                            </p>
                           </div>
                         </div>
-                      )}
-
-                      <div className="space-y-2 pt-1">
-                        {ch.steps.map((step, idx) => {
-                          const key = `${ch.id}-${idx}`;
-                          const checked = Boolean(completedSteps[key]);
-                          return (
-                            <button
-                              key={key}
-                              type="button"
-                              onClick={() => toggleStep(key)}
-                              className={`w-full text-left p-2.5 rounded-lg border text-xs flex items-start gap-2.5 transition-colors ${
-                                checked
-                                  ? 'bg-emerald-50/70 dark:bg-emerald-950/20 border-emerald-300 dark:border-emerald-800 text-stone-700 dark:text-stone-300 line-through'
-                                  : 'bg-white dark:bg-stone-900 border-stone-200 dark:border-stone-800 text-stone-800 dark:text-stone-200 hover:border-amber-400'
-                              }`}
-                            >
-                              {checked ? (
-                                <CheckSquare className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
-                              ) : (
-                                <Square className="w-4 h-4 text-stone-400 shrink-0 mt-0.5" />
-                              )}
-                              <span>{step}</span>
-                            </button>
-                          );
-                        })}
                       </div>
 
-                      <div className="pt-2 border-t border-stone-200 dark:border-stone-800 flex flex-wrap items-center justify-between gap-2 text-[11px] text-stone-600 dark:text-stone-400">
-                        <span>
-                          <strong className="text-stone-800 dark:text-stone-200">Resultado esperado:</strong> {ch.outcome}
+                      <div className="px-5 py-3.5 border-t border-stone-200 dark:border-stone-800 flex flex-wrap items-center justify-between gap-2 text-[11px] text-stone-600 dark:text-stone-400">
+                        <span className="max-w-sm">
+                          <strong className="text-stone-800 dark:text-stone-200">Resultado:</strong> {ch.outcome}
                         </span>
                         <button
                           type="button"
-                          onClick={() =>
-                            ch.id === 'reto-01'
-                              ? onJumpToSection('biblioteca', 'mod-03')
-                              : ch.id === 'reto-02'
-                              ? onJumpToSection('biblioteca', 'mod-02')
-                              : ch.id === 'reto-03'
-                              ? onJumpToSection('json-lab')
-                              : onJumpToSection('laboratorios')
-                          }
-                          className="font-mono-code font-bold text-[#326BFF] hover:underline shrink-0"
+                          onClick={() => onJumpToSection(targetHash)}
+                          className="px-3 py-1.5 rounded-lg bg-[#F8C300] hover:bg-[#e5b400] text-[#101014] font-mono-code font-bold shrink-0 whitespace-nowrap"
                         >
-                          {ch.id === 'reto-01'
-                            ? 'Ver Módulo 03 (Luz) →'
-                            : ch.id === 'reto-02'
-                            ? 'Ver Módulo 02 (Óptica) →'
-                            : ch.id === 'reto-03'
-                            ? 'Abrir Lab JSON →'
-                            : 'Practicar en Labs →'}
+                          {ch.labLabel} →
                         </button>
                       </div>
                     </div>

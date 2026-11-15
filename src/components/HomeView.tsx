@@ -12,10 +12,18 @@ import {
   FileDown,
   ExternalLink,
   Images,
+  PencilRuler,
+  History,
+  ShoppingBag,
+  Globe,
+  Video,
+  Scale,
+  Film,
 } from 'lucide-react';
 import type { AppSectionId } from '../types/navigation';
 import { AI_TOOLS_DIRECTORY } from '../data/extendedModulesData';
 import { VISUAL_LIBRARY_PATHS } from '../data/visualLibraryRegistry';
+import { STUDIO_MEDIA_ASSETS } from '../data/creativeStudiosData';
 import { ResilientImage } from './ResilientImage';
 import { ToolBrandLogo } from './ToolBrandLogo';
 
@@ -194,6 +202,153 @@ export const HomeView: React.FC<HomeViewProps> = ({
 
   return (
     <div className="bg-[#F4F2ED] dark:bg-[#101014] transition-colors">
+      {/* 0. ¿QUÉ QUIERES HACER HOY? — Entrada dual por Objetivos y Disciplinas */}
+      <section className="py-14 border-b border-[#DEDAD0] dark:border-[#26262E] bg-[#F4F2ED] dark:bg-[#101014]">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 space-y-8">
+          <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-4">
+            <div className="space-y-2">
+              <div className="text-xs font-mono-code uppercase tracking-wider text-[#7545D6] dark:text-[#F8C300] font-bold">
+                ENTRADA DIRECTA POR OBJETIVO · SIN BARRERAS TÉCNICAS
+              </div>
+              <h2 className="text-3xl sm:text-4xl font-extrabold font-display-sans text-[#101014] dark:text-[#F4F2ED] leading-tight text-balance">
+                ¿Qué quieres hacer hoy?
+              </h2>
+              <p className="text-sm text-[#4A4A55] dark:text-[#B4B2AC] max-w-2xl">
+                Elige tu objetivo actual —desde crear tu primera imagen hasta transformar un boceto en papel, restaurar una fotografía antigua, lanzar productos o construir una página web— o navega por disciplinas técnicas.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => onNavigateSection('academia', 'challenges')}
+              className="px-4 py-2.5 text-xs font-bold uppercase tracking-wider bg-[#101014] dark:bg-[#F8C300] text-[#F4F2ED] dark:text-[#101014] rounded-lg inline-flex items-center gap-1.5 shrink-0 whitespace-nowrap"
+            >
+              <Sparkles className="w-3.5 h-3.5" />
+              <span>Ver 6 Retos Prácticos</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            {[
+              {
+                title: 'Crear mi primera imagen',
+                subtitle: 'Empieza desde cero con 6 pasos claros y glosario amigable, sin tecnicismos.',
+                badge: 'NIVEL INICIAL · RETO 06',
+                image: STUDIO_MEDIA_ASSETS.botanicalArt,
+                icon: <Sparkles className="w-4 h-4 text-[#F8C300]" />,
+                onClick: () => onNavigateSection('laboratorios', 'principiante'),
+              },
+              {
+                title: 'Transformar un dibujo',
+                subtitle: 'Sube un boceto o croquis en papel, limpia sombras y llévalo a 3D, ilustración o foto.',
+                badge: 'DRAWING TO IMAGE · RETO 04',
+                image: STUDIO_MEDIA_ASSETS.drawingTo3dRender,
+                icon: <PencilRuler className="w-4 h-4 text-[#7545D6] dark:text-[#F8C300]" />,
+                onClick: () => onNavigateSection('laboratorios', 'dibujo'),
+              },
+              {
+                title: 'Restaurar una fotografía',
+                subtitle: 'Recupera retratos antiguos rayados o descoloridos conservando identidad y grano.',
+                badge: 'PHOTO RESTORATION · RETO 02',
+                image: STUDIO_MEDIA_ASSETS.restorationBeforeAfter,
+                icon: <History className="w-4 h-4 text-[#326BFF] dark:text-[#F8C300]" />,
+                onClick: () => onNavigateSection('laboratorios', 'restauracion'),
+              },
+              {
+                title: 'Crear publicidad y productos',
+                subtitle: 'Convierte objetos cotidianos en Packshots, Lifestyle, Hero Shots y Social Commerce.',
+                badge: 'PRODUCT & COMMERCE · RETO 03',
+                image: STUDIO_MEDIA_ASSETS.productCommerceStudio,
+                icon: <ShoppingBag className="w-4 h-4 text-[#F8C300]" />,
+                onClick: () => onNavigateSection('laboratorios', 'producto'),
+              },
+              {
+                title: 'Diseñar una página web',
+                subtitle: 'Construye prompts técnicos de UI/UX, responsive y WCAG para AI Studio, Bolt o Replit.',
+                badge: 'WEB DESIGN BUILDER · RETO 05',
+                image: STUDIO_MEDIA_ASSETS.webDesignShowcase,
+                icon: <Globe className="w-4 h-4 text-[#326BFF] dark:text-[#F8C300]" />,
+                onClick: () => onNavigateSection('laboratorios', 'web'),
+              },
+              {
+                title: 'Crear un video o secuencia',
+                subtitle: 'Planifica escenas en 8 etapas con movimientos de cámara, sonido y storyboard.',
+                badge: 'CINE & MOTION · 8 ETAPAS',
+                image: STUDIO_MEDIA_ASSETS.cinemaStudio,
+                icon: <Video className="w-4 h-4 text-[#7545D6] dark:text-[#F8C300]" />,
+                onClick: () => onNavigateSection('film-director'),
+              },
+            ].map((goal) => (
+              <button
+                key={goal.title}
+                type="button"
+                onClick={goal.onClick}
+                className="text-left rounded-2xl overflow-hidden bg-white dark:bg-[#16161C] border border-[#DEDAD0] dark:border-[#26262E] hover:border-[#F8C300] transition-colors group flex flex-col justify-between"
+              >
+                <div>
+                  <div className="relative h-40 overflow-hidden bg-[#101014]">
+                    <ResilientImage
+                      src={goal.image}
+                      alt={goal.title}
+                      aspectRatio="16:9"
+                      containerClassName="w-full h-full"
+                      className="group-hover:scale-105 transition-transform duration-500"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#101014]/85 via-[#101014]/25 to-transparent pointer-events-none" />
+                    <div className="absolute bottom-2.5 left-3.5 right-3.5 text-[10px] font-mono-code font-bold text-[#F8C300]">
+                      {goal.badge}
+                    </div>
+                  </div>
+                  <div className="p-5 space-y-1.5">
+                    <div className="flex items-center justify-between gap-2">
+                      <h3 className="text-base font-bold font-display-sans text-[#101014] dark:text-[#F4F2ED] group-hover:text-[#326BFF] dark:group-hover:text-[#F8C300] transition-colors">
+                        {goal.title}
+                      </h3>
+                      {goal.icon}
+                    </div>
+                    <p className="text-xs text-[#4A4A55] dark:text-[#B4B2AC] leading-relaxed">
+                      {goal.subtitle}
+                    </p>
+                  </div>
+                </div>
+                <div className="px-5 pb-4 text-xs font-mono-code font-bold text-[#326BFF] dark:text-[#F8C300] inline-flex items-center gap-1">
+                  <span>Abrir laboratorio</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </div>
+              </button>
+            ))}
+          </div>
+
+          {/* Explorar por Disciplinas (navegación paralela) */}
+          <div className="p-4 rounded-xl bg-white dark:bg-[#16161C] border border-[#DEDAD0] dark:border-[#26262E] flex flex-col md:flex-row md:items-center justify-between gap-3">
+            <span className="text-xs font-mono-code font-bold uppercase text-[#5B5B66] dark:text-[#A09E97] shrink-0">
+              O EXPLORA POR DISCIPLINA:
+            </span>
+            <div className="flex flex-wrap gap-2">
+              {[
+                { label: 'Fotografía y Retrato', action: () => onOpenGalleryCollection ? onOpenGalleryCollection('Retrato') : onNavigateSection('galeria') },
+                { label: 'Video y Cine', action: () => onNavigateSection('film-director') },
+                { label: 'Diseño Web', action: () => onNavigateSection('laboratorios', 'web') },
+                { label: 'Restauración', action: () => onNavigateSection('laboratorios', 'restauracion') },
+                { label: 'Publicidad y Producto', action: () => onNavigateSection('laboratorios', 'producto') },
+                { label: 'Arte Digital y Dibujo', action: () => onNavigateSection('laboratorios', 'dibujo') },
+                { label: 'Ética IA y Sesgos', action: () => onNavigateSection('etica-ia') },
+                { label: 'Documentales y Películas IA', action: () => onNavigateSection('movies-ia') },
+              ].map((d) => (
+                <button
+                  key={d.label}
+                  type="button"
+                  onClick={d.action}
+                  className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-[#F4F2ED] dark:bg-[#101014] border border-[#DEDAD0] dark:border-[#26262E] hover:border-[#326BFF] transition-colors whitespace-nowrap"
+                >
+                  {d.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* 1. Qué es esta página + Cómo usarla en 3 pasos */}
       <section
         id="que-encuentras"
@@ -339,14 +494,32 @@ export const HomeView: React.FC<HomeViewProps> = ({
                 ¿Qué hay dentro de cada área del laboratorio?
               </h2>
             </div>
-            <button
-              type="button"
-              onClick={() => onNavigateSection('recursos', 'diccionario')}
-              className="px-4 py-2 text-xs font-mono-code font-semibold bg-[#F4F2ED] dark:bg-[#101014] border border-[#D4D0C5] dark:border-[#2C2C36] hover:border-[#326BFF] rounded-lg text-[#101014] dark:text-[#F4F2ED] inline-flex items-center gap-2 shrink-0"
-            >
-              <BookMarked className="w-3.5 h-3.5 text-[#7545D6]" />
-              <span>Ir a Recetas, Comandos y Plantillas</span>
-            </button>
+            <div className="flex flex-wrap gap-2 shrink-0">
+              <button
+                type="button"
+                onClick={() => onNavigateSection('etica-ia')}
+                className="px-4 py-2 text-xs font-mono-code font-bold bg-[#101014] dark:bg-[#F8C300] text-[#F4F2ED] dark:text-[#101014] hover:opacity-90 rounded-lg inline-flex items-center gap-2"
+              >
+                <Scale className="w-3.5 h-3.5" />
+                <span>Laboratorio de Ética IA</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => onNavigateSection('movies-ia')}
+                className="px-4 py-2 text-xs font-mono-code font-bold bg-[#7545D6] text-white hover:opacity-90 rounded-lg inline-flex items-center gap-2"
+              >
+                <Film className="w-3.5 h-3.5" />
+                <span>Documentales y Cine IA</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => onNavigateSection('recursos', 'diccionario')}
+                className="px-4 py-2 text-xs font-mono-code font-semibold bg-[#F4F2ED] dark:bg-[#101014] border border-[#D4D0C5] dark:border-[#2C2C36] hover:border-[#326BFF] rounded-lg text-[#101014] dark:text-[#F4F2ED] inline-flex items-center gap-2"
+              >
+                <BookMarked className="w-3.5 h-3.5 text-[#7545D6]" />
+                <span>Ir a Recetas, Comandos y Plantillas</span>
+              </button>
+            </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

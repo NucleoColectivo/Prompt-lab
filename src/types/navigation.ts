@@ -7,8 +7,18 @@ export type AppSectionId =
   | 'film-director'
   | 'builder'
   | 'academia'
+  | 'etica-ia'
+  | 'movies-ia'
   | 'recursos'
   | 'favoritos';
 
-export type LabSubSection = 'labs' | 'json';
+export type LabSubSection =
+  | 'principiante'
+  | 'dibujo'
+  | 'restauracion'
+  | 'producto'
+  | 'web'
+  | 'labs'
+  | 'json';
+
 export type ResourceSubSection = 'recetas' | 'diccionario' | 'plantillas';

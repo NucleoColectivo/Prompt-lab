@@ -293,24 +293,24 @@ export const WorkshopExporterModal: React.FC<WorkshopExporterModalProps> = ({
           className="print-section bg-white border border-stone-200 rounded p-6 sm:p-8 text-stone-900 shadow-sm mb-6"
         >
           {/* Header of Worksheet */}
-          <div className="flex items-start justify-between border-b border-stone-200 pb-4 mb-4">
+          <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2 border-b border-stone-200 pb-4 mb-4">
             <div>
               <div className="flex items-center gap-2 text-xs font-mono-code uppercase tracking-wider text-amber-700 font-bold">
                 <span className="w-2.5 h-2.5 bg-amber-600 inline-block transform rotate-45"></span>
                 <span>NÚCLEO COLECTIVO · ART & AI LAB</span>
               </div>
-              <h4 className="text-xl font-bold font-serif-title mt-1 text-stone-900">
+              <h4 className="text-lg sm:text-xl font-bold font-serif-title mt-1 text-stone-900">
                 {activeTitle}
               </h4>
             </div>
-            <div className="text-right text-[11px] font-mono-code text-stone-500">
+            <div className="sm:text-right text-[11px] font-mono-code text-stone-500">
               <div>{new Date().toLocaleDateString('es-ES')}</div>
               <div className="font-semibold text-stone-700">{participantName}</div>
             </div>
           </div>
 
           {/* Technical Specs Table */}
-          <div className="grid grid-cols-2 gap-3 bg-stone-50 p-3.5 rounded border border-stone-200 text-xs font-mono-code mb-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-stone-50 p-3.5 rounded border border-stone-200 text-xs font-mono-code mb-4">
             <div>
               <span className="text-stone-500 block text-[10px] uppercase">Cámara:</span>
               <span className="font-semibold text-stone-800">{activeSpecs.camera}</span>
@@ -346,7 +346,7 @@ export const WorkshopExporterModal: React.FC<WorkshopExporterModalProps> = ({
           </div>
 
           {/* Pedagogical checklist + Provenance for in-person students */}
-          <div className="border-t border-stone-200 pt-3 text-[11px] text-stone-600 grid grid-cols-3 gap-2">
+          <div className="border-t border-stone-200 pt-3 text-[11px] text-stone-600 grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div>
               <strong className="block text-stone-800">1. Óptica Coherente</strong>
               Verificar relación entre focal y distancia al sujeto.

@@ -110,6 +110,24 @@ export const Footer: React.FC<FooterProps> = ({ onNavigateSection }) => {
                   Constructor de Prompts (12 Módulos) & Exportador PDF/PNG
                 </a>
               </li>
+              <li>
+                <a
+                  href="#etica-ia"
+                  onClick={(e) => handleLink(e, 'etica-ia')}
+                  className="hover:text-[#326BFF] dark:hover:text-[#F8C300] transition-colors font-semibold text-[#101014] dark:text-[#F4F2ED]"
+                >
+                  Ética IA · Laboratorio de Sesgos, Dilemas y Videoteca
+                </a>
+              </li>
+              <li>
+                <a
+                  href="#movies-ia"
+                  onClick={(e) => handleLink(e, 'movies-ia')}
+                  className="hover:text-[#326BFF] dark:hover:text-[#F8C300] transition-colors font-semibold text-[#101014] dark:text-[#F4F2ED]"
+                >
+                  Documentales y Películas IA · Filmoteca Crítica
+                </a>
+              </li>
             </ul>
           </div>
 

@@ -678,57 +678,57 @@ export const PromptBuilder: React.FC<PromptBuilderProps> = ({
         </div>
 
         {/* Mode Selector & Progressive View Toggle */}
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 mb-7">
-          <div className="inline-flex p-1 bg-white dark:bg-[#16161C] rounded-xl border border-[#DEDAD0] dark:border-[#26262E]">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-7">
+          <div className="w-full sm:w-auto grid grid-cols-1 min-[420px]:grid-cols-2 sm:inline-flex p-1 bg-white dark:bg-[#16161C] rounded-xl border border-[#DEDAD0] dark:border-[#26262E] gap-1 sm:gap-0">
             <button
               type="button"
               onClick={() => setBuilderState((p) => ({ ...p, mode: 'photo' }))}
-              className={`px-4 py-2 text-xs font-semibold uppercase tracking-wider rounded-lg transition-all flex items-center gap-2 ${
+              className={`px-3 sm:px-4 py-2 min-h-[40px] text-xs font-semibold uppercase tracking-wider rounded-lg transition-all flex items-center justify-center gap-2 ${
                 builderState.mode === 'photo'
                   ? 'bg-[#F8C300] text-[#101014] font-bold'
                   : 'text-[#4A4A55] dark:text-[#B4B2AC] hover:text-[#101014] dark:hover:text-[#F4F2ED]'
               }`}
             >
-              <Camera className="w-3.5 h-3.5" />
-              <span>Fotografía & Arte Visual</span>
+              <Camera className="w-3.5 h-3.5 shrink-0" />
+              <span>Fotografía & Arte</span>
             </button>
 
             <button
               type="button"
               onClick={() => setBuilderState((p) => ({ ...p, mode: 'video' }))}
-              className={`px-4 py-2 text-xs font-semibold uppercase tracking-wider rounded-lg transition-all flex items-center gap-2 ${
+              className={`px-3 sm:px-4 py-2 min-h-[40px] text-xs font-semibold uppercase tracking-wider rounded-lg transition-all flex items-center justify-center gap-2 ${
                 builderState.mode === 'video'
                   ? 'bg-[#F8C300] text-[#101014] font-bold'
                   : 'text-[#4A4A55] dark:text-[#B4B2AC] hover:text-[#101014] dark:hover:text-[#F4F2ED]'
               }`}
             >
-              <Video className="w-3.5 h-3.5" />
-              <span>Video & Cinematografía</span>
+              <Video className="w-3.5 h-3.5 shrink-0" />
+              <span>Video & Cine</span>
             </button>
           </div>
 
-          <div className="inline-flex p-1 bg-white dark:bg-[#16161C] rounded-xl border border-[#DEDAD0] dark:border-[#26262E]">
+          <div className="w-full sm:w-auto grid grid-cols-2 sm:inline-flex p-1 bg-white dark:bg-[#16161C] rounded-xl border border-[#DEDAD0] dark:border-[#26262E] gap-1 sm:gap-0">
             <button
               type="button"
               onClick={() => setBuilderDensity('all12')}
-              className={`px-3 py-1.5 text-[11px] font-mono-code font-semibold rounded-lg transition-colors ${
+              className={`px-2.5 sm:px-3 py-2 min-h-[38px] text-[11px] font-mono-code font-semibold rounded-lg transition-colors text-center ${
                 builderDensity === 'all12'
                   ? 'bg-[#101014] text-[#F4F2ED] dark:bg-[#7545D6] dark:text-white'
                   : 'text-[#4A4A55] dark:text-[#B4B2AC]'
               }`}
             >
-              12 Módulos Completos
+              12 Módulos
             </button>
             <button
               type="button"
               onClick={() => setBuilderDensity('essential')}
-              className={`px-3 py-1.5 text-[11px] font-mono-code font-semibold rounded-lg transition-colors ${
+              className={`px-2.5 sm:px-3 py-2 min-h-[38px] text-[11px] font-mono-code font-semibold rounded-lg transition-colors text-center ${
                 builderDensity === 'essential'
                   ? 'bg-[#101014] text-[#F4F2ED] dark:bg-[#7545D6] dark:text-white'
                   : 'text-[#4A4A55] dark:text-[#B4B2AC]'
               }`}
             >
-              Modo Rápido (6 Clave)
+              Modo Rápido (6)
             </button>
           </div>
         </div>
@@ -1272,7 +1272,7 @@ export const PromptBuilder: React.FC<PromptBuilderProps> = ({
           <div className="lg:col-span-5 sticky top-20 space-y-4">
             <div className="bg-white dark:bg-[#16161C] border border-[#DEDAD0] dark:border-[#26262E] rounded-2xl p-5 flex flex-col shadow-lg">
               
-              <div className="flex items-center justify-between pb-3 border-b border-[#EFECE4] dark:border-[#26262E] mb-3">
+              <div className="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-[#EFECE4] dark:border-[#26262E] mb-3">
                 <div className="flex items-center gap-2">
                   <Sliders className="w-3.5 h-3.5 text-[#7545D6] dark:text-[#F8C300]" />
                   <span className="text-xs font-mono-code uppercase tracking-wider text-[#101014] dark:text-[#F4F2ED] font-bold">
@@ -1280,12 +1280,12 @@ export const PromptBuilder: React.FC<PromptBuilderProps> = ({
                   </span>
                 </div>
                 <span className="text-[11px] font-mono-code text-[#5B5B66] dark:text-[#A09E97]">
-                  {currentPrompt.length} carácteres · {currentPrompt.split(/\s+/).filter(Boolean).length} palabras
+                  {currentPrompt.length} caracteres · {currentPrompt.split(/\s+/).filter(Boolean).length} palabras
                 </span>
               </div>
 
               {/* 3 Output Modes Selector: Breve / Avanzado / Cinematográfico */}
-              <div className="grid grid-cols-3 gap-1.5 mb-3">
+              <div className="grid grid-cols-1 min-[400px]:grid-cols-3 gap-1.5 mb-3">
                 {(
                   [
                     { id: 'breve', label: 'Breve' },
@@ -1297,7 +1297,7 @@ export const PromptBuilder: React.FC<PromptBuilderProps> = ({
                     key={m.id}
                     type="button"
                     onClick={() => setOutputMode(m.id)}
-                    className={`py-1.5 text-[11px] font-mono-code uppercase rounded border transition-colors ${
+                    className={`py-2 px-2 text-[11px] font-mono-code uppercase rounded border transition-colors truncate ${
                       outputMode === m.id
                         ? 'bg-stone-900 dark:bg-amber-400 text-white dark:text-stone-950 border-stone-900 dark:border-amber-400 font-bold'
                         : 'bg-stone-50 dark:bg-stone-950 text-stone-600 dark:text-stone-400 border-stone-200 dark:border-stone-800'

@@ -18,6 +18,8 @@ const DESKTOP_NAV_ITEMS: { id: AppSectionId; label: string; href: string }[] = [
   { id: 'laboratorios', label: 'Laboratorios', href: '#laboratorios' },
   { id: 'film-director', label: 'Planificador', href: '#film-director' },
   { id: 'academia', label: 'Apps IA', href: '#herramientas-academia' },
+  { id: 'etica-ia', label: 'Ética IA', href: '#etica-ia' },
+  { id: 'movies-ia', label: 'Cine IA', href: '#movies-ia' },
   { id: 'recursos', label: 'Recursos', href: '#recetas' },
 ];
 
@@ -48,8 +50,8 @@ const MOBILE_NAV_ITEMS: { id: AppSectionId; label: string; subtitle: string; hre
   },
   {
     id: 'laboratorios',
-    label: 'Laboratorios & JSON Visual',
-    subtitle: 'Simuladores de luz, cámara, color y extractor JSON',
+    label: 'Laboratorios Creativos (7 Estudios)',
+    subtitle: 'Mi Primera Imagen, Dibujo a Imagen, Restauración, Producto, Web IA, Simuladores y JSON',
     href: '#laboratorios',
   },
   {
@@ -77,6 +79,18 @@ const MOBILE_NAV_ITEMS: { id: AppSectionId; label: string; subtitle: string; hre
     href: '#herramientas-academia',
   },
   {
+    id: 'etica-ia',
+    label: 'Ética IA · Sesgos, Dilemas & Videoteca',
+    subtitle: 'Laboratorio de sesgos, dilemas morales (MIT) y 20 charlas críticas',
+    href: '#etica-ia',
+  },
+  {
+    id: 'movies-ia',
+    label: 'Documentales & Películas IA · Cine Club',
+    subtitle: '31 documentales/debates + 20 películas esenciales de ciencia ficción IA',
+    href: '#movies-ia',
+  },
+  {
     id: 'recursos',
     label: 'Recetas, Comandos & Plantillas',
     subtitle: 'Fórmulas rápidas y estructuras universales',
@@ -101,23 +115,24 @@ export const Header: React.FC<HeaderProps> = ({
 
   return (
     <header className="sticky top-0 z-40 w-full backdrop-blur-md bg-[#F4F2ED]/95 dark:bg-[#101014]/95 border-b border-[#DEDAD0] dark:border-[#26262E] transition-colors">
-      <div className="max-w-7xl mx-auto flex items-center justify-between gap-4 xl:gap-6 px-4 sm:px-6 py-3">
-        {/* Zone 1: Single-line Brand Wordmark */}
+      <div className="max-w-7xl mx-auto flex items-center justify-between gap-2 sm:gap-4 xl:gap-6 px-3 sm:px-6 py-2.5 sm:py-3">
+        {/* Zone 1: Single-line Brand Wordmark (compact on narrow mobile) */}
         <a
           href="#inicio"
           onClick={(e) => {
             e.preventDefault();
             handleSelect('home');
           }}
-          className="text-sm sm:text-base font-extrabold tracking-tight text-[#101014] dark:text-[#F4F2ED] hover:text-[#326BFF] dark:hover:text-[#F8C300] transition-colors whitespace-nowrap shrink-0"
+          className="text-xs sm:text-base font-extrabold tracking-tight text-[#101014] dark:text-[#F4F2ED] hover:text-[#326BFF] dark:hover:text-[#F8C300] transition-colors whitespace-nowrap shrink-0 min-w-0"
         >
-          NÚCLEO COLECTIVO · PROMPT LAB
+          <span className="xl:hidden">NÚCLEO LAB</span>
+          <span className="hidden xl:inline">NÚCLEO COLECTIVO · PROMPT LAB</span>
         </a>
 
         {/* Zone 2: Desktop Single-Line Navigation */}
         <nav
           aria-label="Navegación principal"
-          className="hidden lg:flex items-center gap-4 xl:gap-5 text-[11px] uppercase tracking-wider font-semibold text-[#4A4A55] dark:text-[#B4B2AC]"
+          className="hidden lg:flex items-center gap-2.5 xl:gap-4 text-[11px] uppercase tracking-wider font-semibold text-[#4A4A55] dark:text-[#B4B2AC]"
         >
           {DESKTOP_NAV_ITEMS.map((item) => {
             const isActive = activeSection === item.id;
@@ -143,7 +158,7 @@ export const Header: React.FC<HeaderProps> = ({
         </nav>
 
         {/* Zone 3: Global Search, Favorites, Theme Toggle & Builder CTA */}
-        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+        <div className="flex items-center gap-1 sm:gap-2 shrink-0">
           <button
             type="button"
             onClick={onOpenGlobalSearch}
@@ -158,7 +173,7 @@ export const Header: React.FC<HeaderProps> = ({
           <button
             type="button"
             onClick={() => handleSelect('favoritos')}
-            className={`px-2.5 py-2 min-h-[40px] flex items-center justify-center gap-1.5 rounded-lg text-xs font-semibold transition-colors whitespace-nowrap shrink-0 ${
+            className={`px-2 sm:px-2.5 py-2 min-h-[40px] min-w-[40px] flex items-center justify-center gap-1.5 rounded-lg text-xs font-semibold transition-colors whitespace-nowrap shrink-0 ${
               activeSection === 'favoritos'
                 ? 'bg-[#7545D6] text-white'
                 : 'text-[#3F3F48] dark:text-[#C8C6BF] hover:text-[#7545D6] dark:hover:text-[#F8C300] hover:bg-black/5 dark:hover:bg-white/10'

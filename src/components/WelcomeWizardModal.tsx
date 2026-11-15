@@ -127,16 +127,16 @@ export const WelcomeWizardModal: React.FC<WelcomeWizardModalProps> = ({
       {/* Modal Card */}
       <div className="relative z-10 w-full max-w-2xl rounded-2xl overflow-hidden bg-[#FAF8F5] dark:bg-stone-900 border border-stone-200 dark:border-stone-800 shadow-2xl text-stone-900 dark:text-stone-100 max-h-[92vh] flex flex-col">
         {/* Top Bar with Brand & Stepper */}
-        <div className="px-5 py-4 border-b border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-950 flex items-center justify-between gap-4">
-          <div className="flex items-center gap-2 text-xs font-mono-code uppercase tracking-wider text-amber-700 dark:text-amber-400 font-bold">
+        <div className="px-4 sm:px-5 py-3.5 sm:py-4 border-b border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-950 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2 text-[11px] sm:text-xs font-mono-code uppercase tracking-wider text-amber-700 dark:text-amber-400 font-bold min-w-0">
             <Compass className="w-4 h-4 shrink-0" />
-            <span>BIENVENIDO A NÚCLEO COLECTIVO · GUÍA EN 3 PASOS</span>
+            <span className="truncate">BIENVENIDO · GUÍA EN 3 PASOS</span>
           </div>
 
           <button
             type="button"
             onClick={onClose}
-            className="p-1.5 text-stone-400 hover:text-stone-800 dark:hover:text-stone-200 rounded transition-colors"
+            className="p-2 min-h-[40px] min-w-[40px] flex items-center justify-center text-stone-400 hover:text-stone-800 dark:hover:text-stone-200 rounded transition-colors shrink-0"
             aria-label="Cerrar guía de bienvenida"
             title="Cerrar"
           >
@@ -145,7 +145,7 @@ export const WelcomeWizardModal: React.FC<WelcomeWizardModalProps> = ({
         </div>
 
         {/* Interactive Stepper Indicator */}
-        <div className="px-5 pt-4 bg-[#FAF8F5] dark:bg-stone-900">
+        <div className="px-4 sm:px-5 pt-4 bg-[#FAF8F5] dark:bg-stone-900">
           <div className="grid grid-cols-3 gap-2">
             {WIZARD_STEPS.map((step, idx) => {
               const active = idx === stepIndex;
@@ -155,7 +155,7 @@ export const WelcomeWizardModal: React.FC<WelcomeWizardModalProps> = ({
                   key={step.number}
                   type="button"
                   onClick={() => setStepIndex(idx)}
-                  className={`p-2 rounded-lg border text-left transition-all ${
+                  className={`min-w-0 p-2 rounded-lg border text-left transition-all ${
                     active
                       ? 'bg-amber-400/20 border-amber-500 text-stone-950 dark:text-amber-300'
                       : completed
@@ -165,7 +165,7 @@ export const WelcomeWizardModal: React.FC<WelcomeWizardModalProps> = ({
                 >
                   <div className="flex items-center justify-between text-[10px] font-mono-code font-bold">
                     <span>PASO {step.number}</span>
-                    {completed && <Check className="w-3 h-3 text-emerald-600" />}
+                    {completed && <Check className="w-3 h-3 text-emerald-600 shrink-0" />}
                   </div>
                   <div className="text-[11px] font-semibold truncate mt-0.5">{step.title}</div>
                 </button>

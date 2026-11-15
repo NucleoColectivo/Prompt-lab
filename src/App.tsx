@@ -5,6 +5,11 @@ import {
   BookOpen,
   Compass,
   FileText,
+  Sparkles,
+  PencilRuler,
+  History,
+  ShoppingBag,
+  Globe,
 } from 'lucide-react';
 import { Header } from './components/Header';
 import { Hero } from './components/Hero';
@@ -15,6 +20,11 @@ import { InteractiveCreativeLabs, StoryboardSceneItem } from './components/Inter
 import { AiFilmDirector } from './components/AiFilmDirector';
 import { ToolsAndAcademy } from './components/ToolsAndAcademy';
 import { JsonVisualLab } from './components/JsonVisualLab';
+import { WebDesignLab } from './components/studios/WebDesignLab';
+import { PhotoRestorationLab } from './components/studios/PhotoRestorationLab';
+import { ProductCommerceLab } from './components/studios/ProductCommerceLab';
+import { BeginnerFirstImageLab } from './components/studios/BeginnerFirstImageLab';
+import { DrawingToImageLab } from './components/studios/DrawingToImageLab';
 import { PromptBuilder, PromptBuilderState } from './components/PromptBuilder';
 import { DictionaryBrowser } from './components/DictionaryBrowser';
 import { RecipesSection } from './components/RecipesSection';
@@ -26,6 +36,8 @@ import { WelcomeWizardModal } from './components/WelcomeWizardModal';
 import { VisualGalleryView } from './components/VisualGalleryView';
 import { GlobalSearchModal } from './components/GlobalSearchModal';
 import { FavoritesVaultView } from './components/FavoritesVaultView';
+import { EticaIaView } from './components/EticaIaView';
+import { MoviesIaView } from './components/MoviesIaView';
 import { CommandItem, RECIPES } from './data/promptData';
 import { LibraryEntry, ModuleId } from './data/modulesData';
 import { JsonStyleProfile } from './data/videoAndJsonData';
@@ -37,6 +49,7 @@ function resolveRouteFromHash(hashValue: string): {
   section: AppSectionId;
   labSub?: LabSubSection;
   resourceSub?: ResourceSubSection;
+  academySub?: 'tools' | 'challenges' | 'glossary';
 } {
   const clean = hashValue.replace(/^#/, '').toLowerCase();
   switch (clean) {
@@ -49,6 +62,20 @@ function resolveRouteFromHash(hashValue: string): {
     case 'biblioteca':
     case 'video-lab':
       return { section: 'biblioteca' };
+    case 'mi-primera-imagen':
+    case 'principiante':
+      return { section: 'laboratorios', labSub: 'principiante' };
+    case 'dibujo-a-imagen':
+    case 'dibujo':
+      return { section: 'laboratorios', labSub: 'dibujo' };
+    case 'restauracion':
+      return { section: 'laboratorios', labSub: 'restauracion' };
+    case 'producto-lab':
+    case 'producto':
+      return { section: 'laboratorios', labSub: 'producto' };
+    case 'web-lab':
+    case 'web':
+      return { section: 'laboratorios', labSub: 'web' };
     case 'laboratorios':
       return { section: 'laboratorios', labSub: 'labs' };
     case 'json-lab':
@@ -57,9 +84,21 @@ function resolveRouteFromHash(hashValue: string): {
       return { section: 'film-director' };
     case 'builder':
       return { section: 'builder' };
+    case 'retos':
+      return { section: 'academia', academySub: 'challenges' };
+    case 'glosario':
+      return { section: 'academia', academySub: 'glossary' };
     case 'herramientas-academia':
     case 'academia':
-      return { section: 'academia' };
+      return { section: 'academia', academySub: 'tools' };
+    case 'etica-ia':
+    case 'etica':
+      return { section: 'etica-ia' };
+    case 'movies-ia':
+    case 'documentales':
+    case 'peliculas':
+    case 'cine-ia':
+      return { section: 'movies-ia' };
     case 'recetas':
     case 'recursos':
       return { section: 'recursos', resourceSub: 'recetas' };
@@ -87,6 +126,10 @@ export default function App() {
   const [activeResourceSub, setActiveResourceSub] = useState<ResourceSubSection>(() =>
     resolveRouteFromHash(typeof window !== 'undefined' ? window.location.hash : '').resourceSub || 'recetas'
   );
+  const [academyTab, setAcademyTab] = useState<'tools' | 'challenges' | 'glossary'>(() =>
+    resolveRouteFromHash(typeof window !== 'undefined' ? window.location.hash : '').academySub || 'tools'
+  );
+  const [productSeedSubject, setProductSeedSubject] = useState<string>('');
 
   const [activeLibraryModule, setActiveLibraryModule] = useState<ModuleId>('mod-01');
   const [activeGalleryCollection, setActiveGalleryCollection] = useState<string>('Todas');
@@ -200,6 +243,7 @@ export default function App() {
       setActiveSection(resolved.section);
       if (resolved.labSub) setActiveLabSub(resolved.labSub);
       if (resolved.resourceSub) setActiveResourceSub(resolved.resourceSub);
+      if (resolved.academySub) setAcademyTab(resolved.academySub);
     };
     window.addEventListener('hashchange', onHashChange);
     return () => window.removeEventListener('hashchange', onHashChange);
@@ -224,9 +268,29 @@ export default function App() {
       let hashTarget: string = section === 'home' ? 'inicio' : section;
 
       if (section === 'laboratorios') {
-        const nextSub = subTab === 'json' ? 'json' : 'labs';
+        const validLabs: LabSubSection[] = [
+          'principiante',
+          'dibujo',
+          'restauracion',
+          'producto',
+          'web',
+          'labs',
+          'json',
+        ];
+        const nextSub: LabSubSection = validLabs.includes(subTab as LabSubSection)
+          ? (subTab as LabSubSection)
+          : 'labs';
         setActiveLabSub(nextSub);
-        hashTarget = nextSub === 'json' ? 'json-lab' : 'laboratorios';
+        const hashByLab: Record<LabSubSection, string> = {
+          principiante: 'mi-primera-imagen',
+          dibujo: 'dibujo-a-imagen',
+          restauracion: 'restauracion',
+          producto: 'producto-lab',
+          web: 'web-lab',
+          labs: 'laboratorios',
+          json: 'json-lab',
+        };
+        hashTarget = hashByLab[nextSub];
       } else if (section === 'recursos') {
         const nextRes: ResourceSubSection =
           subTab === 'diccionario'
@@ -237,7 +301,19 @@ export default function App() {
         setActiveResourceSub(nextRes);
         hashTarget = nextRes;
       } else if (section === 'academia') {
-        hashTarget = 'herramientas-academia';
+        const nextAcademy =
+          subTab === 'challenges'
+            ? 'challenges'
+            : subTab === 'glossary'
+            ? 'glossary'
+            : 'tools';
+        setAcademyTab(nextAcademy);
+        hashTarget =
+          nextAcademy === 'challenges'
+            ? 'retos'
+            : nextAcademy === 'glossary'
+            ? 'glosario'
+            : 'herramientas-academia';
       }
 
       if (typeof window !== 'undefined') {
@@ -347,7 +423,10 @@ export default function App() {
       setActiveLibraryModule(moduleId);
     }
     const resolved = resolveRouteFromHash(sectionId);
-    navigateToSection(resolved.section, resolved.labSub || resolved.resourceSub);
+    navigateToSection(
+      resolved.section,
+      resolved.labSub || resolved.resourceSub || resolved.academySub
+    );
   };
 
   const handleTryExampleInBuilder = (mode: 'photo' | 'video', promptText: string) => {
@@ -542,44 +621,119 @@ export default function App() {
           />
         )}
 
-        {/* 4. SECCIÓN LABORATORIOS (5 Laboratorios Creativos + Laboratorio JSON Visual) */}
+        {/* 4. SECCIÓN LABORATORIOS (Nivel Inicial, 4 Estudios Especializados, 5 Simuladores y JSON Visual) */}
         {activeSection === 'laboratorios' && (
           <div>
             <div className="bg-white dark:bg-[#16161C] border-b border-[#DEDAD0] dark:border-[#26262E]">
-              <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex flex-wrap items-center justify-between gap-3">
-                <div className="flex items-center gap-2 text-xs font-mono-code uppercase tracking-wider text-[#4A4A55] dark:text-[#A09E97] font-bold">
-                  <span>ESTACIÓN DE LABORATORIOS</span>
+              <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 space-y-3">
+                <div className="flex items-center justify-between gap-2 text-xs font-mono-code uppercase tracking-wider text-[#4A4A55] dark:text-[#A09E97] font-bold">
+                  <span>ESTACIÓN DE LABORATORIOS Y ESTUDIOS CREATIVOS</span>
                 </div>
-                <div className="flex flex-wrap gap-2">
-                  <button
-                    type="button"
-                    onClick={() => navigateToSection('laboratorios', 'labs')}
-                    className={`px-4 py-2 text-xs font-semibold uppercase tracking-wider rounded-lg border transition-colors flex items-center gap-2 ${
-                      activeLabSub === 'labs'
-                        ? 'bg-[#F8C300] text-[#101014] border-[#F8C300] font-bold'
-                        : 'bg-[#F4F2ED] dark:bg-[#101014] text-[#101014] dark:text-[#F4F2ED] border-[#DEDAD0] dark:border-[#26262E] hover:border-[#326BFF]'
-                    }`}
-                  >
-                    <Sliders className="w-3.5 h-3.5" />
-                    <span>5 Laboratorios Creativos</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => navigateToSection('laboratorios', 'json')}
-                    className={`px-4 py-2 text-xs font-semibold uppercase tracking-wider rounded-lg border transition-colors flex items-center gap-2 ${
-                      activeLabSub === 'json'
-                        ? 'bg-[#F8C300] text-[#101014] border-[#F8C300] font-bold'
-                        : 'bg-[#F4F2ED] dark:bg-[#101014] text-[#101014] dark:text-[#F4F2ED] border-[#DEDAD0] dark:border-[#26262E] hover:border-[#326BFF]'
-                    }`}
-                  >
-                    <Braces className="w-3.5 h-3.5" />
-                    <span>Laboratorio JSON Visual (Módulo 07)</span>
-                  </button>
+                <div className="grid grid-cols-1 min-[360px]:grid-cols-2 sm:flex sm:flex-wrap gap-2">
+                  {[
+                    {
+                      id: 'principiante' as LabSubSection,
+                      label: 'Mi Primera Imagen',
+                      icon: <Sparkles className="w-3.5 h-3.5 shrink-0" />,
+                    },
+                    {
+                      id: 'dibujo' as LabSubSection,
+                      label: 'Dibujo a Imagen',
+                      icon: <PencilRuler className="w-3.5 h-3.5 shrink-0" />,
+                    },
+                    {
+                      id: 'restauracion' as LabSubSection,
+                      label: 'Restauración',
+                      icon: <History className="w-3.5 h-3.5 shrink-0" />,
+                    },
+                    {
+                      id: 'producto' as LabSubSection,
+                      label: 'Producto',
+                      icon: <ShoppingBag className="w-3.5 h-3.5 shrink-0" />,
+                    },
+                    {
+                      id: 'web' as LabSubSection,
+                      label: 'Diseño Web IA',
+                      icon: <Globe className="w-3.5 h-3.5 shrink-0" />,
+                    },
+                    {
+                      id: 'labs' as LabSubSection,
+                      label: '5 Simuladores',
+                      icon: <Sliders className="w-3.5 h-3.5 shrink-0" />,
+                    },
+                    {
+                      id: 'json' as LabSubSection,
+                      label: 'JSON Visual',
+                      icon: <Braces className="w-3.5 h-3.5 shrink-0" />,
+                    },
+                  ].map((tab) => (
+                    <button
+                      key={tab.id}
+                      type="button"
+                      onClick={() => navigateToSection('laboratorios', tab.id)}
+                      className={`px-3 py-2.5 min-h-[40px] text-xs font-semibold uppercase tracking-wider rounded-lg border transition-colors flex items-center justify-center sm:justify-start gap-2 whitespace-nowrap ${
+                        activeLabSub === tab.id
+                          ? 'bg-[#F8C300] text-[#101014] border-[#F8C300] font-bold'
+                          : 'bg-[#F4F2ED] dark:bg-[#101014] text-[#101014] dark:text-[#F4F2ED] border-[#DEDAD0] dark:border-[#26262E] hover:border-[#326BFF]'
+                      }`}
+                    >
+                      {tab.icon}
+                      <span className="truncate">{tab.label}</span>
+                    </button>
+                  ))}
                 </div>
               </div>
             </div>
 
-            {activeLabSub === 'labs' ? (
+            {activeLabSub === 'principiante' && (
+              <BeginnerFirstImageLab
+                onApplyToBuilder={(patch) => {
+                  setBuilderState((prev) => ({ ...prev, ...patch }));
+                  navigateToSection('builder');
+                }}
+                onOpenFundamentals={() => navigateToSection('fundamentos')}
+              />
+            )}
+
+            {activeLabSub === 'dibujo' && (
+              <DrawingToImageLab
+                onApplyToBuilder={(patch) => {
+                  setBuilderState((prev) => ({ ...prev, ...patch }));
+                  navigateToSection('builder');
+                }}
+                onSendToProductLab={(subject) => {
+                  setProductSeedSubject(subject);
+                  navigateToSection('laboratorios', 'producto');
+                }}
+              />
+            )}
+
+            {activeLabSub === 'restauracion' && (
+              <PhotoRestorationLab
+                onApplyToBuilder={(patch) => {
+                  setBuilderState((prev) => ({ ...prev, ...patch }));
+                  navigateToSection('builder');
+                }}
+              />
+            )}
+
+            {activeLabSub === 'producto' && (
+              <ProductCommerceLab
+                externalSeedSubject={productSeedSubject}
+                onApplyToBuilder={(patch) => {
+                  setBuilderState((prev) => ({ ...prev, ...patch }));
+                  navigateToSection('builder');
+                }}
+              />
+            )}
+
+            {activeLabSub === 'web' && (
+              <WebDesignLab
+                onOpenChallenges={() => navigateToSection('academia', 'challenges')}
+              />
+            )}
+
+            {activeLabSub === 'labs' && (
               <InteractiveCreativeLabs
                 externalStoryboardScenes={externalStoryboardScenes}
                 onApplyToBuilder={(patch, shouldSwitch = true) => {
@@ -594,7 +748,9 @@ export default function App() {
                   navigateToSection('biblioteca');
                 }}
               />
-            ) : (
+            )}
+
+            {activeLabSub === 'json' && (
               <JsonVisualLab
                 externalProfile={externalJsonProfile}
                 onApplyStyleToBuilder={handleApplyJsonStyleToBuilder}
@@ -663,7 +819,37 @@ export default function App() {
 
         {/* 8. SECCIÓN ACADEMIA, APPS EXTERNAS (31) Y RETOS */}
         {activeSection === 'academia' && (
-          <ToolsAndAcademy onJumpToSection={handleJumpToSection} />
+          <ToolsAndAcademy
+            defaultTab={academyTab}
+            onJumpToSection={handleJumpToSection}
+          />
+        )}
+
+        {/* 8B. SECCIÓN ÉTICA IA (Sesgos, Dilemas Morales y Videoteca Crítica) */}
+        {activeSection === 'etica-ia' && (
+          <EticaIaView
+            onSendPromptToBuilder={(patch) => {
+              setBuilderState((prev) => ({ ...prev, ...patch }));
+              navigateToSection('builder');
+            }}
+            onOpenLibraryModule={(modId) => {
+              setActiveLibraryModule(modId);
+              navigateToSection('biblioteca');
+            }}
+            onOpenRestorationLab={() => navigateToSection('laboratorios', 'restauracion')}
+          />
+        )}
+
+        {/* 8C. SECCIÓN DOCUMENTALES Y PELÍCULAS IA (Filmoteca Crítica & Cine Club) */}
+        {activeSection === 'movies-ia' && (
+          <MoviesIaView
+            onSendToBuilder={(patch) => {
+              setBuilderState((prev) => ({ ...prev, ...patch }));
+              navigateToSection('builder');
+            }}
+            onOpenEticaIa={() => navigateToSection('etica-ia')}
+            onOpenFilmDirector={() => navigateToSection('film-director')}
+          />
         )}
 
         {/* 9. SECCIÓN RECURSOS (Recetas Maestras, Diccionario, Plantillas Universales) */}

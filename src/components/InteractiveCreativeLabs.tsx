@@ -1133,7 +1133,7 @@ export const InteractiveCreativeLabs: React.FC<InteractiveCreativeLabsProps> = (
                 {rimLight && (
                   <div className="absolute inset-y-4 right-2 w-1.5 rounded-full bg-sky-300/60 blur-xs pointer-events-none" />
                 )}
-                <div className="absolute bottom-2 left-2 right-2 px-2.5 py-1 rounded bg-stone-950/85 text-[11px] font-mono-code text-stone-100 flex justify-between">
+                <div className="absolute bottom-2 left-2 right-2 px-2.5 py-1 rounded bg-stone-950/85 text-[11px] font-mono-code text-stone-100 flex flex-wrap justify-between gap-2">
                   <span>{keyMood}</span>
                   <span className="text-amber-300">{keyAngle}° · {kelvinTemp}K</span>
                 </div>
@@ -1297,7 +1297,7 @@ export const InteractiveCreativeLabs: React.FC<InteractiveCreativeLabsProps> = (
                   </div>
                 </div>
 
-                <div className="flex-1 min-w-[200px]">
+                <div className="flex-1 min-w-0 w-full sm:w-auto">
                   <label className="block text-[11px] font-mono-code text-stone-500 mb-1">Regla de Armonía</label>
                   <div className="flex flex-wrap gap-1.5">
                     {(
@@ -1330,11 +1330,11 @@ export const InteractiveCreativeLabs: React.FC<InteractiveCreativeLabsProps> = (
 
               {/* Photo Upload Color Extractor */}
               <div className="p-3.5 rounded-lg border border-dashed border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-900 flex flex-wrap items-center justify-between gap-3">
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3 min-w-0">
                   {extractPreview && (
-                    <img src={extractPreview} alt="Referencia cromática" className="w-12 h-12 rounded object-cover border border-stone-200" />
+                    <img src={extractPreview} alt="Referencia cromática" className="w-12 h-12 rounded object-cover border border-stone-200 shrink-0" />
                   )}
-                  <div>
+                  <div className="min-w-0">
                     <div className="text-xs font-bold text-stone-900 dark:text-stone-100">
                       Extraer paleta dominante desde tu fotografía
                     </div>
@@ -1353,7 +1353,7 @@ export const InteractiveCreativeLabs: React.FC<InteractiveCreativeLabsProps> = (
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  className="px-3 py-1.5 text-xs font-semibold bg-stone-900 dark:bg-amber-400 text-white dark:text-stone-950 rounded flex items-center gap-1.5"
+                  className="w-full sm:w-auto justify-center px-3 py-2 min-h-[40px] text-xs font-semibold bg-stone-900 dark:bg-amber-400 text-white dark:text-stone-950 rounded flex items-center gap-1.5"
                 >
                   <Upload className="w-3.5 h-3.5" />
                   <span>Subir Imagen</span>

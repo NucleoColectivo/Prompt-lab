@@ -387,7 +387,7 @@ export const PromptFundamentals: React.FC<PromptFundamentalsProps> = ({
                 </div>
 
                 {/* Formula Bar */}
-                <div className="p-3.5 rounded-lg bg-stone-950 text-amber-300 font-mono-code text-xs overflow-x-auto whitespace-nowrap">
+                <div className="p-3.5 rounded-lg bg-stone-950 text-amber-300 font-mono-code text-xs whitespace-normal break-words leading-relaxed">
                   FÓRMULA RÁPIDA: SUJETO + ACCIÓN + ESCENARIO + TIPO DE IMAGEN + ESTILO + ILUMINACIÓN/TONO + COMPOSICIÓN/CALIDAD
                 </div>
 

@@ -1030,8 +1030,8 @@ export const VisualGalleryView: React.FC<VisualGalleryViewProps> = ({
         >
           <div className="w-full max-w-6xl bg-[#F4F2ED] dark:bg-[#16161C] border border-[#DEDAD0] dark:border-[#26262E] rounded-2xl overflow-hidden shadow-2xl my-auto">
             {/* Lightbox Top Bar */}
-            <div className="px-5 py-3.5 border-b border-[#DEDAD0] dark:border-[#26262E] bg-white dark:bg-[#101014] flex flex-wrap items-center justify-between gap-3">
-              <div className="flex flex-wrap items-center gap-2 text-xs font-mono-code">
+            <div className="px-4 sm:px-5 py-3 sm:py-3.5 border-b border-[#DEDAD0] dark:border-[#26262E] bg-white dark:bg-[#101014] flex flex-wrap items-center justify-between gap-2.5">
+              <div className="flex flex-wrap items-center gap-2 text-xs font-mono-code min-w-0">
                 <span className="font-bold text-[#7545D6] dark:text-[#F8C300]">
                   {lightboxItem.code}
                 </span>
@@ -1039,17 +1039,17 @@ export const VisualGalleryView: React.FC<VisualGalleryViewProps> = ({
                 <span className="font-semibold text-[#101014] dark:text-[#F4F2ED]">
                   {lightboxItem.collection}
                 </span>
-                <span aria-hidden="true">·</span>
-                <span className="text-[#5B5B66] dark:text-[#A09E97]">
+                <span aria-hidden="true" className="hidden sm:inline">·</span>
+                <span className="hidden sm:inline text-[#5B5B66] dark:text-[#A09E97]">
                   {lightboxItem.provenance}
                 </span>
               </div>
 
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
                 <button
                   type="button"
                   onClick={() => navigateLightbox(-1)}
-                  className="p-2 rounded-lg border border-[#DEDAD0] dark:border-[#26262E] hover:border-[#F8C300]"
+                  className="p-2 min-h-[40px] min-w-[40px] flex items-center justify-center rounded-lg border border-[#DEDAD0] dark:border-[#26262E] hover:border-[#F8C300]"
                   aria-label="Lámina anterior"
                   title="Anterior (Flecha Izquierda)"
                 >
@@ -1058,7 +1058,7 @@ export const VisualGalleryView: React.FC<VisualGalleryViewProps> = ({
                 <button
                   type="button"
                   onClick={() => navigateLightbox(1)}
-                  className="p-2 rounded-lg border border-[#DEDAD0] dark:border-[#26262E] hover:border-[#F8C300]"
+                  className="p-2 min-h-[40px] min-w-[40px] flex items-center justify-center rounded-lg border border-[#DEDAD0] dark:border-[#26262E] hover:border-[#F8C300]"
                   aria-label="Siguiente lámina"
                   title="Siguiente (Flecha Derecha)"
                 >
@@ -1067,7 +1067,7 @@ export const VisualGalleryView: React.FC<VisualGalleryViewProps> = ({
                 <button
                   type="button"
                   onClick={() => setLightboxItem(null)}
-                  className="p-2 rounded-lg bg-[#101014] dark:bg-[#F4F2ED] text-[#F4F2ED] dark:text-[#101014]"
+                  className="p-2 min-h-[40px] min-w-[40px] flex items-center justify-center rounded-lg bg-[#101014] dark:bg-[#F4F2ED] text-[#F4F2ED] dark:text-[#101014]"
                   aria-label="Cerrar visor"
                   title="Cerrar (ESC)"
                 >
@@ -1077,16 +1077,16 @@ export const VisualGalleryView: React.FC<VisualGalleryViewProps> = ({
             </div>
 
             {/* Lightbox Two-Column Workspace */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 max-h-[82vh] overflow-y-auto">
+            <div className="grid grid-cols-1 lg:grid-cols-12 max-h-[85vh] overflow-y-auto lg:overflow-hidden">
               {/* Left Column: High-Res Image & Provenance Note */}
-              <div className="lg:col-span-6 bg-[#101014] p-5 flex flex-col justify-between gap-4">
+              <div className="lg:col-span-6 bg-[#101014] p-4 sm:p-5 flex flex-col justify-between gap-4">
                 <div className="flex-1 flex items-center justify-center">
                   <ResilientImage
                     src={lightboxItem.image}
                     alt={lightboxItem.alt}
                     aspectRatio={lightboxItem.aspectRatio}
                     objectPosition={lightboxItem.objectPosition || 'center'}
-                    containerClassName="w-full max-h-[58vh] rounded-xl overflow-hidden"
+                    containerClassName="w-full max-h-[48vh] lg:max-h-[58vh] rounded-xl overflow-hidden"
                   />
                 </div>
                 <div className="text-[11px] font-mono-code text-[#A09E97] border-t border-white/10 pt-3 flex flex-wrap items-center justify-between gap-2">
@@ -1096,7 +1096,7 @@ export const VisualGalleryView: React.FC<VisualGalleryViewProps> = ({
               </div>
 
               {/* Right Column: Editable Prompt, Variations, Specs & Actions */}
-              <div className="lg:col-span-6 p-6 space-y-5 overflow-y-auto">
+              <div className="lg:col-span-6 p-4 sm:p-6 space-y-5 lg:max-h-[82vh] lg:overflow-y-auto">
                 <div className="space-y-1.5">
                   <div className="flex items-center justify-between gap-2">
                     <span className="text-[11px] font-mono-code font-bold uppercase text-[#326BFF] dark:text-[#F8C300]">
@@ -1130,7 +1130,7 @@ export const VisualGalleryView: React.FC<VisualGalleryViewProps> = ({
                 </div>
 
                 {/* Live Specs Grid (reflects active Light/Lens/Context hypothesis) */}
-                <div className="grid grid-cols-2 gap-2.5 text-[11px] p-3.5 rounded-xl bg-white dark:bg-[#101014] border border-[#DEDAD0] dark:border-[#26262E]">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-[11px] p-3.5 rounded-xl bg-white dark:bg-[#101014] border border-[#DEDAD0] dark:border-[#26262E]">
                   <div>
                     <span className="font-mono-code text-[#5B5B66] dark:text-[#A09E97] block">Cámara equiv.</span>
                     <strong className="text-[#101014] dark:text-[#F4F2ED]">{lightboxItem.specs.camera}</strong>
@@ -1195,19 +1195,19 @@ export const VisualGalleryView: React.FC<VisualGalleryViewProps> = ({
                   </div>
 
                   {/* 5 Path Segmented Tabs */}
-                  <div className="grid grid-cols-5 gap-1 p-1 rounded-lg bg-[#F4F2ED] dark:bg-[#16161C]">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-1.5 p-1.5 rounded-lg bg-[#F4F2ED] dark:bg-[#16161C]">
                     {[
-                      { id: 'lighting' as ResearchPathId, label: '1. Luz', icon: <Sun className="w-3 h-3" />, active: !!selectedLighting },
-                      { id: 'lens' as ResearchPathId, label: '2. Lente', icon: <Aperture className="w-3 h-3" />, active: !!selectedLens },
-                      { id: 'context' as ResearchPathId, label: '3. Contexto', icon: <MapPin className="w-3 h-3" />, active: !!selectedContext },
-                      { id: 'video' as ResearchPathId, label: '4. Video', icon: <Film className="w-3 h-3" />, active: false },
-                      { id: 'json' as ResearchPathId, label: '5. JSON', icon: <Braces className="w-3 h-3" />, active: false },
+                      { id: 'lighting' as ResearchPathId, label: '1. Luz', icon: <Sun className="w-3 h-3 shrink-0" />, active: !!selectedLighting },
+                      { id: 'lens' as ResearchPathId, label: '2. Lente', icon: <Aperture className="w-3 h-3 shrink-0" />, active: !!selectedLens },
+                      { id: 'context' as ResearchPathId, label: '3. Contexto', icon: <MapPin className="w-3 h-3 shrink-0" />, active: !!selectedContext },
+                      { id: 'video' as ResearchPathId, label: '4. Video', icon: <Film className="w-3 h-3 shrink-0" />, active: false },
+                      { id: 'json' as ResearchPathId, label: '5. JSON', icon: <Braces className="w-3 h-3 shrink-0" />, active: false },
                     ].map((tab) => (
                       <button
                         key={tab.id}
                         type="button"
                         onClick={() => setActiveResearchPath(tab.id)}
-                        className={`px-2 py-1.5 text-[11px] font-semibold rounded-md transition-colors flex items-center justify-center gap-1 whitespace-nowrap ${
+                        className={`px-2.5 py-2 min-h-[38px] text-[11px] font-semibold rounded-md transition-colors flex items-center justify-center gap-1.5 whitespace-nowrap ${
                           activeResearchPath === tab.id
                             ? 'bg-[#101014] dark:bg-[#F8C300] text-[#F4F2ED] dark:text-[#101014] font-bold'
                             : tab.active
@@ -1576,7 +1576,7 @@ export const VisualGalleryView: React.FC<VisualGalleryViewProps> = ({
                 </div>
 
                 {/* Primary Lightbox CTAs */}
-                <div className="pt-1 flex flex-wrap items-center gap-2.5">
+                <div className="pt-1 grid grid-cols-1 sm:flex sm:flex-wrap items-center gap-2.5">
                   <button
                     type="button"
                     onClick={() =>
@@ -1587,9 +1587,9 @@ export const VisualGalleryView: React.FC<VisualGalleryViewProps> = ({
                         false
                       )
                     }
-                    className="flex-1 py-3 px-4 text-xs sm:text-sm font-bold bg-[#F8C300] hover:bg-[#e5b400] text-[#101014] rounded-xl transition-colors flex items-center justify-center gap-2 whitespace-nowrap"
+                    className="sm:flex-1 py-3 px-4 min-h-[44px] text-xs sm:text-sm font-bold bg-[#F8C300] hover:bg-[#e5b400] text-[#101014] rounded-xl transition-colors flex items-center justify-center gap-2 whitespace-nowrap"
                   >
-                    <Sparkles className="w-4 h-4" />
+                    <Sparkles className="w-4 h-4 shrink-0" />
                     <span>Probar en Constructor</span>
                   </button>
 
@@ -1600,7 +1600,7 @@ export const VisualGalleryView: React.FC<VisualGalleryViewProps> = ({
                       setLightboxItem(null);
                       onOpenTechnicalModule(mod);
                     }}
-                    className="py-3 px-3.5 text-xs font-semibold rounded-xl border border-[#D4D0C5] dark:border-[#2C2C36] bg-white dark:bg-[#101014] hover:border-[#326BFF] inline-flex items-center gap-1.5 whitespace-nowrap"
+                    className="py-3 px-3.5 min-h-[44px] text-xs font-semibold rounded-xl border border-[#D4D0C5] dark:border-[#2C2C36] bg-white dark:bg-[#101014] hover:border-[#326BFF] inline-flex items-center justify-center gap-1.5 whitespace-nowrap"
                   >
                     <BookOpen className="w-3.5 h-3.5 text-[#326BFF]" />
                     <span>Ver Módulo</span>
@@ -1615,7 +1615,7 @@ export const VisualGalleryView: React.FC<VisualGalleryViewProps> = ({
                         setLightboxItem(null);
                         onAnalyzeInJsonLab(target, prof);
                       }}
-                      className="py-3 px-3.5 text-xs font-semibold rounded-xl border border-[#D4D0C5] dark:border-[#2C2C36] bg-white dark:bg-[#101014] hover:border-[#7545D6] inline-flex items-center gap-1.5 whitespace-nowrap"
+                      className="py-3 px-3.5 min-h-[44px] text-xs font-semibold rounded-xl border border-[#D4D0C5] dark:border-[#2C2C36] bg-white dark:bg-[#101014] hover:border-[#7545D6] inline-flex items-center justify-center gap-1.5 whitespace-nowrap"
                     >
                       <Braces className="w-3.5 h-3.5 text-[#7545D6] dark:text-[#F8C300]" />
                       <span>JSON Lab</span>
