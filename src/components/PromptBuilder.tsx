@@ -1167,6 +1167,78 @@ Avoid: ${builderState.negativeAvoid.length > 0 ? builderState.negativeAvoid.join
                 </div>
               )}
 
+              {/* Rapid Single-Variable Variations Bar */}
+              <div className="mb-3 p-2.5 rounded bg-stone-50 dark:bg-stone-950 border border-stone-200 dark:border-stone-800 space-y-1.5">
+                <div className="text-[10px] font-mono-code uppercase font-bold text-stone-500">
+                  Variaciones rápidas (cambia 1 parámetro sin rehacer todo):
+                </div>
+                <div className="flex flex-wrap gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setBuilderState((p) => ({
+                        ...p,
+                        lens: p.lens.includes('85mm')
+                          ? '24mm wide angle lens'
+                          : p.lens.includes('24mm')
+                          ? '35mm prime lens'
+                          : '85mm portrait prime lens',
+                      }))
+                    }
+                    className="px-2 py-1 text-[10px] font-mono-code rounded bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 hover:border-amber-500 text-stone-700 dark:text-stone-300"
+                  >
+                    Variar Lente
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setBuilderState((p) => ({
+                        ...p,
+                        lighting: p.lighting.includes('Rembrandt')
+                          ? 'Soft natural window light during golden hour'
+                          : p.lighting.includes('window')
+                          ? 'Chiaroscuro, dramatic contrast between light and deep shadow'
+                          : 'Rembrandt lighting, directional light with cheek triangle',
+                      }))
+                    }
+                    className="px-2 py-1 text-[10px] font-mono-code rounded bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 hover:border-amber-500 text-stone-700 dark:text-stone-300"
+                  >
+                    Variar Luz
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setBuilderState((p) => ({
+                        ...p,
+                        aspectRatio:
+                          p.aspectRatio === '4:5'
+                            ? '16:9'
+                            : p.aspectRatio === '16:9'
+                            ? '9:16'
+                            : '4:5',
+                      }))
+                    }
+                    className="px-2 py-1 text-[10px] font-mono-code rounded bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 hover:border-amber-500 text-stone-700 dark:text-stone-300"
+                  >
+                    Rotar Formato ({builderState.aspectRatio})
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setBuilderState((p) => ({
+                        ...p,
+                        temperature: p.temperature?.includes('Cálida')
+                          ? 'Fría nocturna / Hora azul (7200K)'
+                          : 'Cálida dorada (3200K–4200K)',
+                      }))
+                    }
+                    className="px-2 py-1 text-[10px] font-mono-code rounded bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 hover:border-amber-500 text-stone-700 dark:text-stone-300"
+                  >
+                    Cálida ↔ Fría
+                  </button>
+                </div>
+              </div>
+
               {/* Formatted Code Box */}
               <div className="relative bg-stone-950 rounded p-4 border border-stone-800/90 font-mono-code text-xs text-stone-200 leading-relaxed max-h-[420px] overflow-y-auto whitespace-pre-wrap select-all">
                 {currentPrompt}

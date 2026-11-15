@@ -13,6 +13,8 @@ import {
   Sliders,
 } from 'lucide-react';
 import { ModuleId } from '../data/modulesData';
+import { VISUAL_LIBRARY_PATHS } from '../data/visualLibraryRegistry';
+import { ResilientImage } from './ResilientImage';
 
 interface PromptFundamentalsProps {
   onJumpToSection: (sectionId: string, moduleId?: ModuleId) => void;
@@ -337,10 +339,11 @@ export const PromptFundamentals: React.FC<PromptFundamentalsProps> = ({
                 {/* Right Visual Reference */}
                 <div className="lg:col-span-5">
                   <div className="rounded-xl overflow-hidden border border-stone-200 dark:border-stone-800 bg-stone-900 shadow-sm">
-                    <img
-                      src="/images/comp_lighting_rembrandt_highkey_1794593014446.jpg"
+                    <ResilientImage
+                      src={VISUAL_LIBRARY_PATHS.lightComparison}
                       alt="Comparación visual mostrando cómo cambia un retrato según las instrucciones del prompt"
-                      className="w-full h-64 object-cover"
+                      objectPosition="top"
+                      containerClassName="w-full h-64"
                     />
                     <div className="p-3.5 bg-stone-950 text-stone-200 text-xs space-y-1">
                       <div className="font-mono-code text-[11px] text-amber-400 uppercase font-bold">
@@ -494,10 +497,10 @@ export const PromptFundamentals: React.FC<PromptFundamentalsProps> = ({
 
                 <div className="lg:col-span-5">
                   <div className="rounded-xl overflow-hidden border border-stone-200 dark:border-stone-800 bg-stone-900 shadow-sm">
-                    <img
-                      src="/images/mod_video_camera_rig_1794593015892.jpg"
+                    <ResilientImage
+                      src={VISUAL_LIBRARY_PATHS.camCinemaRig}
                       alt="Cámara de cine sobre estabilizador Steadicam y rieles de movimiento orbital"
-                      className="w-full h-64 object-cover"
+                      containerClassName="w-full h-64"
                     />
                     <div className="p-3.5 bg-stone-950 text-stone-200 text-xs">
                       <span className="font-mono-code text-[11px] text-amber-400 uppercase font-bold block mb-1">

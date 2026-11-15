@@ -13,6 +13,8 @@ import {
   Info,
   Compass,
   Sparkles,
+  Images,
+  Layers,
 } from 'lucide-react';
 import {
   MODULES_META,
@@ -25,6 +27,13 @@ import {
 } from '../data/modulesData';
 import { MODULE_06_VIDEO_ENTRIES } from '../data/videoAndJsonData';
 import { EXTENDED_MODULES_META, EXTENDED_LIBRARY_ENTRIES } from '../data/extendedModulesData';
+import {
+  VISUAL_ASSET_REGISTRY,
+  VISUAL_ASSETS_MAP,
+  VisualAssetCategory,
+  VisualAssetRecord,
+} from '../data/visualLibraryRegistry';
+import { ResilientImage } from './ResilientImage';
 import { TechnicalDiagramSVG, VisualComparisonStrip } from './VisualDiagrams';
 
 export interface VisualLibraryExplorerProps {
@@ -65,6 +74,9 @@ export const VisualLibraryExplorer: React.FC<VisualLibraryExplorerProps> = ({
     }
   });
   const [selectedEntry, setSelectedEntry] = useState<LibraryEntry | null>(null);
+  const [selectedAtlasAsset, setSelectedAtlasAsset] = useState<VisualAssetRecord | null>(null);
+  const [explorerMode, setExplorerMode] = useState<'modules' | 'atlas'>('modules');
+  const [atlasCategory, setAtlasCategory] = useState<'Todas' | VisualAssetCategory>('Todas');
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [copiedLang, setCopiedLang] = useState<'es' | 'en'>('es');
 
@@ -136,6 +148,26 @@ export const VisualLibraryExplorer: React.FC<VisualLibraryExplorerProps> = ({
     });
   }, [activeModule, selectedSubcategory, difficultyFilter, onlyFavorites, favorites, searchQuery]);
 
+  const atlasCategories = useMemo<('Todas' | VisualAssetCategory)[]>(() => {
+    const unique = Array.from(new Set(VISUAL_ASSET_REGISTRY.map((a) => a.category)));
+    return ['Todas', ...unique];
+  }, []);
+
+  const filteredAtlasAssets = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    return VISUAL_ASSET_REGISTRY.filter((asset) => {
+      const matchCat = atlasCategory === 'Todas' || asset.category === atlasCategory;
+      const matchSearch =
+        !q ||
+        asset.title.toLowerCase().includes(q) ||
+        asset.description.toLowerCase().includes(q) ||
+        asset.technicalExplanation.toLowerCase().includes(q) ||
+        asset.category.toLowerCase().includes(q) ||
+        asset.tags.some((t) => t.toLowerCase().includes(q));
+      return matchCat && matchSearch;
+    });
+  }, [atlasCategory, searchQuery]);
+
   const openRelatedTopic = (topicId: string) => {
     const target = ALL_ENTRIES.find((item) => item.id === topicId);
     if (target) {
@@ -183,6 +215,33 @@ export const VisualLibraryExplorer: React.FC<VisualLibraryExplorerProps> = ({
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
+            <div className="inline-flex rounded border border-stone-300 dark:border-stone-700 overflow-hidden text-xs font-semibold">
+              <button
+                type="button"
+                onClick={() => setExplorerMode('modules')}
+                className={`px-3 py-2 flex items-center gap-1.5 transition-colors ${
+                  explorerMode === 'modules'
+                    ? 'bg-stone-900 dark:bg-amber-400 text-white dark:text-stone-950'
+                    : 'bg-white dark:bg-stone-900 text-stone-700 dark:text-stone-300'
+                }`}
+              >
+                <Layers className="w-3.5 h-3.5" />
+                <span>26 Módulos</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setExplorerMode('atlas')}
+                className={`px-3 py-2 flex items-center gap-1.5 transition-colors ${
+                  explorerMode === 'atlas'
+                    ? 'bg-stone-900 dark:bg-amber-400 text-white dark:text-stone-950'
+                    : 'bg-white dark:bg-stone-900 text-stone-700 dark:text-stone-300'
+                }`}
+              >
+                <Images className="w-3.5 h-3.5" />
+                <span>Atlas Visual ({VISUAL_ASSET_REGISTRY.length})</span>
+              </button>
+            </div>
+
             <button
               type="button"
               onClick={() => setShowComparisons((prev) => !prev)}
@@ -193,92 +252,96 @@ export const VisualLibraryExplorer: React.FC<VisualLibraryExplorerProps> = ({
               }`}
             >
               <ArrowLeftRight className="w-3.5 h-3.5" />
-              <span>{showComparisons ? 'Ocultar Comparaciones' : 'Comparaciones Visuales'}</span>
+              <span>{showComparisons ? 'Ocultar Comparaciones' : 'Comparaciones'}</span>
             </button>
 
-            <button
-              type="button"
-              onClick={() => setOnlyFavorites((prev) => !prev)}
-              className={`px-3.5 py-2 text-xs font-semibold uppercase tracking-wider rounded border transition-colors flex items-center gap-1.5 ${
-                onlyFavorites
-                  ? 'bg-stone-900 dark:bg-amber-400 text-white dark:text-stone-950 border-stone-900 dark:border-amber-400'
-                  : 'bg-white dark:bg-stone-900 text-stone-700 dark:text-stone-300 border-stone-300 dark:border-stone-700'
-              }`}
+            {explorerMode === 'modules' && (
+              <button
+                type="button"
+                onClick={() => setOnlyFavorites((prev) => !prev)}
+                className={`px-3.5 py-2 text-xs font-semibold uppercase tracking-wider rounded border transition-colors flex items-center gap-1.5 ${
+                  onlyFavorites
+                    ? 'bg-stone-900 dark:bg-amber-400 text-white dark:text-stone-950 border-stone-900 dark:border-amber-400'
+                    : 'bg-white dark:bg-stone-900 text-stone-700 dark:text-stone-300 border-stone-300 dark:border-stone-700'
+                }`}
+              >
+                <Star className={`w-3.5 h-3.5 ${onlyFavorites ? 'fill-current' : 'text-amber-500'}`} />
+                <span>Favoritos ({favorites.length})</span>
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* 3 Thematic Pillars Switcher across all 26 Modules (modules mode) */}
+        {explorerMode === 'modules' && (
+          <div className="space-y-3">
+            <div className="flex flex-wrap items-center gap-2">
+              {(
+                [
+                  { id: 'imagen-cine', label: 'Bloque I · Imagen, Óptica, Luz, Color & Cine (Mód. 01–06)' },
+                  { id: 'narrativa-diseno', label: 'Bloque II · Storytelling, Storyboard, Personajes, Sonido & Diseño (Mód. 07–14)' },
+                  { id: 'especialidades-etica', label: 'Bloque III · 3D, Fotogrametría, Ciencia, Accesibilidad & Ética (Mód. 15–26)' },
+                ] as const
+              ).map((grp) => {
+                const isGrpActive = activeGroup === grp.id && !searchQuery;
+                return (
+                  <button
+                    key={grp.id}
+                    type="button"
+                    onClick={() => {
+                      setSearchQuery('');
+                      setActiveGroup(grp.id);
+                      const firstInGrp = ALL_MODULES_META.find((m) => m.group === grp.id);
+                      if (firstInGrp) onChangeModule(firstInGrp.id);
+                    }}
+                    className={`px-3.5 py-2 text-xs font-semibold rounded-lg border transition-colors ${
+                      isGrpActive
+                        ? 'bg-amber-400 text-stone-950 border-amber-400 shadow-xs'
+                        : 'bg-white dark:bg-stone-900 text-stone-700 dark:text-stone-300 border-stone-200 dark:border-stone-800 hover:border-amber-400'
+                    }`}
+                  >
+                    {grp.label}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Interactive Module Switcher for active pillar */}
+            <div
+              role="tablist"
+              aria-label="Módulos de la biblioteca visual"
+              className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5"
             >
-              <Star className={`w-3.5 h-3.5 ${onlyFavorites ? 'fill-current' : 'text-amber-500'}`} />
-              <span>Favoritos ({favorites.length})</span>
-            </button>
+              {groupModules.map((mod) => {
+                const isActive = mod.id === activeModule && !searchQuery;
+                const count = ALL_ENTRIES.filter((e) => e.moduleId === mod.id).length;
+                return (
+                  <button
+                    key={mod.id}
+                    type="button"
+                    role="tab"
+                    aria-selected={isActive}
+                    onClick={() => {
+                      setSearchQuery('');
+                      onChangeModule(mod.id);
+                    }}
+                    className={`p-3 text-left rounded-lg border transition-all flex flex-col justify-between ${
+                      isActive
+                        ? 'bg-stone-900 dark:bg-amber-400 text-white dark:text-stone-950 border-stone-900 dark:border-amber-400 shadow-sm'
+                        : 'bg-white dark:bg-stone-900 text-stone-800 dark:text-stone-200 border-stone-200 dark:border-stone-800 hover:border-amber-400/70'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between text-[10px] font-mono-code uppercase tracking-wider opacity-80 mb-1">
+                      <span>Módulo {mod.number}</span>
+                      <span>{count} fichas</span>
+                    </div>
+                    <span className="text-xs sm:text-sm font-bold leading-snug">{mod.shortTitle}</span>
+                  </button>
+                );
+              })}
+            </div>
           </div>
-        </div>
-
-        {/* 3 Thematic Pillars Switcher across all 26 Modules */}
-        <div className="space-y-3">
-          <div className="flex flex-wrap items-center gap-2">
-            {(
-              [
-                { id: 'imagen-cine', label: 'Bloque I · Imagen, Óptica, Luz, Color & Cine (Mód. 01–06)' },
-                { id: 'narrativa-diseno', label: 'Bloque II · Storytelling, Storyboard, Personajes, Sonido & Diseño (Mód. 07–14)' },
-                { id: 'especialidades-etica', label: 'Bloque III · 3D, Fotogrametría, Ciencia, Accesibilidad & Ética (Mód. 15–26)' },
-              ] as const
-            ).map((grp) => {
-              const isGrpActive = activeGroup === grp.id && !searchQuery;
-              return (
-                <button
-                  key={grp.id}
-                  type="button"
-                  onClick={() => {
-                    setSearchQuery('');
-                    setActiveGroup(grp.id);
-                    const firstInGrp = ALL_MODULES_META.find((m) => m.group === grp.id);
-                    if (firstInGrp) onChangeModule(firstInGrp.id);
-                  }}
-                  className={`px-3.5 py-2 text-xs font-semibold rounded-lg border transition-colors ${
-                    isGrpActive
-                      ? 'bg-amber-400 text-stone-950 border-amber-400 shadow-xs'
-                      : 'bg-white dark:bg-stone-900 text-stone-700 dark:text-stone-300 border-stone-200 dark:border-stone-800 hover:border-amber-400'
-                  }`}
-                >
-                  {grp.label}
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Interactive Module Switcher for active pillar */}
-          <div
-            role="tablist"
-            aria-label="Módulos de la biblioteca visual"
-            className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5"
-          >
-            {groupModules.map((mod) => {
-              const isActive = mod.id === activeModule && !searchQuery;
-              const count = ALL_ENTRIES.filter((e) => e.moduleId === mod.id).length;
-              return (
-                <button
-                  key={mod.id}
-                  type="button"
-                  role="tab"
-                  aria-selected={isActive}
-                  onClick={() => {
-                    setSearchQuery('');
-                    onChangeModule(mod.id);
-                  }}
-                  className={`p-3 text-left rounded-lg border transition-all flex flex-col justify-between ${
-                    isActive
-                      ? 'bg-stone-900 dark:bg-amber-400 text-white dark:text-stone-950 border-stone-900 dark:border-amber-400 shadow-sm'
-                      : 'bg-white dark:bg-stone-900 text-stone-800 dark:text-stone-200 border-stone-200 dark:border-stone-800 hover:border-amber-400/70'
-                  }`}
-                >
-                  <div className="flex items-center justify-between text-[10px] font-mono-code uppercase tracking-wider opacity-80 mb-1">
-                    <span>Módulo {mod.number}</span>
-                    <span>{count} fichas</span>
-                  </div>
-                  <span className="text-xs sm:text-sm font-bold leading-snug">{mod.shortTitle}</span>
-                </button>
-              );
-            })}
-          </div>
-        </div>
+        )}
 
         {/* Visual Comparison Strip (expandable or toggled) */}
         {showComparisons && (
@@ -312,28 +375,30 @@ export const VisualLibraryExplorer: React.FC<VisualLibraryExplorerProps> = ({
               )}
             </div>
 
-            {/* Difficulty Filter */}
-            <div className="flex items-center gap-2 shrink-0">
-              <SlidersHorizontal className="w-3.5 h-3.5 text-stone-500" />
-              <label htmlFor="difficulty-select" className="text-xs font-mono-code text-stone-500">
-                Nivel:
-              </label>
-              <select
-                id="difficulty-select"
-                value={difficultyFilter}
-                onChange={(e) => setDifficultyFilter(e.target.value)}
-                className="text-xs bg-stone-50 dark:bg-stone-950 border border-stone-200 dark:border-stone-800 rounded px-2.5 py-2 text-stone-800 dark:text-stone-200 focus:outline-none focus:border-amber-500"
-              >
-                <option value="Todas">Todos los niveles</option>
-                <option value="Básico">Básico</option>
-                <option value="Intermedio">Intermedio</option>
-                <option value="Avanzado">Avanzado</option>
-              </select>
-            </div>
+            {/* Difficulty Filter (only in modules mode) */}
+            {explorerMode === 'modules' && (
+              <div className="flex items-center gap-2 shrink-0">
+                <SlidersHorizontal className="w-3.5 h-3.5 text-stone-500" />
+                <label htmlFor="difficulty-select" className="text-xs font-mono-code text-stone-500">
+                  Nivel:
+                </label>
+                <select
+                  id="difficulty-select"
+                  value={difficultyFilter}
+                  onChange={(e) => setDifficultyFilter(e.target.value)}
+                  className="text-xs bg-stone-50 dark:bg-stone-950 border border-stone-200 dark:border-stone-800 rounded px-2.5 py-2 text-stone-800 dark:text-stone-200 focus:outline-none focus:border-amber-500"
+                >
+                  <option value="Todas">Todos los niveles</option>
+                  <option value="Básico">Básico</option>
+                  <option value="Intermedio">Intermedio</option>
+                  <option value="Avanzado">Avanzado</option>
+                </select>
+              </div>
+            )}
           </div>
 
-          {/* Subcategory Tabs (shown when not in global search) */}
-          {!searchQuery && (
+          {/* Subcategory Tabs or Atlas Category Filter */}
+          {explorerMode === 'modules' && !searchQuery && (
             <div className="flex flex-wrap items-center gap-1.5 pt-2 border-t border-stone-100 dark:border-stone-800">
               <button
                 type="button"
@@ -358,6 +423,25 @@ export const VisualLibraryExplorer: React.FC<VisualLibraryExplorerProps> = ({
                   }`}
                 >
                   {sub}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {explorerMode === 'atlas' && (
+            <div className="flex flex-wrap items-center gap-1.5 pt-2 border-t border-stone-100 dark:border-stone-800">
+              {atlasCategories.map((cat) => (
+                <button
+                  key={cat}
+                  type="button"
+                  onClick={() => setAtlasCategory(cat)}
+                  className={`px-3 py-1.5 text-xs font-medium rounded transition-colors ${
+                    atlasCategory === cat
+                      ? 'bg-amber-400 text-stone-950 font-semibold'
+                      : 'bg-stone-100 dark:bg-stone-950 text-stone-600 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-200'
+                  }`}
+                >
+                  {cat}
                 </button>
               ))}
             </div>
@@ -433,8 +517,78 @@ export const VisualLibraryExplorer: React.FC<VisualLibraryExplorerProps> = ({
             </div>
           )}
 
-        {/* Entries Visual Grid */}
-        {filteredEntries.length === 0 ? (
+        {/* Entries Visual Grid OR Visual Encyclopedia Atlas */}
+        {explorerMode === 'atlas' ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredAtlasAssets.map((asset) => {
+              const isCopied = copiedId === asset.id;
+              return (
+                <article
+                  key={asset.id}
+                  onClick={() => setSelectedAtlasAsset(asset)}
+                  className="group cursor-pointer rounded-xl border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 overflow-hidden shadow-xs hover:shadow-md hover:border-amber-400/70 transition-all flex flex-col"
+                >
+                  <div className="relative h-52 bg-stone-900 overflow-hidden">
+                    <ResilientImage
+                      src={asset.image}
+                      alt={asset.alt}
+                      objectPosition={asset.objectPosition || 'center'}
+                      containerClassName="w-full h-full"
+                      className="group-hover:scale-105 transition-transform duration-500"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-stone-950/80 via-transparent to-transparent pointer-events-none" />
+                    <div className="absolute bottom-2.5 left-3 right-3 flex items-center justify-between text-[11px] font-mono-code text-stone-100">
+                      <span className="truncate text-amber-300 font-semibold">{asset.category}</span>
+                      <span className="shrink-0 ml-2 text-stone-300">{asset.aspectRatio}</span>
+                    </div>
+                  </div>
+                  <div className="p-4 flex-1 flex flex-col justify-between space-y-3">
+                    <div>
+                      <div className="text-[10px] font-mono-code uppercase tracking-wider text-stone-500">
+                        {asset.subcategory}
+                      </div>
+                      <h3 className="text-base font-bold text-stone-900 dark:text-stone-100 group-hover:text-amber-700 dark:group-hover:text-amber-300 transition-colors leading-snug mt-0.5">
+                        {asset.title}
+                      </h3>
+                      <p className="text-xs text-stone-600 dark:text-stone-400 mt-1.5 line-clamp-2 leading-relaxed">
+                        {asset.description}
+                      </p>
+                      <div className="mt-2.5 text-[11px] font-mono-code text-stone-500 dark:text-stone-400 truncate">
+                        {asset.tags.slice(0, 4).join(' · ')}
+                      </div>
+                    </div>
+                    <div className="pt-2.5 border-t border-stone-100 dark:border-stone-800 flex items-center justify-between gap-2">
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleCopyPrompt(asset.prompt, asset.id, 'en');
+                        }}
+                        className="px-2.5 py-1.5 text-[11px] font-mono-code font-semibold text-stone-700 dark:text-stone-300 hover:text-amber-700 dark:hover:text-amber-300 bg-stone-100 dark:bg-stone-950 rounded flex items-center gap-1.5 transition-colors"
+                      >
+                        {isCopied ? (
+                          <>
+                            <Check className="w-3 h-3 text-emerald-600" />
+                            <span>Copiado</span>
+                          </>
+                        ) : (
+                          <>
+                            <Copy className="w-3 h-3" />
+                            <span>Copiar Prompt</span>
+                          </>
+                        )}
+                      </button>
+                      <span className="text-[11px] font-semibold text-amber-700 dark:text-amber-400 flex items-center gap-0.5">
+                        <span>Ver Lámina</span>
+                        <ArrowUpRight className="w-3.5 h-3.5" />
+                      </span>
+                    </div>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+        ) : filteredEntries.length === 0 ? (
           <div className="p-12 text-center rounded-lg border border-dashed border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-900">
             <p className="text-sm text-stone-600 dark:text-stone-400">
               No se encontraron fichas con esos criterios.
@@ -464,15 +618,15 @@ export const VisualLibraryExplorer: React.FC<VisualLibraryExplorerProps> = ({
                   className="group cursor-pointer rounded-xl border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 overflow-hidden shadow-xs hover:shadow-md hover:border-amber-400/70 transition-all flex flex-col"
                 >
                   {/* Visual Reference Image */}
-                  <div className="relative h-44 bg-stone-100 dark:bg-stone-950 overflow-hidden">
-                    <img
+                  <div className="relative h-48 bg-stone-900 overflow-hidden">
+                    <ResilientImage
                       src={entry.image}
-                      alt={entry.title}
-                      loading="lazy"
-                      referrerPolicy="no-referrer"
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      alt={entry.alt || entry.title}
+                      objectPosition={entry.objectPosition || 'center'}
+                      containerClassName="w-full h-full"
+                      className="group-hover:scale-105 transition-transform duration-500"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-stone-950/75 via-transparent to-transparent" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-stone-950/75 via-transparent to-transparent pointer-events-none" />
 
                     {/* Top-right favorite button */}
                     <button
@@ -622,10 +776,12 @@ export const VisualLibraryExplorer: React.FC<VisualLibraryExplorerProps> = ({
                 {/* Image + SVG Diagram */}
                 <div className="md:col-span-5 space-y-4">
                   <div className="rounded-lg overflow-hidden border border-stone-200 dark:border-stone-800 bg-stone-900">
-                    <img
+                    <ResilientImage
                       src={selectedEntry.image}
-                      alt={selectedEntry.title}
-                      className="w-full h-56 object-cover"
+                      alt={selectedEntry.alt || selectedEntry.title}
+                      aspectRatio={selectedEntry.aspectRatio || '3:2'}
+                      objectPosition={selectedEntry.objectPosition || 'center'}
+                      containerClassName="w-full"
                     />
                   </div>
                   <TechnicalDiagramSVG
@@ -790,6 +946,150 @@ export const VisualLibraryExplorer: React.FC<VisualLibraryExplorerProps> = ({
                   )}
                 </div>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* ==================================================================== */}
+      {/* ATLAS VISUAL PLATE DETAIL MODAL                                      */}
+      {/* ==================================================================== */}
+      {selectedAtlasAsset && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-950/75 backdrop-blur-xs overflow-y-auto"
+          onClick={() => setSelectedAtlasAsset(null)}
+        >
+          <div
+            className="relative w-full max-w-4xl bg-[#FAF8F5] dark:bg-stone-900 border border-stone-300 dark:border-stone-700 rounded-xl shadow-2xl overflow-hidden my-8"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between px-6 py-4 bg-white dark:bg-stone-950 border-b border-stone-200 dark:border-stone-800">
+              <div>
+                <div className="text-[11px] font-mono-code uppercase tracking-wider text-amber-700 dark:text-amber-400 font-bold">
+                  {selectedAtlasAsset.category} · {selectedAtlasAsset.subcategory}
+                </div>
+                <h3 className="text-xl sm:text-2xl font-bold font-serif-title text-stone-900 dark:text-stone-100">
+                  {selectedAtlasAsset.title}
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSelectedAtlasAsset(null)}
+                className="p-2 rounded border border-stone-200 dark:border-stone-800 hover:bg-stone-100 dark:hover:bg-stone-800 text-stone-600 dark:text-stone-300"
+                aria-label="Cerrar lámina visual"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="p-6 max-h-[80vh] overflow-y-auto space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
+                <div className="md:col-span-5">
+                  <div className="rounded-lg overflow-hidden border border-stone-200 dark:border-stone-800 bg-stone-900">
+                    <ResilientImage
+                      src={selectedAtlasAsset.image}
+                      alt={selectedAtlasAsset.alt}
+                      aspectRatio={selectedAtlasAsset.aspectRatio}
+                      objectPosition={selectedAtlasAsset.objectPosition || 'center'}
+                    />
+                  </div>
+                </div>
+                <div className="md:col-span-7 space-y-4">
+                  <div>
+                    <h4 className="text-xs font-mono-code uppercase tracking-wider text-amber-700 dark:text-amber-400 font-bold mb-1">
+                      Descripción Visual
+                    </h4>
+                    <p className="text-sm text-stone-800 dark:text-stone-200 leading-relaxed">
+                      {selectedAtlasAsset.description}
+                    </p>
+                  </div>
+                  <div>
+                    <h4 className="text-xs font-mono-code uppercase tracking-wider text-stone-500 font-bold mb-1">
+                      Explicación Técnica
+                    </h4>
+                    <p className="text-sm text-stone-700 dark:text-stone-300 leading-relaxed">
+                      {selectedAtlasAsset.technicalExplanation}
+                    </p>
+                  </div>
+                  <div>
+                    <h4 className="text-xs font-mono-code uppercase tracking-wider text-stone-500 font-bold mb-1">
+                      Ejemplo de Aplicación
+                    </h4>
+                    <p className="text-xs text-stone-700 dark:text-stone-300">
+                      {selectedAtlasAsset.applicationExample}
+                    </p>
+                  </div>
+                  <div>
+                    <h4 className="text-xs font-mono-code uppercase tracking-wider text-stone-500 font-bold mb-1">
+                      Etiquetas · Formato
+                    </h4>
+                    <p className="text-xs font-mono-code text-stone-600 dark:text-stone-400">
+                      {selectedAtlasAsset.tags.join(' · ')} · {selectedAtlasAsset.aspectRatio}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-4 rounded-lg bg-stone-950 border border-stone-800 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-mono-code uppercase font-bold text-amber-400">
+                    Prompt de Referencia Asociado
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => handleCopyPrompt(selectedAtlasAsset.prompt, selectedAtlasAsset.id, 'en')}
+                    className="text-xs font-mono-code text-stone-300 hover:text-amber-300 flex items-center gap-1"
+                  >
+                    {copiedId === selectedAtlasAsset.id ? (
+                      <>
+                        <Check className="w-3.5 h-3.5 text-emerald-400" />
+                        <span>Copiado</span>
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="w-3.5 h-3.5" />
+                        <span>Copiar</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+                <p className="text-xs text-stone-200 font-mono-code leading-relaxed">
+                  {selectedAtlasAsset.prompt}
+                </p>
+              </div>
+
+              <div className="p-3 rounded-lg bg-white dark:bg-stone-950 border border-stone-200 dark:border-stone-800 text-[11px] font-mono-code text-stone-600 dark:text-stone-400 flex flex-wrap items-center justify-between gap-2">
+                <span>
+                  <strong className="text-stone-800 dark:text-stone-200">Fuente:</strong>{' '}
+                  {selectedAtlasAsset.source}
+                </span>
+                <span>
+                  <strong className="text-stone-800 dark:text-stone-200">Licencia:</strong>{' '}
+                  {selectedAtlasAsset.license}
+                </span>
+              </div>
+
+              {selectedAtlasAsset.relatedIds.length > 0 && (
+                <div className="flex flex-wrap items-center gap-3 pt-2 border-t border-stone-200 dark:border-stone-800 text-xs">
+                  <span className="font-mono-code text-stone-500 flex items-center gap-1">
+                    <BookOpen className="w-3.5 h-3.5" />
+                    <span>Láminas relacionadas:</span>
+                  </span>
+                  {selectedAtlasAsset.relatedIds.map((relId) => {
+                    const rel = VISUAL_ASSETS_MAP[relId];
+                    if (!rel) return null;
+                    return (
+                      <button
+                        key={relId}
+                        type="button"
+                        onClick={() => setSelectedAtlasAsset(rel)}
+                        className="text-xs font-medium text-amber-700 dark:text-amber-400 underline underline-offset-2 hover:text-amber-600"
+                      >
+                        {rel.title}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           </div>
         </div>

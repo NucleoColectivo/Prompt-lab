@@ -16,6 +16,7 @@ import { MasterTemplates } from './components/MasterTemplates';
 import { Footer } from './components/Footer';
 import { CommandDetailModal } from './components/CommandDetailModal';
 import { WorkshopExporterModal } from './components/WorkshopExporterModal';
+import { WelcomeWizardModal } from './components/WelcomeWizardModal';
 import { CommandItem, RECIPES } from './data/promptData';
 import { LibraryEntry, ModuleId } from './data/modulesData';
 import { JsonStyleProfile } from './data/videoAndJsonData';
@@ -75,6 +76,13 @@ export default function App() {
   const [activeLibraryModule, setActiveLibraryModule] = useState<ModuleId>('mod-01');
   const [selectedCommandForModal, setSelectedCommandForModal] = useState<CommandItem | null>(null);
   const [isExporterOpen, setIsExporterOpen] = useState(false);
+  const [isWelcomeWizardOpen, setIsWelcomeWizardOpen] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem('nc_welcome_wizard_seen_v1') !== 'true';
+    } catch {
+      return true;
+    }
+  });
   const [externalStoryboardScenes, setExternalStoryboardScenes] = useState<StoryboardSceneItem[]>([]);
 
   // Builder State
@@ -130,6 +138,15 @@ export default function App() {
   const toggleTheme = () => {
     setIsDarkMode((prev) => !prev);
   };
+
+  const closeWelcomeWizard = useCallback(() => {
+    setIsWelcomeWizardOpen(false);
+    try {
+      localStorage.setItem('nc_welcome_wizard_seen_v1', 'true');
+    } catch {
+      // Ignore storage failures inside restricted iframes
+    }
+  }, []);
 
   const navigateToSection = useCallback(
     (section: AppSectionId, subTab?: string) => {
@@ -307,15 +324,22 @@ export default function App() {
 
       {/* Active Workspace Section View */}
       <main className="flex-1">
-        {/* 0. HOME CLARO (Portada + Explicación completa de lo que se encuentra en la página) */}
+        {/* 0. HOME CLARO (Portada Full-Screen + Explicación completa de lo que se encuentra en la página) */}
         {activeSection === 'home' && (
           <>
             <Hero
               onScrollToBuilder={scrollToBuilder}
               onScrollToDictionary={scrollToDictionary}
               onScrollToVideo={scrollToVideoLab}
+              onExploreGuide={() => {
+                const el = document.getElementById('que-encuentras');
+                if (el) el.scrollIntoView({ behavior: 'smooth' });
+              }}
             />
-            <HomeView onNavigateSection={navigateToSection} />
+            <HomeView
+              onNavigateSection={navigateToSection}
+              onOpenWelcomeWizard={() => setIsWelcomeWizardOpen(true)}
+            />
           </>
         )}
 
@@ -490,6 +514,16 @@ export default function App() {
         onClose={() => setIsExporterOpen(false)}
         builderState={builderState}
         generatedPrompt={currentPromptText}
+      />
+
+      {/* 3-Step First-Visit Welcome Wizard Modal */}
+      <WelcomeWizardModal
+        isOpen={isWelcomeWizardOpen}
+        onClose={closeWelcomeWizard}
+        onNavigateAndClose={(section) => {
+          closeWelcomeWizard();
+          navigateToSection(section);
+        }}
       />
     </div>
   );

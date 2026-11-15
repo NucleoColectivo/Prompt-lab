@@ -18,9 +18,14 @@ import {
   Upload,
   Send,
   Sparkles,
+  Eye,
 } from 'lucide-react';
 import { TechnicalDiagramSVG } from './VisualDiagrams';
-import { VISUAL_COMPARISONS } from '../data/videoAndJsonData';
+import {
+  COMPARATOR_TOPIC_SETS,
+  VISUAL_LIBRARY_PATHS,
+} from '../data/visualLibraryRegistry';
+import { ResilientImage } from './ResilientImage';
 import type { PromptBuilderState } from './PromptBuilder';
 import type { DiagramConfig } from '../data/modulesData';
 
@@ -167,12 +172,14 @@ export const InteractiveCreativeLabs: React.FC<InteractiveCreativeLabsProps> = (
   };
 
   // ============================================================================
-  // A. COMPARADOR VISUAL (Slider interactivo + Grilla 2x2)
+  // A. COMPARADOR VISUAL (Individual + Slider 2 capas + Grilla 2x2)
   // ============================================================================
   const [selectedCompIdx, setSelectedCompIdx] = useState(0);
   const [sliderPos, setSliderPos] = useState(50);
-  const [compViewMode, setCompViewMode] = useState<'slider' | 'grid2x2'>('slider');
-  const activeComp = VISUAL_COMPARISONS[selectedCompIdx] || VISUAL_COMPARISONS[0];
+  const [compViewMode, setCompViewMode] = useState<'slider' | 'grid2x2' | 'individual'>('slider');
+  const [activeIndividualIdx, setActiveIndividualIdx] = useState(0);
+  const activeComp = COMPARATOR_TOPIC_SETS[selectedCompIdx] || COMPARATOR_TOPIC_SETS[0];
+  const activeIndividualItem = activeComp.gridItems[activeIndividualIdx] || activeComp.gridItems[0];
 
   // ============================================================================
   // B. STORYBOARD & SHOT LIST
@@ -496,28 +503,36 @@ export const InteractiveCreativeLabs: React.FC<InteractiveCreativeLabsProps> = (
         </div>
 
         {/* ================================================================ */}
-        {/* SUB-LAB A: COMPARADOR VISUAL (SLIDER + GRILLA 2x2)              */}
+        {/* SUB-LAB A: COMPARADOR VISUAL (SLIDER + GRILLA 2x2 + INDIVIDUAL)  */}
         {/* ================================================================ */}
         {activeLab === 'comparator' && (
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
             <div className="lg:col-span-5 space-y-4">
-              <div className="flex items-center justify-between gap-2">
+              <div className="flex flex-wrap items-center justify-between gap-2">
                 <h3 className="text-lg font-bold font-serif-title text-stone-900 dark:text-stone-100">
-                  Comparador Interactivo Antes / Después
+                  Comparador Visual Interactivo
                 </h3>
                 <div className="inline-flex rounded border border-stone-200 dark:border-stone-800 overflow-hidden text-[11px] font-mono-code">
                   <button
                     type="button"
+                    onClick={() => setCompViewMode('individual')}
+                    className={`px-2.5 py-1 flex items-center gap-1 ${compViewMode === 'individual' ? 'bg-amber-400 text-stone-950 font-bold' : 'bg-[#FAF8F5] dark:bg-stone-950 text-stone-600 dark:text-stone-300'}`}
+                  >
+                    <Eye className="w-3 h-3" />
+                    <span>Individual</span>
+                  </button>
+                  <button
+                    type="button"
                     onClick={() => setCompViewMode('slider')}
-                    className={`px-2.5 py-1 flex items-center gap-1 ${compViewMode === 'slider' ? 'bg-amber-400 text-stone-950 font-bold' : 'bg-[#FAF8F5] dark:bg-stone-950 text-stone-600'}`}
+                    className={`px-2.5 py-1 flex items-center gap-1 border-x border-stone-200 dark:border-stone-800 ${compViewMode === 'slider' ? 'bg-amber-400 text-stone-950 font-bold' : 'bg-[#FAF8F5] dark:bg-stone-950 text-stone-600 dark:text-stone-300'}`}
                   >
                     <Sliders className="w-3 h-3" />
-                    <span>Slider</span>
+                    <span>Antes/Después</span>
                   </button>
                   <button
                     type="button"
                     onClick={() => setCompViewMode('grid2x2')}
-                    className={`px-2.5 py-1 flex items-center gap-1 ${compViewMode === 'grid2x2' ? 'bg-amber-400 text-stone-950 font-bold' : 'bg-[#FAF8F5] dark:bg-stone-950 text-stone-600'}`}
+                    className={`px-2.5 py-1 flex items-center gap-1 ${compViewMode === 'grid2x2' ? 'bg-amber-400 text-stone-950 font-bold' : 'bg-[#FAF8F5] dark:bg-stone-950 text-stone-600 dark:text-stone-300'}`}
                   >
                     <LayoutGrid className="w-3 h-3" />
                     <span>Grilla 2×2</span>
@@ -526,24 +541,27 @@ export const InteractiveCreativeLabs: React.FC<InteractiveCreativeLabsProps> = (
               </div>
 
               <div className="space-y-2">
-                {VISUAL_COMPARISONS.map((comp, idx) => (
+                {COMPARATOR_TOPIC_SETS.map((comp, idx) => (
                   <button
                     key={comp.id}
                     type="button"
-                    onClick={() => setSelectedCompIdx(idx)}
-                    className={`w-full text-left p-3.5 rounded-lg border transition-all ${
+                    onClick={() => {
+                      setSelectedCompIdx(idx);
+                      setActiveIndividualIdx(0);
+                    }}
+                    className={`w-full text-left p-3 rounded-lg border transition-all ${
                       selectedCompIdx === idx
                         ? 'bg-amber-50/70 dark:bg-amber-950/20 border-amber-400'
                         : 'bg-[#FAF8F5] dark:bg-stone-950 border-stone-200 dark:border-stone-800 hover:border-stone-300'
                     }`}
                   >
-                    <div className="text-[11px] font-mono-code text-amber-700 dark:text-amber-400 font-bold">
-                      {comp.relatedModule}
+                    <div className="text-[10px] font-mono-code text-amber-700 dark:text-amber-400 font-bold uppercase tracking-wider">
+                      {comp.categoryLabel}
                     </div>
-                    <div className="text-sm font-bold text-stone-900 dark:text-stone-100 mt-0.5">
+                    <div className="text-sm font-bold text-stone-900 dark:text-stone-100 mt-0.5 leading-snug">
                       {comp.title}
                     </div>
-                    <p className="text-xs text-stone-600 dark:text-stone-400 mt-1">
+                    <p className="text-xs text-stone-600 dark:text-stone-400 mt-1 line-clamp-2">
                       {comp.lesson}
                     </p>
                   </button>
@@ -553,35 +571,46 @@ export const InteractiveCreativeLabs: React.FC<InteractiveCreativeLabsProps> = (
               {/* Parameter Breakdown */}
               <div className="p-4 rounded-lg bg-[#FAF8F5] dark:bg-stone-950 border border-stone-200 dark:border-stone-800 space-y-2 text-xs">
                 <div className="text-[11px] font-mono-code uppercase font-bold text-stone-500">
-                  Desglose de Parámetros Observables
+                  Parámetros en Comparación ({activeComp.relatedModule})
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <span className="font-bold text-stone-900 dark:text-stone-100 block">{activeComp.leftLabel}</span>
-                    <span className="text-stone-600 dark:text-stone-400">{activeComp.leftSpecs}</span>
+                    <span className="font-bold text-stone-900 dark:text-stone-100 block">{activeComp.leftItem.label}</span>
+                    <span className="text-stone-600 dark:text-stone-400">{activeComp.leftItem.specs}</span>
                   </div>
                   <div>
-                    <span className="font-bold text-amber-700 dark:text-amber-400 block">{activeComp.rightLabel}</span>
-                    <span className="text-stone-600 dark:text-stone-400">{activeComp.rightSpecs}</span>
+                    <span className="font-bold text-amber-700 dark:text-amber-400 block">{activeComp.rightItem.label}</span>
+                    <span className="text-stone-600 dark:text-stone-400">{activeComp.rightItem.specs}</span>
                   </div>
                 </div>
               </div>
             </div>
 
-            <div className="lg:col-span-7">
-              {compViewMode === 'slider' ? (
+            <div className="lg:col-span-7 space-y-4">
+              {compViewMode === 'slider' && (
                 <div className="rounded-xl border border-stone-200 dark:border-stone-800 bg-stone-950 overflow-hidden shadow-sm">
-                  <div className="relative h-80 sm:h-96 select-none overflow-hidden">
-                    <img
-                      src={activeComp.image}
-                      alt={activeComp.title}
-                      className="w-full h-full object-cover"
+                  <div className="relative h-80 sm:h-[430px] select-none overflow-hidden bg-stone-900">
+                    {/* Right/Base Layer */}
+                    <ResilientImage
+                      src={activeComp.rightItem.image}
+                      alt={activeComp.rightItem.alt}
+                      objectPosition="top"
+                      containerClassName="absolute inset-0 w-full h-full"
+                      style={activeComp.rightItem.cssFilter ? { filter: activeComp.rightItem.cssFilter } : undefined}
                     />
-                    {/* Interactive contrast veil clipped at slider position */}
+                    {/* Left Clipped Layer */}
                     <div
-                      className="absolute inset-0 pointer-events-none bg-stone-950/15 backdrop-contrast-110"
+                      className="absolute inset-0 pointer-events-none"
                       style={{ clipPath: `inset(0 ${100 - sliderPos}% 0 0)` }}
-                    />
+                    >
+                      <ResilientImage
+                        src={activeComp.leftItem.image}
+                        alt={activeComp.leftItem.alt}
+                        objectPosition="top"
+                        containerClassName="w-full h-full"
+                        style={activeComp.leftItem.cssFilter ? { filter: activeComp.leftItem.cssFilter } : undefined}
+                      />
+                    </div>
                     <div
                       className="absolute inset-y-0 w-0.5 bg-amber-400 shadow-lg pointer-events-none"
                       style={{ left: `${sliderPos}%` }}
@@ -591,10 +620,10 @@ export const InteractiveCreativeLabs: React.FC<InteractiveCreativeLabsProps> = (
                       </div>
                     </div>
                     <div className="absolute top-3 left-3 px-2.5 py-1 rounded bg-stone-950/85 text-stone-100 text-[11px] font-mono-code">
-                      {activeComp.leftLabel}
+                      {activeComp.leftItem.label}
                     </div>
                     <div className="absolute top-3 right-3 px-2.5 py-1 rounded bg-stone-950/85 text-amber-300 text-[11px] font-mono-code">
-                      {activeComp.rightLabel}
+                      {activeComp.rightItem.label}
                     </div>
                   </div>
                   <div className="p-4 bg-stone-950 text-stone-200 flex items-center gap-4">
@@ -611,22 +640,84 @@ export const InteractiveCreativeLabs: React.FC<InteractiveCreativeLabsProps> = (
                     <span className="text-xs font-mono-code text-amber-300 shrink-0">{sliderPos}%</span>
                   </div>
                 </div>
-              ) : (
+              )}
+
+              {compViewMode === 'grid2x2' && (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {[
-                    { title: '01. Lente 35mm vs 85mm', caption: 'Amplitud espacial vs compresión y bokeh', img: '/images/comp_focal_35_85_1794593013583.jpg', filter: 'none' },
-                    { title: '02. Luz Rembrandt vs High Key', caption: 'Contraste psicológico 4:1 vs luminoso suave', img: '/images/comp_lighting_rembrandt_highkey_1794593014446.jpg', filter: 'none' },
-                    { title: '03. Color Frío 7200K vs Cálido 3200K', caption: 'Melancolía nocturna vs intimidad dorada', img: '/images/mod_composition_cinematography_1794593015294.jpg', filter: 'sepia(0.28) saturate(1.15)' },
-                    { title: '04. Textura JSON Transferida', caption: 'Preservación de identidad + estilo editorial', img: '/images/comp_json_style_transfer_1794593016651.jpg', filter: 'contrast(1.06)' },
-                  ].map((cell) => (
-                    <div key={cell.title} className="rounded-lg border border-stone-200 dark:border-stone-800 bg-[#FAF8F5] dark:bg-stone-950 overflow-hidden">
-                      <img src={cell.img} alt={cell.title} style={{ filter: cell.filter }} className="w-full h-40 object-cover" loading="lazy" />
+                  {activeComp.gridItems.map((cell) => (
+                    <div
+                      key={cell.code}
+                      className="rounded-lg border border-stone-200 dark:border-stone-800 bg-[#FAF8F5] dark:bg-stone-950 overflow-hidden"
+                    >
+                      <ResilientImage
+                        src={cell.image}
+                        alt={cell.alt}
+                        aspectRatio={
+                          activeComp.id === 'comp-four-lights' || activeComp.id === 'comp-ads-directions'
+                            ? '3:4'
+                            : '3:2'
+                        }
+                        objectPosition={cell.objectPosition || 'center'}
+                        style={cell.cssFilter ? { filter: cell.cssFilter } : undefined}
+                      />
                       <div className="p-3">
-                        <div className="text-xs font-bold text-stone-900 dark:text-stone-100">{cell.title}</div>
-                        <div className="text-[11px] text-stone-500 dark:text-stone-400 mt-0.5">{cell.caption}</div>
+                        <div className="text-[10px] font-mono-code font-bold text-amber-700 dark:text-amber-400">
+                          {cell.code}
+                        </div>
+                        <div className="text-xs font-bold text-stone-900 dark:text-stone-100 mt-0.5">
+                          {cell.label}
+                        </div>
+                        <div className="text-[11px] text-stone-600 dark:text-stone-400 mt-0.5">
+                          {cell.specs}
+                        </div>
                       </div>
                     </div>
                   ))}
+                </div>
+              )}
+
+              {compViewMode === 'individual' && activeIndividualItem && (
+                <div className="rounded-xl border border-stone-200 dark:border-stone-800 bg-[#FAF8F5] dark:bg-stone-950 overflow-hidden shadow-sm">
+                  <div className="p-3 border-b border-stone-200 dark:border-stone-800 flex flex-wrap gap-1.5 bg-white dark:bg-stone-900">
+                    {activeComp.gridItems.map((item, idx) => (
+                      <button
+                        key={item.code}
+                        type="button"
+                        onClick={() => setActiveIndividualIdx(idx)}
+                        className={`px-2.5 py-1.5 text-[11px] font-mono-code rounded border transition-colors ${
+                          activeIndividualIdx === idx
+                            ? 'bg-amber-400 text-stone-950 border-amber-400 font-bold'
+                            : 'bg-[#FAF8F5] dark:bg-stone-950 text-stone-700 dark:text-stone-300 border-stone-200 dark:border-stone-800 hover:border-amber-400'
+                        }`}
+                      >
+                        {item.code}
+                      </button>
+                    ))}
+                  </div>
+                  <div className="bg-stone-900">
+                    <ResilientImage
+                      src={activeIndividualItem.image}
+                      alt={activeIndividualItem.alt}
+                      aspectRatio={
+                        activeComp.id === 'comp-four-lights' || activeComp.id === 'comp-ads-directions'
+                          ? '3:4'
+                          : '3:2'
+                      }
+                      objectPosition={activeIndividualItem.objectPosition || 'center'}
+                      containerClassName="max-h-[430px] mx-auto"
+                    />
+                  </div>
+                  <div className="p-4 space-y-1">
+                    <div className="text-[11px] font-mono-code uppercase font-bold text-amber-700 dark:text-amber-400">
+                      {activeIndividualItem.code} · {activeComp.categoryLabel}
+                    </div>
+                    <h4 className="text-base font-bold text-stone-900 dark:text-stone-100">
+                      {activeIndividualItem.label}
+                    </h4>
+                    <p className="text-xs text-stone-600 dark:text-stone-400">
+                      {activeIndividualItem.specs} — {activeComp.lesson}
+                    </p>
+                  </div>
                 </div>
               )}
             </div>
@@ -972,11 +1063,12 @@ export const InteractiveCreativeLabs: React.FC<InteractiveCreativeLabsProps> = (
             </div>
 
             <div className="lg:col-span-6 grid grid-cols-1 sm:grid-cols-2 gap-4 items-stretch">
-              <div className="relative rounded-xl overflow-hidden border border-stone-200 dark:border-stone-800 bg-stone-950 min-h-[260px]">
-                <img
-                  src="/images/recipe_neo_noir_portrait_1794436191840.jpg"
-                  alt="Simulación de iluminación sobre retrato"
-                  className="w-full h-full object-cover"
+              <div className="relative rounded-xl overflow-hidden border border-stone-200 dark:border-stone-800 bg-stone-950 min-h-[300px]">
+                <ResilientImage
+                  src={VISUAL_LIBRARY_PATHS.lightButterfly}
+                  alt="Retrato de estudio para simular dirección e intensidad de iluminación"
+                  objectPosition="top"
+                  containerClassName="w-full h-full min-h-[300px]"
                 />
                 <div
                   className="absolute inset-0 pointer-events-none transition-all duration-200"

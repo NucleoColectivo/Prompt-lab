@@ -14,10 +14,13 @@ import {
 } from 'lucide-react';
 import type { AppSectionId } from '../types/navigation';
 import { AI_TOOLS_DIRECTORY } from '../data/extendedModulesData';
+import { VISUAL_LIBRARY_PATHS } from '../data/visualLibraryRegistry';
+import { ResilientImage } from './ResilientImage';
 import { ToolBrandLogo } from './ToolBrandLogo';
 
 interface HomeViewProps {
   onNavigateSection: (section: AppSectionId, subTab?: string) => void;
+  onOpenWelcomeWizard?: () => void;
 }
 
 const PLATFORM_SECTIONS: {
@@ -37,7 +40,7 @@ const PLATFORM_SECTIONS: {
     whatYouFind:
       'Explicación clara sin tecnicismos de cómo funciona un prompt, comparativa entre una instrucción ambigua y una dirección de arte completa, diferencias Imagen vs Video y reto práctico de 15 minutos.',
     idealFor: 'Personas que comienzan desde cero o docentes preparando su primera clase.',
-    image: '/images/comp_lighting_rembrandt_highkey_1794593014446.jpg',
+    image: VISUAL_LIBRARY_PATHS.lightComparison,
     icon: <BookOpen className="w-4 h-4 text-amber-600" />,
   },
   {
@@ -47,7 +50,7 @@ const PLATFORM_SECTIONS: {
     whatYouFind:
       '26 módulos ilustrados con ejemplos ES/EN, diagramas técnicos y fichas prácticas: óptica 8–400mm, cámaras, iluminación, color, storytelling, storyboard, worldbuilding, 3D, VFX, sonido y ética.',
     idealFor: 'Consultar referentes visuales, estudiar planos o copiar prompts probados.',
-    image: '/images/comp_focal_35_85_1794593013583.jpg',
+    image: VISUAL_LIBRARY_PATHS.focalComparison,
     icon: <Layers className="w-4 h-4 text-amber-600" />,
   },
   {
@@ -58,7 +61,7 @@ const PLATFORM_SECTIONS: {
     whatYouFind:
       'Simulador de iluminación, visor de cámara 3D y distancia focal, comparador A/B, editor de Storyboard, selector HEX y analizador local de fotografías para convertir cualquier estilo en JSON/YAML.',
     idealFor: 'Experimentar cómo cambian la luz, los lentes y el color antes de generar.',
-    image: '/images/comp_json_style_transfer_1794593016651.jpg',
+    image: VISUAL_LIBRARY_PATHS.colorJsonTransfer,
     icon: <Sliders className="w-4 h-4 text-amber-600" />,
   },
   {
@@ -68,7 +71,7 @@ const PLATFORM_SECTIONS: {
     whatYouFind:
       'Transforma una idea breve en concepto creativo, logline, arco narrativo, dirección de fotografía, desglose de escenas con prompts de imagen/video por plano, diseño sonoro y plan de montaje.',
     idealFor: 'Cortometrajes, cápsulas culturales, documentales de barrio y videoarte.',
-    image: '/images/mod_video_camera_rig_1794593015892.jpg',
+    image: VISUAL_LIBRARY_PATHS.camCinemaRig,
     icon: <Clapperboard className="w-4 h-4 text-amber-600" />,
   },
   {
@@ -78,7 +81,7 @@ const PLATFORM_SECTIONS: {
     whatYouFind:
       'Ensambla prompts de Fotografía o Video paso a paso con detector de incompatibilidades ópticas, colecciones por proyecto, exportador de fichas PDF/PNG para talleres y copia directa a apps IA.',
     idealFor: 'Armar prompts listos para pegar en ChatGPT, Midjourney, FLUX o Runway.',
-    image: '/images/recipe_luxury_product_1794436192275.jpg',
+    image: VISUAL_LIBRARY_PATHS.adLuxury,
     icon: <Sparkles className="w-4 h-4 text-amber-600" />,
   },
   {
@@ -88,7 +91,7 @@ const PLATFORM_SECTIONS: {
     whatYouFind:
       'Catálogo visual con logos y ejemplos de Google AI Studio, Gemini, Claude, NotebookLM, ChatGPT, CapCut, Lovable, Bolt, Runway y más; acompañado de rutas, retos interactivos y diccionario bilingüe.',
     idealFor: 'Elegir en qué app practicar cada tarea sin perder tiempo.',
-    image: '/images/recipe_generative_art_1794436193380.jpg',
+    image: VISUAL_LIBRARY_PATHS.animGenerativeParticles,
     icon: <Wrench className="w-4 h-4 text-amber-600" />,
   },
 ];
@@ -106,19 +109,37 @@ const FEATURED_APP_IDS = [
   'tool-runway',
 ];
 
-export const HomeView: React.FC<HomeViewProps> = ({ onNavigateSection }) => {
+export const HomeView: React.FC<HomeViewProps> = ({
+  onNavigateSection,
+  onOpenWelcomeWizard,
+}) => {
   const featuredApps = AI_TOOLS_DIRECTORY.filter((t) => FEATURED_APP_IDS.includes(t.id));
 
   return (
     <div className="bg-[#FAF8F5] dark:bg-stone-950 transition-colors">
       {/* 1. Qué es esta página + Cómo usarla en 3 pasos */}
-      <section className="py-12 border-b border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900/40">
+      <section
+        id="que-encuentras"
+        className="py-12 border-b border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900/40 scroll-mt-16"
+      >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 space-y-8">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
             <div className="lg:col-span-7 space-y-3">
-              <div className="flex items-center gap-2 text-xs font-mono-code uppercase tracking-wider text-amber-700 dark:text-amber-400 font-bold">
-                <Compass className="w-3.5 h-3.5" />
-                <span>QUÉ ENCUENTRAS EN ESTA PÁGINA</span>
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div className="flex items-center gap-2 text-xs font-mono-code uppercase tracking-wider text-amber-700 dark:text-amber-400 font-bold">
+                  <Compass className="w-3.5 h-3.5" />
+                  <span>QUÉ ENCUENTRAS EN ESTA PÁGINA</span>
+                </div>
+                {onOpenWelcomeWizard && (
+                  <button
+                    type="button"
+                    onClick={onOpenWelcomeWizard}
+                    className="px-3 py-1.5 text-[11px] font-mono-code font-bold uppercase tracking-wider bg-amber-400/20 hover:bg-amber-400 text-amber-800 dark:text-amber-300 hover:text-stone-950 border border-amber-400/50 rounded-lg transition-colors inline-flex items-center gap-1.5"
+                  >
+                    <Sparkles className="w-3 h-3" />
+                    <span>Ver Tour 3 Pasos</span>
+                  </button>
+                )}
               </div>
               <h2 className="text-3xl sm:text-4xl font-bold font-serif-title text-stone-900 dark:text-stone-100 leading-tight">
                 Una caja de herramientas abierta para dirigir imagen, cine, diseño y audio con IA
@@ -196,13 +217,14 @@ export const HomeView: React.FC<HomeViewProps> = ({ onNavigateSection }) => {
               >
                 <div>
                   <div className="relative h-40 overflow-hidden bg-stone-900">
-                    <img
+                    <ResilientImage
                       src={item.image}
                       alt={item.title}
-                      loading="lazy"
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      objectPosition="top"
+                      containerClassName="w-full h-full"
+                      className="group-hover:scale-105 transition-transform duration-500"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-stone-950/80 via-stone-950/20 to-transparent" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-stone-950/80 via-stone-950/20 to-transparent pointer-events-none" />
                     <div className="absolute bottom-2.5 left-3.5 right-3.5 flex items-center justify-between text-[11px] font-mono-code text-amber-300 font-bold">
                       <span>{item.code}</span>
                     </div>

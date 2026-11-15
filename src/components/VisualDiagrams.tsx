@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { DiagramConfig, DiagramType } from '../data/modulesData';
 import { VISUAL_COMPARISONS } from '../data/videoAndJsonData';
+import { VISUAL_LIBRARY_PATHS } from '../data/visualLibraryRegistry';
+import { ResilientImage } from './ResilientImage';
 import { Eye, Sliders, Thermometer, Aperture, ArrowLeftRight } from 'lucide-react';
 
 interface TechnicalDiagramSVGProps {
@@ -391,13 +393,12 @@ export const VisualComparisonStrip: React.FC = () => {
               key={comp.id}
               className="rounded-lg border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 overflow-hidden shadow-xs flex flex-col"
             >
-              <div className="relative h-56 bg-stone-100 dark:bg-stone-950 overflow-hidden">
-                <img
+              <div className="relative h-56 bg-stone-900 overflow-hidden">
+                <ResilientImage
                   src={comp.image}
                   alt={comp.title}
-                  loading="lazy"
-                  referrerPolicy="no-referrer"
-                  className="w-full h-full object-cover"
+                  objectPosition="top"
+                  containerClassName="w-full h-full"
                 />
                 <div className="absolute inset-y-0 left-1/2 w-0.5 bg-amber-400/90 shadow-sm pointer-events-none" />
                 <div className="absolute bottom-2 left-2 right-2 flex justify-between gap-2 text-[10px] font-mono-code">
@@ -473,20 +474,20 @@ export const VisualComparisonStrip: React.FC = () => {
 
           <div className="relative h-48 rounded overflow-hidden border border-stone-200 dark:border-stone-800 bg-stone-900">
             {/* Background blurred layer */}
-            <img
-              src="/images/mod_territory_memory_1794593014725.jpg"
+            <ResilientImage
+              src={VISUAL_LIBRARY_PATHS.photoArchitecture}
               alt="Fondo arquitectónico de prueba óptica"
-              className={`w-full h-full object-cover transition-all duration-300 ${apertureBlurMap[selectedAperture]}`}
-              loading="lazy"
+              containerClassName="w-full h-full"
+              className={`transition-all duration-300 ${apertureBlurMap[selectedAperture]}`}
             />
             {/* Foreground sharp subject card */}
             <div className="absolute inset-0 flex items-center justify-center p-4 pointer-events-none">
               <div className="w-28 h-32 rounded border-2 border-amber-400/90 overflow-hidden shadow-xl bg-stone-950">
-                <img
-                  src="/images/recipe_neo_noir_portrait_1794436191840.jpg"
+                <ResilientImage
+                  src={VISUAL_LIBRARY_PATHS.lightRembrandt}
                   alt="Sujeto en plano de enfoque"
-                  className="w-full h-full object-cover"
-                  loading="lazy"
+                  objectPosition="top"
+                  containerClassName="w-full h-full"
                 />
               </div>
             </div>
@@ -536,12 +537,12 @@ export const VisualComparisonStrip: React.FC = () => {
           </div>
 
           <div className="relative h-48 rounded overflow-hidden border border-stone-200 dark:border-stone-800 bg-stone-900">
-            <img
-              src="/images/mod_composition_cinematography_1794593015294.jpg"
+            <ResilientImage
+              src={VISUAL_LIBRARY_PATHS.compCinematography}
               alt="Escena arquitectónica con temperatura de color variable"
               style={{ filter: kelvinFilterMap[selectedKelvin].filter }}
-              className="w-full h-full object-cover transition-all duration-300"
-              loading="lazy"
+              containerClassName="w-full h-full"
+              className="transition-all duration-300"
             />
             <div className={`absolute inset-0 pointer-events-none transition-colors duration-300 ${kelvinFilterMap[selectedKelvin].tint}`} />
             <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between gap-2 text-[11px] font-mono-code bg-stone-950/80 text-stone-100 px-2.5 py-1 rounded">

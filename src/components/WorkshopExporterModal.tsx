@@ -18,6 +18,9 @@ export const WorkshopExporterModal: React.FC<WorkshopExporterModalProps> = ({
 }) => {
   const [selectedFormat, setSelectedFormat] = useState<'current' | string>('current');
   const [participantName, setParticipantName] = useState('Taller Núcleo Colectivo');
+  const [provenanceAuthor, setProvenanceAuthor] = useState('Colectivo / Estudiante');
+  const [provenanceLicense, setProvenanceLicense] = useState('CC BY-NC-SA 4.0 (Uso Educativo / Cultural)');
+  const [provenanceSource, setProvenanceSource] = useState('Asistida con IA · Consentimiento verificado');
   const [isDownloadingPng, setIsDownloadingPng] = useState(false);
   const [pngSuccess, setPngSuccess] = useState(false);
   const printableRef = useRef<HTMLDivElement>(null);
@@ -159,11 +162,14 @@ export const WorkshopExporterModal: React.FC<WorkshopExporterModalProps> = ({
     }
     ctx.fillText(line, 110, y);
 
-    // Footer note
-    ctx.font = '13px "Plus Jakarta Sans", sans-serif';
+    // Footer & Provenance note
+    ctx.font = '13px "JetBrains Mono", monospace';
+    ctx.fillStyle = '#57534E';
+    ctx.fillText(`PROCEDENCIA · Autor: ${provenanceAuthor} | Licencia: ${provenanceLicense}`, 80, 1245);
+    ctx.fillText(`ESTADO IA: ${provenanceSource}`, 80, 1268);
+    ctx.font = '12px "Plus Jakarta Sans", sans-serif';
     ctx.fillStyle = '#78716C';
-    ctx.fillText('Documento pedagógico emitido por Núcleo Colectivo — Laboratorio de Arte, Tecnología e IA.', 80, 1260);
-    ctx.fillText('Uso libre para participantes de talleres y producciones creativas.', 80, 1285);
+    ctx.fillText('Documento pedagógico emitido por Núcleo Colectivo — Laboratorio de Arte, Tecnología e IA.', 80, 1298);
 
     // Download trigger
     setTimeout(() => {
@@ -244,6 +250,43 @@ export const WorkshopExporterModal: React.FC<WorkshopExporterModalProps> = ({
           </div>
         </div>
 
+        {/* Ficha de Procedencia & Ética */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6 p-3.5 rounded-lg bg-white dark:bg-stone-950 border border-stone-200 dark:border-stone-800 text-xs">
+          <div>
+            <label className="block text-[10px] font-mono-code uppercase text-stone-500 mb-1">
+              Autoría / Colectivo (Procedencia)
+            </label>
+            <input
+              type="text"
+              value={provenanceAuthor}
+              onChange={(e) => setProvenanceAuthor(e.target.value)}
+              className="w-full bg-stone-50 dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded px-2.5 py-1.5 text-xs"
+            />
+          </div>
+          <div>
+            <label className="block text-[10px] font-mono-code uppercase text-stone-500 mb-1">
+              Licencia
+            </label>
+            <input
+              type="text"
+              value={provenanceLicense}
+              onChange={(e) => setProvenanceLicense(e.target.value)}
+              className="w-full bg-stone-50 dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded px-2.5 py-1.5 text-xs"
+            />
+          </div>
+          <div>
+            <label className="block text-[10px] font-mono-code uppercase text-stone-500 mb-1">
+              Referencia / Consentimiento IA
+            </label>
+            <input
+              type="text"
+              value={provenanceSource}
+              onChange={(e) => setProvenanceSource(e.target.value)}
+              className="w-full bg-stone-50 dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded px-2.5 py-1.5 text-xs"
+            />
+          </div>
+        </div>
+
         {/* Printable Worksheet Preview Container */}
         <div 
           ref={printableRef}
@@ -302,7 +345,7 @@ export const WorkshopExporterModal: React.FC<WorkshopExporterModalProps> = ({
             </div>
           </div>
 
-          {/* Pedagogical checklist for in-person students */}
+          {/* Pedagogical checklist + Provenance for in-person students */}
           <div className="border-t border-stone-200 pt-3 text-[11px] text-stone-600 grid grid-cols-3 gap-2">
             <div>
               <strong className="block text-stone-800">1. Óptica Coherente</strong>
@@ -313,8 +356,8 @@ export const WorkshopExporterModal: React.FC<WorkshopExporterModalProps> = ({
               Comprobar sombras motivadas y contraste.
             </div>
             <div>
-              <strong className="block text-stone-800">3. Anti-Slop</strong>
-              Revisar ausencia de piel plástica o texto deformado.
+              <strong className="block text-stone-800">3. Procedencia & Ética</strong>
+              {provenanceAuthor} · {provenanceLicense} ({provenanceSource}).
             </div>
           </div>
 

@@ -19,6 +19,11 @@ import {
   AiToolEntry,
 } from '../data/extendedModulesData';
 import type { ModuleId } from '../data/modulesData';
+import {
+  FOUR_LIGHTS_CHALLENGE_SERIES,
+  FOCAL_WORKSHOP_SERIES,
+} from '../data/visualLibraryRegistry';
+import { ResilientImage } from './ResilientImage';
 import { ToolBrandLogo } from './ToolBrandLogo';
 
 interface ToolsAndAcademyProps {
@@ -277,13 +282,14 @@ export const ToolsAndAcademy: React.FC<ToolsAndAcademyProps> = ({ onJumpToSectio
                       <div>
                         {/* Visual Reference Header Banner */}
                         <div className="relative h-32 w-full overflow-hidden bg-stone-900">
-                          <img
+                          <ResilientImage
                             src={tool.previewImage}
                             alt={`Referencia visual de uso creativo en ${tool.name}`}
-                            loading="lazy"
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 opacity-90"
+                            objectPosition="top"
+                            containerClassName="w-full h-full"
+                            className="group-hover:scale-105 transition-transform duration-500 opacity-90"
                           />
-                          <div className="absolute inset-0 bg-gradient-to-t from-stone-950/85 via-stone-950/20 to-transparent" />
+                          <div className="absolute inset-0 bg-gradient-to-t from-stone-950/85 via-stone-950/20 to-transparent pointer-events-none" />
                           <div className="absolute top-2.5 left-3 right-3 flex items-center justify-between text-[10px] font-mono-code text-stone-200">
                             <span className="px-2 py-0.5 rounded bg-stone-950/80 border border-white/15 uppercase tracking-wider font-semibold">
                               {tool.area}
@@ -430,6 +436,72 @@ export const ToolsAndAcademy: React.FC<ToolsAndAcademyProps> = ({ onJumpToSectio
                         {ch.title}
                       </h4>
                       <p className="text-xs text-stone-600 dark:text-stone-400">{ch.objective}</p>
+
+                      {ch.id === 'reto-01' && (
+                        <div className="pt-1 space-y-2">
+                          <div className="flex items-center justify-between text-[10px] font-mono-code uppercase tracking-wider text-amber-700 dark:text-amber-400 font-bold">
+                            <span>Referencia controlada · Misma persona, 4 luces</span>
+                            <span className="text-stone-500 font-normal">Clic para copiar luz</span>
+                          </div>
+                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                            {FOUR_LIGHTS_CHALLENGE_SERIES.map((item) => (
+                              <button
+                                key={item.id}
+                                type="button"
+                                onClick={() => handleCopy(item.promptSnippet, `reto1-${item.id}`)}
+                                className="group text-left rounded-lg overflow-hidden border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 hover:border-amber-500 transition-colors"
+                              >
+                                <ResilientImage
+                                  src={item.image}
+                                  alt={item.alt}
+                                  aspectRatio="3:4"
+                                  objectPosition="top"
+                                  className="group-hover:scale-105 transition-transform duration-300"
+                                />
+                                <div className="p-1.5">
+                                  <div className="text-[10px] font-mono-code font-bold text-stone-900 dark:text-stone-100 truncate">
+                                    {copiedId === `reto1-${item.id}` ? 'Copiado ✓' : item.code}
+                                  </div>
+                                  <div className="text-[10px] text-stone-500 truncate">{item.label.split(' ')[0]}</div>
+                                </div>
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {ch.id === 'reto-02' && (
+                        <div className="pt-1 space-y-2">
+                          <div className="flex items-center justify-between text-[10px] font-mono-code uppercase tracking-wider text-amber-700 dark:text-amber-400 font-bold">
+                            <span>Progresión óptica · Mismo taller, 24 a 135mm</span>
+                            <span className="text-stone-500 font-normal">Clic para copiar lente</span>
+                          </div>
+                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                            {FOCAL_WORKSHOP_SERIES.map((item) => (
+                              <button
+                                key={item.id}
+                                type="button"
+                                onClick={() => handleCopy(item.promptSnippet, `reto2-${item.id}`)}
+                                className="group text-left rounded-lg overflow-hidden border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 hover:border-amber-500 transition-colors"
+                              >
+                                <ResilientImage
+                                  src={item.image}
+                                  alt={item.alt}
+                                  aspectRatio="3:2"
+                                  objectPosition="top"
+                                  className="group-hover:scale-105 transition-transform duration-300"
+                                />
+                                <div className="p-1.5">
+                                  <div className="text-[10px] font-mono-code font-bold text-stone-900 dark:text-stone-100 truncate">
+                                    {copiedId === `reto2-${item.id}` ? 'Copiado ✓' : item.code}
+                                  </div>
+                                  <div className="text-[10px] text-stone-500 truncate">{item.label}</div>
+                                </div>
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
 
                       <div className="space-y-2 pt-1">
                         {ch.steps.map((step, idx) => {

@@ -23,6 +23,8 @@ import {
   FOLDER_STRUCTURE_SUGGESTION,
   JsonStyleProfile,
 } from '../data/videoAndJsonData';
+import { VISUAL_LIBRARY_PATHS } from '../data/visualLibraryRegistry';
+import { ResilientImage } from './ResilientImage';
 
 interface JsonVisualLabProps {
   onApplyStyleToBuilder: (profile: JsonStyleProfile) => void;
@@ -399,11 +401,11 @@ export const JsonVisualLab: React.FC<JsonVisualLabProps> = ({ onApplyStyleToBuil
 
           <div className="lg:col-span-5">
             <div className="rounded-xl overflow-hidden border border-stone-200 dark:border-stone-800 bg-stone-950 shadow-sm">
-              <img
-                src="/images/comp_json_style_transfer_1794593016651.jpg"
+              <ResilientImage
+                src={VISUAL_LIBRARY_PATHS.colorJsonTransfer}
                 alt="Ejemplo de transferencia de estilo vía JSON manteniendo identidad del sujeto"
-                loading="lazy"
-                className="w-full h-56 object-cover"
+                objectPosition="top"
+                containerClassName="w-full h-56"
               />
               <div className="p-3 flex items-center justify-between text-[11px] font-mono-code text-stone-300">
                 <span>Original → Chiaroscuro Monochrome JSON</span>
