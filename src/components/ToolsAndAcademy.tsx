@@ -19,6 +19,7 @@ import {
   AiToolEntry,
 } from '../data/extendedModulesData';
 import type { ModuleId } from '../data/modulesData';
+import { ToolBrandLogo } from './ToolBrandLogo';
 
 interface ToolsAndAcademyProps {
   onJumpToSection: (sectionId: string, moduleId?: ModuleId) => void;
@@ -54,7 +55,7 @@ const LEARNING_PATHS = [
     title: 'Producción Colectiva, Ética y Material Impreso',
     duration: '120 min',
     steps: [
-      'Diseñar un proyecto comunitario completo con AI Film Director (8 etapas).',
+      'Diseñar un proyecto comunitario completo con Planificador Audiovisual (8 etapas).',
       'Revisar Módulo 25 (Accesibilidad) y Módulo 26 (Procedencia y Consentimiento).',
       'Exportar fichas técnicas PDF/PNG desde el Constructor para trabajo en aula.',
     ],
@@ -63,9 +64,22 @@ const LEARNING_PATHS = [
   },
 ];
 
+const TOOL_AREAS: ('Todas' | AiToolEntry['area'])[] = [
+  'Todas',
+  'Asistentes & Investigación',
+  'Desarrollo & Apps',
+  'Imagen',
+  'Video',
+  'Edición',
+  'Audio',
+  '3D',
+  'Diseño',
+];
+
 export const ToolsAndAcademy: React.FC<ToolsAndAcademyProps> = ({ onJumpToSection }) => {
   const [activeTab, setActiveTab] = useState<'tools' | 'challenges' | 'glossary'>('tools');
   const [areaFilter, setAreaFilter] = useState<'Todas' | AiToolEntry['area']>('Todas');
+  const [toolQuery, setToolQuery] = useState('');
   const [glossaryQuery, setGlossaryQuery] = useState('');
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
@@ -97,9 +111,18 @@ export const ToolsAndAcademy: React.FC<ToolsAndAcademyProps> = ({ onJumpToSectio
   };
 
   const filteredTools = useMemo(() => {
-    if (areaFilter === 'Todas') return AI_TOOLS_DIRECTORY;
-    return AI_TOOLS_DIRECTORY.filter((t) => t.area === areaFilter);
-  }, [areaFilter]);
+    const q = toolQuery.trim().toLowerCase();
+    return AI_TOOLS_DIRECTORY.filter((t) => {
+      const matchArea = areaFilter === 'Todas' || t.area === areaFilter;
+      const matchSearch =
+        !q ||
+        t.name.toLowerCase().includes(q) ||
+        t.description.toLowerCase().includes(q) ||
+        t.specialty.toLowerCase().includes(q) ||
+        t.capabilities.some((c) => c.toLowerCase().includes(q));
+      return matchArea && matchSearch;
+    });
+  }, [areaFilter, toolQuery]);
 
   const filteredGlossary = useMemo(() => {
     const q = glossaryQuery.trim().toLowerCase();
@@ -140,17 +163,17 @@ export const ToolsAndAcademy: React.FC<ToolsAndAcademyProps> = ({ onJumpToSectio
             <div className="flex items-center gap-2 text-xs font-mono-code uppercase tracking-wider text-amber-700 dark:text-amber-400 font-bold mb-1.5">
               <span>ECOSISTEMA Y FORMACIÓN</span>
               <span aria-hidden="true" className="text-stone-400">/</span>
-              <span>HERRAMIENTAS, RETOS Y GLOSARIO BILINGÜE</span>
+              <span>APPS IA, RETOS Y GLOSARIO BILINGÜE</span>
             </div>
             <h2 className="text-3xl sm:text-4xl font-bold font-serif-title text-stone-900 dark:text-stone-100">
-              Directorio de Herramientas IA y Academia Visual
+              Directorio de Aplicaciones IA y Academia Visual
             </h2>
             <p className="text-sm text-stone-600 dark:text-stone-400 mt-1 max-w-2xl">
-              Elige la plataforma adecuada para cada etapa (imagen, video, audio, edición, 3D o diseño), practica con retos guiados paso a paso y traduce términos técnicos español–inglés.
+              Explora {AI_TOOLS_DIRECTORY.length} aplicaciones clave —desde Google AI Studio, Gemini, Claude y NotebookLM hasta CapCut, Lovable, Bolt, Runway y Blender— para practicar tus prompts directamente en herramientas reales.
             </p>
           </div>
           <span className="text-xs font-mono-code text-stone-500 dark:text-stone-400">
-            Revisión de herramientas · 2026-11
+            Directorio actualizado · {AI_TOOLS_DIRECTORY.length} plataformas
           </span>
         </div>
 
@@ -158,7 +181,7 @@ export const ToolsAndAcademy: React.FC<ToolsAndAcademyProps> = ({ onJumpToSectio
         <div className="flex flex-wrap gap-2 pb-3 border-b border-stone-200 dark:border-stone-800">
           {(
             [
-              { id: 'tools', label: `Directorio IA (${AI_TOOLS_DIRECTORY.length})`, icon: Wrench },
+              { id: 'tools', label: `Apps IA (${AI_TOOLS_DIRECTORY.length})`, icon: Wrench },
               { id: 'challenges', label: 'Retos Creativos & Rutas', icon: Trophy },
               { id: 'glossary', label: `Diccionario Bilingüe ES–EN (${BILINGUAL_GLOSSARY.length})`, icon: Languages },
             ] as const
@@ -186,75 +209,148 @@ export const ToolsAndAcademy: React.FC<ToolsAndAcademyProps> = ({ onJumpToSectio
         {/* TAB 1: DIRECTORIO DE HERRAMIENTAS */}
         {activeTab === 'tools' && (
           <div className="space-y-6">
-            <div className="flex flex-wrap items-center gap-2">
-              {(['Todas', 'Imagen', 'Video', 'Audio', 'Edición', '3D', 'Diseño'] as const).map((area) => (
-                <button
-                  key={area}
-                  type="button"
-                  onClick={() => setAreaFilter(area)}
-                  className={`px-3 py-1.5 text-xs font-mono-code rounded border transition-colors ${
-                    areaFilter === area
-                      ? 'bg-stone-900 dark:bg-amber-400 text-white dark:text-stone-950 border-stone-900 dark:border-amber-400 font-bold'
-                      : 'bg-[#FAF8F5] dark:bg-stone-950 text-stone-600 dark:text-stone-400 border-stone-200 dark:border-stone-800 hover:border-amber-400'
-                  }`}
-                >
-                  {area}
-                </button>
-              ))}
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-              {filteredTools.map((tool) => (
-                <article
-                  key={tool.id}
-                  className="p-5 rounded-xl bg-[#FAF8F5] dark:bg-stone-950 border border-stone-200 dark:border-stone-800 flex flex-col justify-between space-y-4 hover:border-amber-400 transition-colors"
-                >
-                  <div className="space-y-2.5">
-                    <div className="flex items-center justify-between text-[11px] font-mono-code text-stone-500">
-                      <span className="text-amber-700 dark:text-amber-400 font-bold uppercase">
-                        {tool.area} · {tool.accessType}
-                      </span>
-                      <span>Rev. {tool.lastReviewed}</span>
-                    </div>
-
-                    <h3 className="text-base font-bold font-serif-title text-stone-900 dark:text-stone-100">
-                      {tool.name}
-                    </h3>
-                    <p className="text-xs text-stone-600 dark:text-stone-400 leading-relaxed">
-                      {tool.description}
-                    </p>
-
-                    <div className="text-xs text-stone-700 dark:text-stone-300">
-                      <strong className="font-semibold">Fortaleza:</strong> {tool.specialty}
-                    </div>
-
-                    <div className="text-[11px] font-mono-code text-stone-500 dark:text-stone-400">
-                      {tool.capabilities.join(' · ')}
-                    </div>
-
-                    <div className="p-2.5 rounded bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 text-[11px] text-stone-700 dark:text-stone-300">
-                      <strong className="block font-mono-code text-[10px] uppercase text-stone-500 mb-0.5">
-                        Ejemplo de uso
-                      </strong>
-                      {tool.usageExample}
-                    </div>
-                  </div>
-
-                  <div className="pt-3 border-t border-stone-200 dark:border-stone-800 flex items-center justify-between text-[11px] font-mono-code">
-                    <span className="text-stone-500 truncate pr-2">{tool.compatibleFormats}</span>
-                    <a
-                      href={tool.officialUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-amber-700 dark:text-amber-400 hover:underline font-semibold flex items-center gap-1 shrink-0"
+            {/* Search & Area Filter Row */}
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+              <div className="flex flex-wrap items-center gap-1.5">
+                {TOOL_AREAS.map((area) => {
+                  const count =
+                    area === 'Todas'
+                      ? AI_TOOLS_DIRECTORY.length
+                      : AI_TOOLS_DIRECTORY.filter((t) => t.area === area).length;
+                  return (
+                    <button
+                      key={area}
+                      type="button"
+                      onClick={() => setAreaFilter(area)}
+                      className={`px-3 py-1.5 text-xs font-mono-code rounded border transition-colors ${
+                        areaFilter === area
+                          ? 'bg-stone-900 dark:bg-amber-400 text-white dark:text-stone-950 border-stone-900 dark:border-amber-400 font-bold'
+                          : 'bg-[#FAF8F5] dark:bg-stone-950 text-stone-600 dark:text-stone-400 border-stone-200 dark:border-stone-800 hover:border-amber-400'
+                      }`}
                     >
-                      <span>Sitio oficial</span>
-                      <ExternalLink className="w-3 h-3" />
-                    </a>
-                  </div>
-                </article>
-              ))}
+                      {area} ({count})
+                    </button>
+                  );
+                })}
+              </div>
+
+              <div className="relative w-full lg:w-72 shrink-0">
+                <Search className="w-4 h-4 text-stone-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                <input
+                  type="text"
+                  value={toolQuery}
+                  onChange={(e) => setToolQuery(e.target.value)}
+                  placeholder="Buscar app (Claude, CapCut, Lovable...)"
+                  aria-label="Buscar aplicación IA"
+                  className="w-full pl-9 pr-3 py-2 text-xs bg-[#FAF8F5] dark:bg-stone-950 border border-stone-300 dark:border-stone-700 rounded-lg text-stone-900 dark:text-stone-100 focus:outline-none focus:border-amber-500"
+                />
+              </div>
             </div>
+
+            {filteredTools.length === 0 ? (
+              <div className="p-8 rounded-xl bg-[#FAF8F5] dark:bg-stone-950 border border-stone-200 dark:border-stone-800 text-center space-y-2">
+                <p className="text-sm font-semibold text-stone-800 dark:text-stone-200">
+                  No encontramos aplicaciones con «{toolQuery}» en esta categoría.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAreaFilter('Todas');
+                    setToolQuery('');
+                  }}
+                  className="text-xs font-mono-code text-amber-700 dark:text-amber-400 underline"
+                >
+                  Mostrar todas las aplicaciones ({AI_TOOLS_DIRECTORY.length})
+                </button>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                {filteredTools.map((tool) => {
+                  const cleanDomain = tool.officialUrl
+                    .replace(/^https?:\/\//, '')
+                    .replace(/\/.*$/, '');
+                  return (
+                    <article
+                      key={tool.id}
+                      className="rounded-xl overflow-hidden bg-[#FAF8F5] dark:bg-stone-950 border border-stone-200 dark:border-stone-800 flex flex-col justify-between hover:border-amber-400 transition-colors shadow-xs group"
+                    >
+                      <div>
+                        {/* Visual Reference Header Banner */}
+                        <div className="relative h-32 w-full overflow-hidden bg-stone-900">
+                          <img
+                            src={tool.previewImage}
+                            alt={`Referencia visual de uso creativo en ${tool.name}`}
+                            loading="lazy"
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 opacity-90"
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-t from-stone-950/85 via-stone-950/20 to-transparent" />
+                          <div className="absolute top-2.5 left-3 right-3 flex items-center justify-between text-[10px] font-mono-code text-stone-200">
+                            <span className="px-2 py-0.5 rounded bg-stone-950/80 border border-white/15 uppercase tracking-wider font-semibold">
+                              {tool.area}
+                            </span>
+                            <span className="px-2 py-0.5 rounded bg-stone-950/80 border border-white/15">
+                              {tool.accessType}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Body with Brand Logo + Title */}
+                        <div className="p-5 space-y-3">
+                          <div className="flex items-start gap-3">
+                            <ToolBrandLogo
+                              toolId={tool.id}
+                              brandColor={tool.brandColor}
+                              shortCode={tool.shortCode}
+                              name={tool.name}
+                            />
+                            <div className="min-w-0">
+                              <h3 className="text-base font-bold font-serif-title text-stone-900 dark:text-stone-100 leading-tight">
+                                {tool.name}
+                              </h3>
+                              <span className="text-[11px] font-mono-code text-stone-500 dark:text-stone-400 block truncate mt-0.5">
+                                {cleanDomain}
+                              </span>
+                            </div>
+                          </div>
+
+                          <p className="text-xs text-stone-600 dark:text-stone-400 leading-relaxed">
+                            {tool.description}
+                          </p>
+
+                          <div className="text-xs text-stone-700 dark:text-stone-300">
+                            <strong className="font-semibold">Fortaleza:</strong> {tool.specialty}
+                          </div>
+
+                          <div className="text-[11px] font-mono-code text-amber-800 dark:text-amber-300">
+                            {tool.capabilities.join(' · ')}
+                          </div>
+
+                          <div className="p-2.5 rounded bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 text-[11px] text-stone-700 dark:text-stone-300">
+                            <strong className="block font-mono-code text-[10px] uppercase text-stone-500 mb-0.5">
+                              Ejemplo práctico en taller
+                            </strong>
+                            {tool.usageExample}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="px-5 py-3.5 border-t border-stone-200 dark:border-stone-800 bg-white/60 dark:bg-stone-900/40 flex items-center justify-between gap-2 text-[11px] font-mono-code">
+                        <span className="text-stone-500 truncate">{tool.compatibleFormats}</span>
+                        <a
+                          href={tool.officialUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="px-3 py-1.5 rounded bg-amber-400 hover:bg-amber-300 text-stone-950 font-bold flex items-center gap-1.5 shrink-0 transition-colors"
+                        >
+                          <span>Abrir App</span>
+                          <ExternalLink className="w-3 h-3" />
+                        </a>
+                      </div>
+                    </article>
+                  );
+                })}
+              </div>
+            )}
           </div>
         )}
 

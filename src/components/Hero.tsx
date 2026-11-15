@@ -76,7 +76,7 @@ export const Hero: React.FC<HeroProps> = ({
             </div>
 
             {/* Direct advice from Manuel & Núcleo Colectivo */}
-            <div className="text-xs text-stone-600 dark:text-stone-400 border-l-2 border-amber-500/70 pl-3 py-1">
+            <div className="text-xs text-stone-600 dark:text-stone-400 rounded-lg border border-stone-200 dark:border-stone-800 bg-white/80 dark:bg-stone-900/60 p-3.5">
               <p>
                 <strong className="text-stone-800 dark:text-stone-300 font-medium">Nota de dirección:</strong> Los códigos con barra (<code className="text-amber-700 dark:text-amber-300 font-mono-code font-bold">/premiumshowcase</code>, <code className="text-amber-700 dark:text-amber-300 font-mono-code font-bold">/dolly-in</code>) funcionan como atajos mnemotécnicos en ChatGPT y modelos de lenguaje, traduciéndose en parámetros físicos precisos de cámara y luz.
               </p>

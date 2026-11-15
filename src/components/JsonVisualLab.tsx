@@ -14,6 +14,7 @@ import {
   FolderTree,
   Sparkles,
   FileCode2,
+  ExternalLink,
 } from 'lucide-react';
 import {
   JSON_STYLE_PRESETS,
@@ -28,6 +29,164 @@ interface JsonVisualLabProps {
 }
 
 const FAV_JSON_KEY = 'nc_fav_json_styles_v1';
+
+function rgbToHex(r: number, g: number, b: number): string {
+  const clamp = (v: number) => Math.max(0, Math.min(255, Math.round(v)));
+  return (
+    '#' +
+    [clamp(r), clamp(g), clamp(b)]
+      .map((x) => x.toString(16).padStart(2, '0').toUpperCase())
+      .join('')
+  );
+}
+
+async function analyzeImageLocallyWithCanvas(
+  dataUrl: string,
+  notes: string
+): Promise<Omit<JsonStyleProfile, 'id'>> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      try {
+        const size = 96;
+        const canvas = document.createElement('canvas');
+        canvas.width = size;
+        canvas.height = size;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+          throw new Error('No se pudo inicializar el analizador visual del navegador.');
+        }
+        ctx.drawImage(img, 0, 0, size, size);
+        const { data } = ctx.getImageData(0, 0, size, size);
+
+        let sumLuma = 0;
+        let sumWarmth = 0;
+        let sumSat = 0;
+        const lumas: number[] = [];
+        const bucketCounts = new Map<string, { count: number; r: number; g: number; b: number }>();
+
+        for (let i = 0; i < data.length; i += 4) {
+          const r = data[i];
+          const g = data[i + 1];
+          const b = data[i + 2];
+          const luma = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+          lumas.push(luma);
+          sumLuma += luma;
+          sumWarmth += r - b;
+          const maxC = Math.max(r, g, b);
+          const minC = Math.min(r, g, b);
+          sumSat += maxC === 0 ? 0 : (maxC - minC) / maxC;
+
+          // Quantize into 24-step color buckets to extract dominant swatches
+          const qr = Math.round(r / 32) * 32;
+          const qg = Math.round(g / 32) * 32;
+          const qb = Math.round(b / 32) * 32;
+          const key = `${qr}-${qg}-${qb}`;
+          const prev = bucketCounts.get(key);
+          if (prev) {
+            prev.count += 1;
+            prev.r += r;
+            prev.g += g;
+            prev.b += b;
+          } else {
+            bucketCounts.set(key, { count: 1, r, g, b });
+          }
+        }
+
+        const totalPixels = lumas.length || 1;
+        const avgLuma = sumLuma / totalPixels;
+        const avgWarmth = sumWarmth / totalPixels;
+        const avgSat = sumSat / totalPixels;
+        const variance =
+          lumas.reduce((acc, l) => acc + Math.pow(l - avgLuma, 2), 0) / totalPixels;
+        const contrastStd = Math.sqrt(variance);
+
+        const topSwatches = Array.from(bucketCounts.values())
+          .sort((a, b) => b.count - a.count)
+          .slice(0, 5)
+          .map((item) => rgbToHex(item.r / item.count, item.g / item.count, item.b / item.count));
+
+        const keyLight =
+          avgLuma < 85
+            ? 'Low Key (sombras profundas y altas luces contenidas)'
+            : avgLuma > 168
+            ? 'High Key (iluminación envolvente brillante y limpia)'
+            : 'Mid Key equilibrada con transición gradual de tonos medios';
+
+        const contrastLabel =
+          contrastStd > 62
+            ? 'alto contraste direccional'
+            : contrastStd > 38
+            ? 'contraste medio editorial'
+            : 'contraste suave difuso';
+
+        const tempLabel =
+          avgWarmth > 18
+            ? 'cálida dorada (~3600K–4400K)'
+            : avgWarmth < -14
+            ? 'fría atmosférica (~6500K–7600K)'
+            : 'neutra equilibrada (~5200K–5600K)';
+
+        const satLabel =
+          avgSat < 0.14
+            ? 'monocromática o muy desaturada'
+            : avgSat > 0.45
+            ? 'saturación cromática rica y expresiva'
+            : 'saturación natural orgánica y contenida';
+
+        const ratio =
+          img.naturalWidth && img.naturalHeight
+            ? img.naturalWidth > img.naturalHeight * 1.15
+              ? 'encuadre horizontal cinematográfico'
+              : img.naturalHeight > img.naturalWidth * 1.15
+              ? 'encuadre vertical editorial'
+              : 'encuadre equilibrado próximo a cuadrado'
+            : 'encuadre balanceado';
+
+        const customNote = notes.trim() ? ` Prioridad indicada: ${notes.trim()}.` : '';
+
+        resolve({
+          style_name:
+            avgLuma < 90
+              ? 'Chiaroscuro Extraído'
+              : avgWarmth > 18
+              ? 'Editorial Cálido Analizado'
+              : 'Natural Balanceado Extraído',
+          category: 'Análisis Local',
+          photography: `Dirección fotográfica con ${contrastLabel}, lectura visual limpia y ${ratio}.${customNote}`,
+          camera: 'Referencia de rango dinámico amplio tipo medio formato / full-frame',
+          lens: 'Óptica fija aparente 50mm–85mm sin distorsión angular perceptible',
+          aperture: 'Profundidad de campo media-superficial (aparente f/2.0–f/2.8)',
+          lighting: `${keyLight}, ${contrastLabel} y temperatura ${tempLabel}`,
+          composition: `Composición en ${ratio} (${img.naturalWidth}x${img.naturalHeight}px) con aire respirable alrededor del foco`,
+          color: `Paleta ${satLabel}; muestras dominantes medidas: ${topSwatches.join(', ')}`,
+          focus: 'Nitidez selectiva enfocada en el sujeto principal con transición progresiva',
+          depth_of_field: 'Separación suave figura-fondo sin desenfoque artificial de software',
+          texture: 'Textura orgánica natural, grano sutil y microdetalles preservados en luces y sombras',
+          atmosphere:
+            avgLuma < 90
+              ? 'Atmósfera íntima, contenida y dramática'
+              : 'Atmósfera serena, editorial y luminosa',
+          background:
+            avgLuma < 90
+              ? 'Fondo oscuro controlado en penumbra limpia'
+              : 'Fondo armónico desenfocado acorde a la paleta medida',
+          post_processing: `Gradación sutil conservando la curva tonal observada (${topSwatches.slice(0, 3).join(' / ')})`,
+          preservation: {
+            keep_subject_identity: true,
+            keep_facial_features: true,
+            keep_natural_pose: true,
+          },
+          observable_notes: `Medición directa en navegador (${img.naturalWidth}x${img.naturalHeight}px): luminancia media ${Math.round(avgLuma)}/255, contraste σ=${Math.round(contrastStd)}, temperatura ${tempLabel}. Paleta extraída: ${topSwatches.join(', ')}.`,
+        });
+      } catch (err) {
+        reject(err);
+      }
+    };
+    img.onerror = () => reject(new Error('No se pudo leer la imagen subida.'));
+    img.src = dataUrl;
+  });
+}
 
 function toYamlString(profile: JsonStyleProfile): string {
   return `style_name: "${profile.style_name}"
@@ -58,9 +217,8 @@ export const JsonVisualLab: React.FC<JsonVisualLabProps> = ({ onApplyStyleToBuil
   const [outputFormat, setOutputFormat] = useState<'json' | 'yaml'>('json');
   const [activeTab, setActiveTab] = useState<'editor' | 'prompts' | 'troubleshooting'>('editor');
 
-  // Image Upload + Gemini Multimodal State
+  // Image Upload + Local Canvas Analyzer State
   const [uploadedPreview, setUploadedPreview] = useState<string | null>(null);
-  const [uploadedMime, setUploadedMime] = useState<string>('image/jpeg');
   const [analysisNotes, setAnalysisNotes] = useState('');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analyzeError, setAnalyzeError] = useState<string | null>(null);
@@ -88,7 +246,6 @@ export const JsonVisualLab: React.FC<JsonVisualLabProps> = ({ onApplyStyleToBuil
     const file = e.target.files?.[0];
     if (!file) return;
     setAnalyzeError(null);
-    setUploadedMime(file.type || 'image/jpeg');
     const reader = new FileReader();
     reader.onload = () => {
       if (typeof reader.result === 'string') {
@@ -100,34 +257,21 @@ export const JsonVisualLab: React.FC<JsonVisualLabProps> = ({ onApplyStyleToBuil
 
   const handleAnalyzeImage = async () => {
     if (!uploadedPreview) {
-      setAnalyzeError('Sube primero una fotografía de referencia para analizar con Gemini.');
+      setAnalyzeError('Sube primero una fotografía de referencia para analizar su paleta, luz y proporción.');
       return;
     }
     setAnalyzeError(null);
     setIsAnalyzing(true);
     try {
-      const res = await fetch('/api/gemini/analyze-style', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          imageBase64: uploadedPreview,
-          mimeType: uploadedMime,
-          notes: analysisNotes,
-        }),
-      });
-      if (!res.ok) {
-        const errData = await res.json().catch(() => ({}));
-        throw new Error(errData.error || `Error ${res.status}`);
-      }
-      const data = await res.json();
+      const extracted = await analyzeImageLocallyWithCanvas(uploadedPreview, analysisNotes);
       setActiveProfile({
         id: `custom-${Date.now()}`,
-        ...data,
+        ...extracted,
       });
     } catch (err: any) {
       console.error(err);
       setAnalyzeError(
-        err?.message || 'No se pudo analizar la imagen. Verifica la conexión con Gemini.'
+        err?.message || 'No se pudo procesar la imagen. Intenta con otro archivo JPG, PNG o WebP.'
       );
     } finally {
       setIsAnalyzing(false);
@@ -221,7 +365,7 @@ export const JsonVisualLab: React.FC<JsonVisualLabProps> = ({ onApplyStyleToBuil
               Laboratorio JSON Visual
             </h2>
             <p className="text-sm text-stone-600 dark:text-stone-400 leading-relaxed max-w-2xl">
-              Convierte una imagen inspiradora en una receta estructurada reutilizable (sin inventar EXIF ocultos ni alterar tu identidad). Sube una fotografía para extraer su estilo con Gemini, edita cada campo, compara estilos lado a lado y genera el prompt listo para aplicar sobre tu retrato.
+              Convierte una imagen inspiradora en una receta estructurada reutilizable (sin inventar EXIF ocultos ni alterar tu identidad). Sube una fotografía para extraer su luz, contraste y paleta cromática en tu navegador, edita cada campo, compara estilos lado a lado y genera el prompt listo para practicar en tus herramientas IA favoritas.
             </p>
 
             {/* 3-Step Strip */}
@@ -409,10 +553,10 @@ export const JsonVisualLab: React.FC<JsonVisualLabProps> = ({ onApplyStyleToBuil
                     <div>
                       <h3 className="text-sm font-bold text-stone-900 dark:text-stone-100 flex items-center gap-2">
                         <Upload className="w-4 h-4 text-amber-600" />
-                        <span>Extraer Estilo JSON desde una Fotografía (Gemini Multimodal)</span>
+                        <span>Extraer Estilo JSON desde una Fotografía (Análisis Local)</span>
                       </h3>
                       <p className="text-xs text-stone-600 dark:text-stone-400 mt-0.5">
-                        Sube una foto de referencia para analizar luz, composición, textura y color observable sin copiar rasgos personales.
+                        Sube una foto de referencia para medir clave tonal, temperatura, contraste y 5 colores dominantes directamente en tu dispositivo.
                       </p>
                     </div>
                   </div>
@@ -458,7 +602,7 @@ export const JsonVisualLab: React.FC<JsonVisualLabProps> = ({ onApplyStyleToBuil
                         {isAnalyzing ? (
                           <>
                             <Loader2 className="w-4 h-4 animate-spin" />
-                            <span>Analizando estética con Gemini...</span>
+                            <span>Analizando imagen localmente...</span>
                           </>
                         ) : (
                           <>
@@ -649,8 +793,30 @@ export const JsonVisualLab: React.FC<JsonVisualLabProps> = ({ onApplyStyleToBuil
                       </button>
                     </div>
                     <p className="text-[11px] text-stone-600 dark:text-stone-400 leading-relaxed">
-                      Adjunta tu retrato en ChatGPT o editor multimodal y pega este bloque para aplicar el estilo conservando identidad.
+                      Copia el bloque y adjunta tu retrato en ChatGPT, Gemini Web o Flux para aplicar el estilo conservando identidad.
                     </p>
+                    <div className="flex flex-wrap gap-2 pt-1">
+                      <a
+                        href="https://chatgpt.com/"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={() => handleCopy(fullApplicationPrompt, 'full-apply')}
+                        className="px-2.5 py-1.5 text-[11px] font-mono-code font-semibold bg-white dark:bg-stone-900 border border-stone-300 dark:border-stone-700 hover:border-amber-500 text-stone-800 dark:text-stone-200 rounded inline-flex items-center gap-1 transition-colors"
+                      >
+                        <span>Practicar en ChatGPT</span>
+                        <ExternalLink className="w-3 h-3 text-amber-600" />
+                      </a>
+                      <a
+                        href="https://gemini.google.com/"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={() => handleCopy(fullApplicationPrompt, 'full-apply')}
+                        className="px-2.5 py-1.5 text-[11px] font-mono-code font-semibold bg-white dark:bg-stone-900 border border-stone-300 dark:border-stone-700 hover:border-amber-500 text-stone-800 dark:text-stone-200 rounded inline-flex items-center gap-1 transition-colors"
+                      >
+                        <span>Practicar en Gemini Web</span>
+                        <ExternalLink className="w-3 h-3 text-amber-600" />
+                      </a>
+                    </div>
                   </div>
                 </div>
               </div>

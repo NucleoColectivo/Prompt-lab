@@ -14,7 +14,8 @@ import {
   Star,
   AlertTriangle,
   Download,
-  Sliders
+  Sliders,
+  ExternalLink
 } from 'lucide-react';
 import { RECIPES } from '../data/promptData';
 
@@ -477,7 +478,7 @@ Avoid: ${builderState.negativeAvoid.length > 0 ? builderState.negativeAvoid.join
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const handleEnrichWithGemini = async () => {
+  const handleEnrichWithGemini = () => {
     if (!builderState.subject.trim()) {
       setEnrichError('Escribe primero una idea básica en el campo de sujeto (ej: "un reloj de titanio", "un artesano en su taller").');
       return;
@@ -485,29 +486,42 @@ Avoid: ${builderState.negativeAvoid.length > 0 ? builderState.negativeAvoid.join
 
     setEnrichError(null);
     setIsEnriching(true);
-    try {
-      const response = await fetch('/api/gemini/enrich', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          subject: builderState.subject,
-          mode: builderState.mode,
-          style: builderState.visualStyle
-        })
-      });
 
-      if (!response.ok) {
-        throw new Error(`Error en servidor: ${response.statusText}`);
-      }
+    const rawSubject = builderState.subject.trim();
+    const lower = rawSubject.toLowerCase();
+    const isVideo = builderState.mode === 'video';
+    const isPortrait = /(persona|mujer|hombre|retrato|artesano|artista|joven|rostro|manos)/.test(lower);
+    const isObject = /(reloj|frasco|perfume|cerámica|producto|botella|objeto|escultura)/.test(lower);
+    const isSpace = /(calle|barrio|arquitectura|taller|galería|paisaje|bosque|montaña|ciudad)/.test(lower);
 
-      const data = await response.json();
-      setGeminiSuggestion(data);
-    } catch (err: any) {
-      console.error(err);
-      setEnrichError('No se pudo conectar con Gemini. Verifica la clave API en Configuración.');
-    } finally {
-      setIsEnriching(false);
-    }
+    const enrichedDescription = isVideo
+      ? `${rawSubject}, capturado con continuidad física creíble en ${builderState.visualStyle || 'lenguaje cinematográfico contemporáneo'}, resaltando interacción real entre luz, atmósfera y movimiento sutil del entorno.`
+      : isPortrait
+      ? `${rawSubject}, con expresión genuina, postura relajada, piel natural con textura real sin suavizado artificial y presencia física equilibrada dentro de una composición ${builderState.visualStyle || 'editorial contemporánea'}.`
+      : isObject
+      ? `${rawSubject}, fotografiado destacando peso físico, reflejos controlados en los materiales, imperfecciones táctiles auténticas y separación limpia respecto al fondo.`
+      : isSpace
+      ? `${rawSubject}, con profundidad espacial en planos claro-oscuros, materiales arquitectónicos con pátina real y atmósfera envolvente sin saturación exagerada.`
+      : `${rawSubject}, desarrollado bajo dirección de arte ${builderState.visualStyle || 'editorial'} con atención precisa a materiales, luz direccional y encuadre equilibrado.`;
+
+    const visualCues = isPortrait
+      ? ['poros y textura real de piel', 'brillo natural en ojos (catchlight)', 'tejido orgánico en vestuario', 'caída suave de sombras']
+      : isObject
+      ? ['reflejo especular controlado', 'microtextura mineral/metálica', 'transición nítida de bordes', 'grano fino fotográfico']
+      : ['atmósfera con profundidad tonal', 'textura arquitectónica táctil', 'equilibrio de luces altas', 'colorimetría orgánica'];
+
+    const lightingAdvice = isVideo
+      ? 'Luz direccional lateral estable con partículas suaves en contraluz para dar relieve al movimiento de cámara.'
+      : isPortrait
+      ? 'Luz natural lateral de ventana o esquema Rembrandt suave a 45° para esculpir volumen sin endurecer sombras.'
+      : 'Luz principal rasante que revele relieve del material + rebote sutil en sombras.';
+
+    setGeminiSuggestion({
+      enrichedDescription,
+      visualCues,
+      lightingAdvice,
+    });
+    setIsEnriching(false);
   };
 
   const applyGeminiSuggestion = () => {
@@ -681,17 +695,17 @@ Avoid: ${builderState.negativeAvoid.length > 0 ? builderState.negativeAvoid.join
                   onClick={handleEnrichWithGemini}
                   disabled={isEnriching}
                   className="px-2.5 py-1 text-[11px] font-mono-code text-amber-800 dark:text-amber-300 bg-amber-100/70 dark:bg-amber-950/40 hover:bg-amber-200/80 dark:hover:bg-amber-900/60 border border-amber-300 dark:border-amber-800/80 rounded transition-all flex items-center gap-1.5 disabled:opacity-50"
-                  title="Enriquecer descripción con detalles ópticos, texturas y dirección de arte con Gemini"
+                  title="Ampliar tu idea básica con texturas, luz y dirección de arte"
                 >
                   {isEnriching ? (
                     <>
                       <Loader2 className="w-3 h-3 animate-spin text-amber-600" />
-                      <span>Enriqueciendo con Gemini...</span>
+                      <span>Ampliando escena...</span>
                     </>
                   ) : (
                     <>
                       <Wand2 className="w-3 h-3 text-amber-600 dark:text-amber-400" />
-                      <span>Enriquecer con Gemini</span>
+                      <span>Enriquecer Escena</span>
                     </>
                   )}
                 </button>
@@ -715,13 +729,13 @@ Avoid: ${builderState.negativeAvoid.length > 0 ? builderState.negativeAvoid.join
                 </p>
               )}
 
-              {/* Gemini Suggestion Panel */}
+              {/* Art Direction Suggestion Panel */}
               {geminiSuggestion && (
                 <div className="mt-3 p-4 bg-amber-50/80 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/40 rounded-lg text-stone-800 dark:text-stone-200 animate-in fade-in">
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-xs font-mono-code font-bold text-amber-800 dark:text-amber-400 flex items-center gap-1.5">
                       <Sparkles className="w-3.5 h-3.5 text-amber-600" />
-                      <span>Propuesta de Dirección de Arte (Gemini)</span>
+                      <span>Propuesta de Dirección de Arte</span>
                     </span>
                     <button
                       type="button"
@@ -1290,12 +1304,47 @@ Avoid: ${builderState.negativeAvoid.length > 0 ? builderState.negativeAvoid.join
                 )}
               </div>
 
-              {/* Usage hint */}
-              <div className="mt-3 text-[11px] text-stone-500 leading-normal flex items-start gap-1.5">
-                <Sparkles className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
-                <span>
-                  Pega directamente este prompt en <strong>ChatGPT</strong> (con o sin fotografía adjunta), <strong>Midjourney v6</strong>, <strong>Flux.1</strong>, o en <strong>Runway Gen-3 / Kling</strong> para secuencias en movimiento.
-                </span>
+              {/* Direct Practice Launchers in External AI Apps */}
+              <div className="mt-3 pt-3 border-t border-stone-200 dark:border-stone-800 space-y-2">
+                <div className="flex items-center justify-between text-[11px] font-mono-code uppercase text-stone-600 dark:text-stone-400 font-bold">
+                  <span>Practicar ahora en aplicaciones IA (copia y abre):</span>
+                </div>
+                <div className="flex flex-wrap gap-1.5">
+                  {(builderState.mode === 'photo'
+                    ? [
+                        { name: 'ChatGPT', url: 'https://chatgpt.com/' },
+                        { name: 'Gemini', url: 'https://gemini.google.com/' },
+                        { name: 'Midjourney', url: 'https://www.midjourney.com/' },
+                        { name: 'FLUX / Freepik', url: 'https://www.freepik.com/ai/image-generator' },
+                        { name: 'Adobe Firefly', url: 'https://firefly.adobe.com/' },
+                      ]
+                    : [
+                        { name: 'Runway Gen-3', url: 'https://app.runwayml.com/' },
+                        { name: 'Kling AI', url: 'https://klingai.com/' },
+                        { name: 'Google Flow / Veo', url: 'https://labs.google/fx/tools/flow' },
+                        { name: 'Luma Dream Machine', url: 'https://lumalabs.ai/dream-machine' },
+                        { name: 'ChatGPT', url: 'https://chatgpt.com/' },
+                      ]
+                  ).map((app) => (
+                    <a
+                      key={app.name}
+                      href={app.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={handleCopy}
+                      className="px-2.5 py-1.5 text-[11px] font-mono-code font-semibold bg-stone-50 dark:bg-stone-950 border border-stone-200 dark:border-stone-800 hover:border-amber-500 text-stone-800 dark:text-stone-200 rounded inline-flex items-center gap-1 transition-colors"
+                    >
+                      <span>{app.name}</span>
+                      <ExternalLink className="w-3 h-3 text-amber-600 dark:text-amber-400" />
+                    </a>
+                  ))}
+                </div>
+                <p className="text-[11px] text-stone-500 leading-normal flex items-start gap-1.5">
+                  <Sparkles className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+                  <span>
+                    Al pulsar cualquiera de los enlaces se copia automáticamente tu prompt al portapapeles para pegarlo y practicar directamente en la plataforma elegida.
+                  </span>
+                </p>
               </div>
 
             </div>

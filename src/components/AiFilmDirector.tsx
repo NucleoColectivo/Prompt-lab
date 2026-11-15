@@ -12,6 +12,7 @@ import {
   Camera,
   Scissors,
   Layers,
+  ExternalLink,
 } from 'lucide-react';
 import type { StoryboardSceneItem } from './InteractiveCreativeLabs';
 import type { PromptBuilderState } from './PromptBuilder';
@@ -151,6 +152,141 @@ const SAMPLE_DOSSIER: FilmProjectDossier = {
   },
 };
 
+function synthesizeFilmProjectLocal(
+  idea: string,
+  format: string,
+  durationSeconds: number,
+  tone: string
+): FilmProjectDossier {
+  const cleanIdea = idea.trim().replace(/^quiero hacer (un|una)\s+/i, '');
+  const shortTitle =
+    cleanIdea
+      .split(/\s+/)
+      .slice(0, 6)
+      .join(' ')
+      .replace(/^./, (c) => c.toUpperCase()) || 'Proyecto Audiovisual Núcleo';
+
+  const isNoir = tone.toLowerCase().includes('noir') || tone.toLowerCase().includes('dramático');
+  const isExperimental =
+    tone.toLowerCase().includes('experimental') || format.toLowerCase().includes('experimental');
+  const isVertical = format.includes('9:16') || durationSeconds === 15;
+
+  const paletteHex = isNoir
+    ? ['#0C0A09', '#1E3A5F', '#D97706', '#E7E5E4']
+    : isExperimental
+    ? ['#09090B', '#0D9488', '#F59E0B', '#F5F5F4']
+    : ['#1C1917', '#7C4D3A', '#D97706', '#FAF8F5'];
+
+  const cameraRef = isNoir
+    ? 'ARRI Alexa 35 · Perfil nocturno de alto contraste'
+    : isExperimental
+    ? 'Sony Venice 2 · Gran formato y lectura limpia en luces bajas'
+    : 'ARRI Alexa 35 · Rango dinámico natural orgánico';
+
+  const lensSpec = isExperimental
+    ? '14mm ultra gran angular espacial + 50mm macro de textura'
+    : '35mm documental + 85mm primer plano expresivo';
+
+  const lightingSpec = isNoir
+    ? 'Claroscuro nocturno con luz lateral fría (6800K) y puntos cálidos de tungsteno (3000K)'
+    : isExperimental
+    ? 'Haces volumétricos suaves y reflejos especulares controlados sobre superficies reales'
+    : 'Luz natural direccional lateral (4400K) con transición gradual de sombras';
+
+  const ratioTag = isVertical ? 'aspect ratio 9:16 vertical' : 'aspect ratio 16:9 widescreen';
+
+  const d1 = durationSeconds === 15 ? 4 : durationSeconds === 60 ? 12 : 7;
+  const d2 = durationSeconds === 15 ? 4 : durationSeconds === 60 ? 14 : 8;
+  const d3 = durationSeconds === 15 ? 4 : durationSeconds === 60 ? 12 : 7;
+  const d4 = durationSeconds - (d1 + d2 + d3) > 0 ? durationSeconds - (d1 + d2 + d3) : 6;
+
+  return {
+    projectTitle: shortTitle,
+    concept: {
+      theme: `Exploración audiovisual en torno a: ${cleanIdea}.`,
+      intention: `Construir una narrativa sensorial coherente en tono ${tone.toLowerCase()}, priorizando autenticidad visual frente a clichés genéricos.`,
+      keyMessage: 'Cada plano revela la relación viva entre espacio, materia, gesto humano y memoria.',
+      targetAudience: `Comunidad cultural, talleres audiovisuales y distribución en ${format}.`,
+    },
+    script: {
+      logline: `Pieza de ${durationSeconds} segundos (${format}) donde ${cleanIdea.toLowerCase()} evoluciona desde su contexto espacial hasta un cierre íntimo y resonante.`,
+      narrativeArc: `01 Atmósfera de apertura (${d1}s) → 02 Desarrollo de acción (${d2}s) → 03 Detalle sensorial (${d3}s) → 04 Cierre y resonancia (${d4}s).`,
+      voiceoverOrDialogue: `Voz en off pausada: "Todo lugar guarda un ritmo invisible que solo aparece cuando nos detenemos a mirarlo con calma."`,
+    },
+    cinematography: {
+      cameraReference: cameraRef,
+      lensStrategy: lensSpec,
+      lightingScheme: lightingSpec,
+      colorPaletteHex: paletteHex,
+      colorDescription: `Gradación coherente en ${tone.toLowerCase()} evitando saturación artificial y cuidando tonos de piel y textura mineral.`,
+    },
+    scenes: [
+      {
+        sceneNumber: 1,
+        title: 'Establecimiento territorial y atmósfera',
+        durationSec: d1,
+        shotSize: 'Gran Plano General (ELS)',
+        cameraAngle: 'Picado suave',
+        cameraMovement: 'Crane Down lento',
+        visualAction: `Plano de apertura revelando el entorno completo vinculado a ${cleanIdea}, con luz direccional marcando profundidad.`,
+        imageKeyframePrompt: `Establishing wide architectural shot introducing ${cleanIdea}, ${lightingSpec}, 24mm lens, ${ratioTag}, organic film texture, no text.`,
+        videoMotionPrompt: `Slow smooth crane-down establishing movement gliding over the environment of ${cleanIdea}, subtle atmospheric motion, 24fps, ${d1}s, ${ratioTag}.`,
+        soundCue: 'Ambiente espacial amplio y entrada progresiva de capa armónica grave.',
+      },
+      {
+        sceneNumber: 2,
+        title: 'Acción principal en entorno real',
+        durationSec: d2,
+        shotSize: 'Plano Medio (MS)',
+        cameraAngle: 'Normal (Eye Level)',
+        cameraMovement: 'Tracking lateral estabilizado',
+        visualAction: `Seguimiento cercano del sujeto o protagonista dentro de la escena de ${cleanIdea}, con interacción genuina con su espacio.`,
+        imageKeyframePrompt: `Medium shot editorial scene focusing on ${cleanIdea}, authentic human gesture and natural materials, 35mm f/2.0 lens, ${lightingSpec}, ${ratioTag}.`,
+        videoMotionPrompt: `Stabilized lateral tracking shot following movement gracefully inside ${cleanIdea}, continuous focus, natural inertia, 24fps, ${d2}s, ${ratioTag}.`,
+        soundCue: 'Foley cercano de pasos, materiales y pulso rítmico sutil.',
+      },
+      {
+        sceneNumber: 3,
+        title: 'Detalle táctil y punto focal',
+        durationSec: d3,
+        shotSize: 'Primerísimo Primer Plano (ECU)',
+        cameraAngle: 'Ligero contrapicado o detalle macro',
+        cameraMovement: 'Dolly In lento',
+        visualAction: `Acercamiento íntimo a la textura central de ${cleanIdea}: manos, reflejos de luz, superficie o gesto decisivo.`,
+        imageKeyframePrompt: `Macro close-up capturing intricate surface texture and light interplay around ${cleanIdea}, 85mm f/2.8 shallow depth of field, tactile authenticity, ${ratioTag}.`,
+        videoMotionPrompt: `Very slow intimate dolly-in toward the focal detail of ${cleanIdea}, delicate light shift across texture, 24fps, ${d3}s, ${ratioTag}.`,
+        soundCue: 'Sonido táctil en primer plano (close-mic) y pausa breve antes del cierre.',
+      },
+      {
+        sceneNumber: 4,
+        title: 'Resolución y plano de salida',
+        durationSec: d4,
+        shotSize: 'Plano General (LS)',
+        cameraAngle: 'Normal (Eye Level)',
+        cameraMovement: 'Dolly Out suave',
+        visualAction: `Retroceso pausado de cámara dejando respirar el espacio completo tras la acción central de ${cleanIdea}.`,
+        imageKeyframePrompt: `Clean balanced closing frame of ${cleanIdea} with open breathing room and serene directional light, 35mm lens, ${ratioTag}.`,
+        videoMotionPrompt: `Gentle dolly-out pulling back calmly to leave the scene breathing in steady natural light, 24fps, ${d4}s, ${ratioTag}.`,
+        soundCue: 'Resonancia final de ambiente real con decaimiento armónico limpio.',
+      },
+    ],
+    soundDesign: {
+      musicDirection: isExperimental
+        ? 'Textura electroacústica ambiental con síntesis granular suave a 68 BPM y percusión orgánica contenida.'
+        : 'Instrumentación acústica minimalista (piano preparado o guitarra nylon) en dinámica creciente discreta.',
+      ambience: 'Grabación binaural del entorno real sin exceso de reverberación sintética.',
+      foley: 'Rozamiento de materiales reales, pisadas, respiración y sonidos mecánicos suaves acordes a la escena.',
+      voiceDirection: 'Voz natural cercana al micrófono, ritmo reflexivo y pausas reales para lectura visual.',
+    },
+    editingPlan: {
+      rhythm: `Montaje pensado para ${durationSeconds}s totales con respiro entre cortes (${d1}s–${d2}s por plano).`,
+      transitions: 'Cortes directos sobre movimiento (match on action) + J-cut de audio anticipando cada toma.',
+      colorGradingNotes: `Aplicar LUT de contraste suave y alinear blancos sobre la paleta ${paletteHex.slice(0, 3).join(', ')}.`,
+      exportSpecs: `${isVertical ? 'Vertical 9:16 (1080x1920)' : 'Horizontal 16:9 (3840x2160)'} · H.264 / ProRes · Subtítulos accesibles incluidos.`,
+    },
+  };
+}
+
 const QUICK_IDEAS = [
   'Quiero hacer un video de 30 segundos sobre la memoria de un barrio y sus oficios',
   'Cortometraje experimental sobre agua, arquitectura de hormigón y sonido urbano',
@@ -176,7 +312,7 @@ export const AiFilmDirector: React.FC<AiFilmDirectorProps> = ({
     setTimeout(() => setCopiedKey(null), 1800);
   };
 
-  const handleGenerate = async (e: React.FormEvent) => {
+  const handleGenerate = (e: React.FormEvent) => {
     e.preventDefault();
     if (!idea.trim()) {
       setErrorMsg('Describe brevemente la idea de tu película, video o pieza visual.');
@@ -185,24 +321,9 @@ export const AiFilmDirector: React.FC<AiFilmDirectorProps> = ({
 
     setErrorMsg(null);
     setIsGenerating(true);
-    try {
-      const response = await fetch('/api/gemini/direct-film', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ idea, format, durationSeconds, tone }),
-      });
-
-      const data = await response.json();
-      if (!response.ok) {
-        throw new Error(data.error || 'No se pudo generar el proyecto con Gemini.');
-      }
-
-      setDossier(data);
-    } catch (err: any) {
-      setErrorMsg(err?.message || 'Error al conectar con el Director IA.');
-    } finally {
-      setIsGenerating(false);
-    }
+    const synthesized = synthesizeFilmProjectLocal(idea, format, durationSeconds, tone);
+    setDossier(synthesized);
+    setIsGenerating(false);
   };
 
   const handleExportDossier = (ext: 'json' | 'txt') => {
@@ -257,17 +378,17 @@ export const AiFilmDirector: React.FC<AiFilmDirectorProps> = ({
           <div>
             <div className="flex items-center gap-2 text-xs font-mono-code uppercase tracking-wider text-amber-700 dark:text-amber-400 font-bold mb-1.5">
               <Clapperboard className="w-4 h-4" />
-              <span>AI FILM DIRECTOR · 8 ETAPAS DE PRODUCCIÓN</span>
+              <span>PLANIFICADOR AUDIOVISUAL · 8 ETAPAS DE PRODUCCIÓN</span>
             </div>
             <h2 className="text-3xl sm:text-4xl font-bold font-serif-title text-stone-900 dark:text-stone-100">
               De una idea a un proyecto audiovisual completo
             </h2>
             <p className="text-sm text-stone-600 dark:text-stone-400 mt-1 max-w-2xl">
-              Describe lo que quieres filmar o crear. Gemini organiza el paquete completo: concepto, guion, storyboard por escenas, fotografía, prompts de imagen y video por toma, sonido y montaje.
+              Describe lo que quieres filmar o crear. El planificador organiza el paquete completo en segundos: concepto, guion, storyboard por escenas, fotografía, prompts de imagen y video por toma, sonido y montaje.
             </p>
           </div>
           <div className="text-xs font-mono-code text-stone-500 dark:text-stone-400">
-            Flujo integral Núcleo Colectivo · Gemini Multimodal
+            Flujo integral Núcleo Colectivo · Sin API requerida
           </div>
         </div>
 
@@ -433,7 +554,7 @@ export const AiFilmDirector: React.FC<AiFilmDirectorProps> = ({
                 </div>
                 <p><strong className="text-stone-900 dark:text-stone-100">Logline:</strong> <span className="text-stone-600 dark:text-stone-400">{dossier.script.logline}</span></p>
                 <p><strong className="text-stone-900 dark:text-stone-100">Arco:</strong> <span className="text-stone-600 dark:text-stone-400">{dossier.script.narrativeArc}</span></p>
-                <p className="italic text-stone-800 dark:text-stone-200 border-l-2 border-amber-400 pl-2.5">
+                <p className="italic text-stone-800 dark:text-stone-200 p-2.5 rounded bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800">
                   {dossier.script.voiceoverOrDialogue}
                 </p>
               </div>
@@ -569,6 +690,40 @@ export const AiFilmDirector: React.FC<AiFilmDirectorProps> = ({
                 <p><strong className="text-stone-900 dark:text-stone-100">Transiciones:</strong> <span className="text-stone-600 dark:text-stone-400">{dossier.editingPlan.transitions}</span></p>
                 <p><strong className="text-stone-900 dark:text-stone-100">Etalonaje:</strong> <span className="text-stone-600 dark:text-stone-400">{dossier.editingPlan.colorGradingNotes}</span></p>
                 <p><strong className="text-stone-900 dark:text-stone-100">Exportación:</strong> <span className="text-stone-600 dark:text-stone-400">{dossier.editingPlan.exportSpecs}</span></p>
+              </div>
+            </div>
+            {/* Stage 8: Launch & Practice in Real AI Production Apps */}
+            <div className="p-4 rounded-xl bg-[#FAF8F5] dark:bg-stone-950 border border-stone-200 dark:border-stone-800 space-y-3">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <div>
+                  <div className="text-[11px] font-mono-code uppercase font-bold text-amber-700 dark:text-amber-400">
+                    08. Llevar el Dossier a Producción Real (Practicar en Apps IA)
+                  </div>
+                  <p className="text-xs text-stone-600 dark:text-stone-400 mt-0.5">
+                    Copia los prompts de cada escena y ábrelos directamente en las herramientas externas de imagen, video y sonido:
+                  </p>
+                </div>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {[
+                  { name: 'Midjourney (Keyframes)', url: 'https://www.midjourney.com/' },
+                  { name: 'Runway Gen-3 (Video)', url: 'https://app.runwayml.com/' },
+                  { name: 'Kling AI (Video)', url: 'https://klingai.com/' },
+                  { name: 'Google Flow / Veo (Video)', url: 'https://labs.google/fx/tools/flow' },
+                  { name: 'ElevenLabs (Voz & Foley)', url: 'https://elevenlabs.io/' },
+                  { name: 'Suno (Música)', url: 'https://suno.com/' },
+                ].map((tool) => (
+                  <a
+                    key={tool.name}
+                    href={tool.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-3 py-1.5 text-xs font-mono-code font-semibold bg-white dark:bg-stone-900 border border-stone-300 dark:border-stone-700 hover:border-amber-500 text-stone-800 dark:text-stone-200 rounded inline-flex items-center gap-1.5 transition-colors"
+                  >
+                    <span>{tool.name}</span>
+                    <ExternalLink className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+                  </a>
+                ))}
               </div>
             </div>
           </div>

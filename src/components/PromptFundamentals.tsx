@@ -118,7 +118,7 @@ export const PromptFundamentals: React.FC<PromptFundamentalsProps> = ({
     {
       step: '04 · Producir',
       title: 'Constructor, JSON & Academia',
-      summary: 'Arma prompts con Gemini, extrae estilo JSON, consulta herramientas IA y retos.',
+      summary: 'Arma prompts listos, extrae estilo JSON local y practica directo en apps IA.',
       targetId: 'builder',
       icon: <Braces className="w-4 h-4 text-amber-600 dark:text-amber-400" />,
     },
