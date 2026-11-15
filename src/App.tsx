@@ -279,8 +279,11 @@ export default function App() {
     navigateToSection('builder');
   };
 
-  const handleSendGalleryItemToJsonLab = (item: GalleryVisualItem) => {
-    const profile: JsonStyleProfile = {
+  const handleSendGalleryItemToJsonLab = (
+    item: GalleryVisualItem,
+    customProfile?: JsonStyleProfile
+  ) => {
+    const profile: JsonStyleProfile = customProfile || {
       id: `gal-${item.id}`,
       style_name: `${item.title} (${item.style})`,
       category: item.collection,
@@ -309,6 +312,24 @@ export default function App() {
     };
     setExternalJsonProfile(profile);
     navigateToSection('laboratorios', 'json');
+  };
+
+  const handleAddGalleryShotToStoryboard = (scene: StoryboardSceneItem) => {
+    let existing: StoryboardSceneItem[] = [];
+    try {
+      const saved = localStorage.getItem('nc_storyboard_v1');
+      if (saved) existing = JSON.parse(saved);
+    } catch {
+      existing = [];
+    }
+    const nextList = Array.isArray(existing) ? [...existing, scene] : [scene];
+    try {
+      localStorage.setItem('nc_storyboard_v1', JSON.stringify(nextList));
+    } catch {
+      // ignore storage errors
+    }
+    setExternalStoryboardScenes(nextList);
+    navigateToSection('laboratorios', 'labs');
   };
 
   const handleApplyAssetToBuilder = (asset: VisualAssetRecord) => {
@@ -496,6 +517,7 @@ export default function App() {
               navigateToSection('biblioteca');
             }}
             onAnalyzeInJsonLab={handleSendGalleryItemToJsonLab}
+            onAddToStoryboard={handleAddGalleryShotToStoryboard}
             onOpenLabs={() => navigateToSection('laboratorios', 'labs')}
           />
         )}
@@ -598,7 +620,7 @@ export default function App() {
               setBuilderState((prev) => ({ ...prev, ...patch }));
               navigateToSection('builder');
             }}
-            onOpenGalleryCine={() => openGallery('06. Cine')}
+            onOpenGalleryCine={() => openGallery('Cine')}
             onOpenVideoModule={() => {
               setActiveLibraryModule('mod-06');
               navigateToSection('biblioteca');

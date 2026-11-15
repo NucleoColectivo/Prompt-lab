@@ -52,30 +52,30 @@ function getGalleryCollectionForModule(modId: ModuleId): string {
     case 'mod-01':
     case 'mod-03':
     case 'mod-20':
-      return '01. Retrato';
+      return 'Retrato';
     case 'mod-11':
     case 'mod-16':
-      return '02. Paisaje';
+      return 'Paisaje';
     case 'mod-15':
     case 'mod-19':
-      return '03. Producto';
+      return 'Producto';
     case 'mod-04':
     case 'mod-14':
     case 'mod-18':
-      return '04. Arte Digital';
+      return 'Arte Digital';
     case 'mod-02':
     case 'mod-05':
     case 'mod-06':
     case 'mod-09':
     case 'mod-10':
     case 'mod-12':
-      return '06. Cine';
+      return 'Cine';
     case 'mod-17':
-      return '07. Macro y Naturaleza';
+      return 'Macro y Naturaleza';
     case 'mod-08':
     case 'mod-13':
     case 'mod-22':
-      return '08. Motion y Video';
+      return 'Motion y Video';
     default:
       return 'Todas';
   }

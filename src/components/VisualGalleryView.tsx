@@ -19,17 +19,39 @@ import {
   SlidersHorizontal,
   Braces,
   Sliders,
+  Sun,
+  Aperture,
+  MapPin,
+  Download,
+  Clapperboard,
+  FlaskConical,
+  FileText,
 } from 'lucide-react';
 import {
   GALLERY_COLLECTIONS,
   GALLERY_VISUAL_ITEMS,
-  GalleryCollectionId,
   GalleryVisualItem,
   PromptVariationOption,
 } from '../data/galleryCollectionsData';
 import type { ModuleId } from '../data/modulesData';
+import type { JsonStyleProfile } from '../data/videoAndJsonData';
 import type { PromptBuilderState } from './PromptBuilder';
+import type { StoryboardSceneItem } from './InteractiveCreativeLabs';
 import { ResilientImage } from './ResilientImage';
+import {
+  ResearchPathId,
+  ResearchHypothesisOption,
+  VideoMovementPreset,
+  LIGHTING_HYPOTHESES,
+  LENS_HYPOTHESES,
+  CONTEXT_HYPOTHESES,
+  VIDEO_MOVEMENT_PRESETS,
+  buildCombinedExperimentPrompt,
+  buildCombinedBuilderPatch,
+  buildPlateJsonProfile,
+  buildStoryboardSceneFromPlate,
+  exportPlateResearchSheetText,
+} from '../utils/galleryResearchEngine';
 
 export interface VisualGalleryViewProps {
   activeCollection: string;
@@ -38,12 +60,15 @@ export interface VisualGalleryViewProps {
   onToggleFavorite: (id: string) => void;
   onExperimentInBuilder: (patch: Partial<PromptBuilderState>) => void;
   onOpenTechnicalModule: (moduleId: ModuleId) => void;
-  onAnalyzeInJsonLab?: (item: GalleryVisualItem) => void;
+  onAnalyzeInJsonLab?: (item: GalleryVisualItem, customProfile?: JsonStyleProfile) => void;
+  onAddToStoryboard?: (scene: StoryboardSceneItem) => void;
   onOpenLabs?: () => void;
 }
 
 type SortOption = 'curated' | 'az' | 'favorites';
 type LayoutMode = 'masonry' | 'grid';
+
+const GALLERY_NOTES_KEY = 'nc_gallery_notes_v1';
 
 export const VisualGalleryView: React.FC<VisualGalleryViewProps> = ({
   activeCollection,
@@ -53,8 +78,14 @@ export const VisualGalleryView: React.FC<VisualGalleryViewProps> = ({
   onExperimentInBuilder,
   onOpenTechnicalModule,
   onAnalyzeInJsonLab,
+  onAddToStoryboard,
   onOpenLabs,
 }) => {
+  const normalizedActiveCollection = useMemo(
+    () => (activeCollection === 'Todas' ? 'Todas' : activeCollection.replace(/^\d+\.\s*/, '')),
+    [activeCollection]
+  );
+
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedStyle, setSelectedStyle] = useState<string>('Todos');
   const [selectedTechnique, setSelectedTechnique] = useState<string>('Todas');
@@ -70,6 +101,31 @@ export const VisualGalleryView: React.FC<VisualGalleryViewProps> = ({
   const [lightboxDraftPrompt, setLightboxDraftPrompt] = useState('');
   const [appliedVariationPatch, setAppliedVariationPatch] =
     useState<PromptVariationOption['patch'] | null>(null);
+
+  // 5-Path Visual Research Lab state inside Lightbox
+  const [activeResearchPath, setActiveResearchPath] = useState<ResearchPathId>('lighting');
+  const [selectedLighting, setSelectedLighting] = useState<ResearchHypothesisOption | null>(null);
+  const [selectedLens, setSelectedLens] = useState<ResearchHypothesisOption | null>(null);
+  const [selectedContext, setSelectedContext] = useState<ResearchHypothesisOption | null>(null);
+  const [selectedVideoPreset, setSelectedVideoPreset] = useState<VideoMovementPreset>(
+    VIDEO_MOVEMENT_PRESETS[0]
+  );
+  const [researchNotes, setResearchNotes] = useState<Record<string, string>>(() => {
+    try {
+      const raw = localStorage.getItem(GALLERY_NOTES_KEY);
+      return raw ? JSON.parse(raw) : {};
+    } catch {
+      return {};
+    }
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(GALLERY_NOTES_KEY, JSON.stringify(researchNotes));
+    } catch {
+      // ignore storage quota errors
+    }
+  }, [researchNotes]);
 
   const uniqueStyles = useMemo(
     () => ['Todos', ...Array.from(new Set(GALLERY_VISUAL_ITEMS.map((i) => i.style)))],
@@ -90,14 +146,15 @@ export const VisualGalleryView: React.FC<VisualGalleryViewProps> = ({
   }, []);
 
   const activeCollectionMeta = useMemo(
-    () => GALLERY_COLLECTIONS.find((c) => c.id === activeCollection) || null,
-    [activeCollection]
+    () => GALLERY_COLLECTIONS.find((c) => c.id === normalizedActiveCollection) || null,
+    [normalizedActiveCollection]
   );
 
   const filteredItems = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
     const list = GALLERY_VISUAL_ITEMS.filter((item) => {
-      const matchCol = activeCollection === 'Todas' || item.collection === activeCollection;
+      const matchCol =
+        normalizedActiveCollection === 'Todas' || item.collection === normalizedActiveCollection;
       const matchStyle = selectedStyle === 'Todos' || item.style === selectedStyle;
       const matchTech = selectedTechnique === 'Todas' || item.technique === selectedTechnique;
       const matchMedia = mediaFilter === 'all' || item.mediaType === mediaFilter;
@@ -138,7 +195,7 @@ export const VisualGalleryView: React.FC<VisualGalleryViewProps> = ({
     }
     return list;
   }, [
-    activeCollection,
+    normalizedActiveCollection,
     selectedStyle,
     selectedTechnique,
     mediaFilter,
@@ -150,7 +207,7 @@ export const VisualGalleryView: React.FC<VisualGalleryViewProps> = ({
   ]);
 
   const hasActiveFilters =
-    activeCollection !== 'Todas' ||
+    normalizedActiveCollection !== 'Todas' ||
     selectedStyle !== 'Todos' ||
     selectedTechnique !== 'Todas' ||
     mediaFilter !== 'all' ||
@@ -176,10 +233,15 @@ export const VisualGalleryView: React.FC<VisualGalleryViewProps> = ({
   };
 
   const openLightbox = useCallback(
-    (item: GalleryVisualItem) => {
+    (item: GalleryVisualItem, initialPath: ResearchPathId = 'lighting') => {
       setLightboxItem(item);
       setLightboxDraftPrompt(promptLang === 'es' ? item.promptEs : item.promptEn);
       setAppliedVariationPatch(null);
+      setActiveResearchPath(initialPath);
+      setSelectedLighting(null);
+      setSelectedLens(null);
+      setSelectedContext(null);
+      setSelectedVideoPreset(VIDEO_MOVEMENT_PRESETS[0]);
     },
     [promptLang]
   );
@@ -188,9 +250,59 @@ export const VisualGalleryView: React.FC<VisualGalleryViewProps> = ({
   const switchLightboxLanguage = (lang: 'es' | 'en') => {
     setPromptLang(lang);
     if (lightboxItem) {
-      setLightboxDraftPrompt(lang === 'es' ? lightboxItem.promptEs : lightboxItem.promptEn);
+      const combined = buildCombinedExperimentPrompt(
+        lightboxItem,
+        lang,
+        selectedLighting,
+        selectedLens,
+        selectedContext
+      );
+      setLightboxDraftPrompt(combined);
       setAppliedVariationPatch(null);
     }
+  };
+
+  // Sync draft prompt whenever the researcher toggles Lighting / Lens / Context hypotheses
+  const updateResearchHypothesis = (
+    kind: 'lighting' | 'lens' | 'context',
+    option: ResearchHypothesisOption
+  ) => {
+    if (!lightboxItem) return;
+    const nextLight =
+      kind === 'lighting'
+        ? selectedLighting?.id === option.id
+          ? null
+          : option
+        : selectedLighting;
+    const nextLens =
+      kind === 'lens'
+        ? selectedLens?.id === option.id
+          ? null
+          : option
+        : selectedLens;
+    const nextCtx =
+      kind === 'context'
+        ? selectedContext?.id === option.id
+          ? null
+          : option
+        : selectedContext;
+
+    setSelectedLighting(nextLight);
+    setSelectedLens(nextLens);
+    setSelectedContext(nextCtx);
+    setAppliedVariationPatch(null);
+    setLightboxDraftPrompt(
+      buildCombinedExperimentPrompt(lightboxItem, promptLang, nextLight, nextLens, nextCtx)
+    );
+  };
+
+  const resetLightboxExperiments = () => {
+    if (!lightboxItem) return;
+    setSelectedLighting(null);
+    setSelectedLens(null);
+    setSelectedContext(null);
+    setAppliedVariationPatch(null);
+    setLightboxDraftPrompt(promptLang === 'es' ? lightboxItem.promptEs : lightboxItem.promptEn);
   };
 
   const applyVariationInLightbox = (variation: PromptVariationOption) => {
@@ -211,6 +323,9 @@ export const VisualGalleryView: React.FC<VisualGalleryViewProps> = ({
       setLightboxItem(nextItem);
       setLightboxDraftPrompt(promptLang === 'es' ? nextItem.promptEs : nextItem.promptEn);
       setAppliedVariationPatch(null);
+      setSelectedLighting(null);
+      setSelectedLens(null);
+      setSelectedContext(null);
     },
     [lightboxItem, filteredItems, promptLang]
   );
@@ -218,6 +333,11 @@ export const VisualGalleryView: React.FC<VisualGalleryViewProps> = ({
   useEffect(() => {
     if (!lightboxItem) return;
     const onKeyDown = (e: KeyboardEvent) => {
+      const targetTag = (e.target as HTMLElement)?.tagName;
+      if (targetTag === 'TEXTAREA' || targetTag === 'INPUT') {
+        if (e.key === 'Escape') setLightboxItem(null);
+        return;
+      }
       if (e.key === 'Escape') setLightboxItem(null);
       if (e.key === 'ArrowRight') navigateLightbox(1);
       if (e.key === 'ArrowLeft') navigateLightbox(-1);
@@ -229,37 +349,108 @@ export const VisualGalleryView: React.FC<VisualGalleryViewProps> = ({
   const sendItemToBuilder = (
     item: GalleryVisualItem,
     customPrompt?: string,
-    variationPatch?: PromptVariationOption['patch'] | null
+    variationPatch?: PromptVariationOption['patch'] | null,
+    asVideoExperiment?: boolean
   ) => {
+    const combinedPatch = buildCombinedBuilderPatch(
+      item,
+      promptLang,
+      selectedLighting,
+      selectedLens,
+      selectedContext,
+      asVideoExperiment ? selectedVideoPreset : null
+    );
+
     const promptToLoad =
       customPrompt || (promptLang === 'es' ? item.promptEs : item.promptEn);
 
     const patch: Partial<PromptBuilderState> = {
-      mode: item.mediaType === 'video' ? 'video' : 'photo',
-      subject: promptToLoad,
-      composition: item.specs.composition,
-      camera: item.specs.camera,
-      lens: variationPatch?.lens || item.specs.lens,
-      aperture: item.specs.aperture,
-      lighting: variationPatch?.lighting || item.specs.lighting,
-      colorPalette: variationPatch?.colorPalette || item.specs.color,
-      atmosphere: item.specs.atmosphere,
-      texture: item.specs.texture,
-      visualStyle: item.style,
+      ...combinedPatch,
+      subject: asVideoExperiment
+        ? combinedPatch.subject
+        : promptToLoad,
+      lens: variationPatch?.lens || combinedPatch.lens || item.specs.lens,
+      lighting: variationPatch?.lighting || combinedPatch.lighting || item.specs.lighting,
+      colorPalette: variationPatch?.colorPalette || combinedPatch.colorPalette || item.specs.color,
       aspectRatio: variationPatch?.aspectRatio || item.aspectRatio,
       motion:
         variationPatch?.motion ||
+        combinedPatch.motion ||
         (item.mediaType === 'video'
           ? 'Smooth controlled cinematic camera movement at 24fps'
           : undefined),
-      negativeAvoid: item.negativePrompt
-        .split(',')
-        .map((s) => s.trim())
-        .filter(Boolean),
     };
 
     setLightboxItem(null);
     onExperimentInBuilder(patch);
+  };
+
+  const liveJsonProfile = useMemo(() => {
+    if (!lightboxItem) return null;
+    return buildPlateJsonProfile(
+      lightboxItem,
+      selectedLighting,
+      selectedLens,
+      selectedContext
+    );
+  }, [lightboxItem, selectedLighting, selectedLens, selectedContext]);
+
+  const liveVideoSequencePrompt = useMemo(() => {
+    if (!lightboxItem) return '';
+    const base = buildCombinedExperimentPrompt(
+      lightboxItem,
+      promptLang,
+      selectedLighting,
+      selectedLens,
+      selectedContext
+    );
+    const suffix =
+      promptLang === 'es'
+        ? selectedVideoPreset.promptSuffixEs
+        : selectedVideoPreset.promptSuffixEn;
+    return `${base} — [${suffix}]`;
+  }, [
+    lightboxItem,
+    promptLang,
+    selectedLighting,
+    selectedLens,
+    selectedContext,
+    selectedVideoPreset,
+  ]);
+
+  const handleDownloadResearchDossier = () => {
+    if (!lightboxItem || !liveJsonProfile) return;
+    const promptEs = buildCombinedExperimentPrompt(
+      lightboxItem,
+      'es',
+      selectedLighting,
+      selectedLens,
+      selectedContext
+    );
+    const promptEn = buildCombinedExperimentPrompt(
+      lightboxItem,
+      'en',
+      selectedLighting,
+      selectedLens,
+      selectedContext
+    );
+    const content = exportPlateResearchSheetText(
+      lightboxItem,
+      promptEs,
+      promptEn,
+      liveVideoSequencePrompt,
+      liveJsonProfile,
+      researchNotes[lightboxItem.id] || ''
+    );
+    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${lightboxItem.code.toLowerCase()}-investigacion-visual.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   };
 
   return (
@@ -272,17 +463,17 @@ export const VisualGalleryView: React.FC<VisualGalleryViewProps> = ({
         <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-4 border-b border-[#DEDAD0] dark:border-[#26262E] pb-6">
           <div className="space-y-2">
             <div className="flex flex-wrap items-center gap-2 text-xs font-mono-code uppercase tracking-wider text-[#7545D6] dark:text-[#F8C300] font-bold">
-              <span>PRIORIDAD 01</span>
-              <span aria-hidden="true">·</span>
-              <span>GALERÍA EXPERIMENTAL</span>
+              <span>INVESTIGACIÓN VISUAL COLECTIVA</span>
               <span aria-hidden="true">·</span>
               <span>{GALLERY_VISUAL_ITEMS.length} LÁMINAS CURADAS</span>
+              <span aria-hidden="true">·</span>
+              <span>5 CAMINOS DE EXPERIMENTACIÓN</span>
             </div>
             <h1 className="text-3xl sm:text-4xl font-extrabold font-display-sans text-[#101014] dark:text-[#F4F2ED] leading-tight text-balance">
-              Enciclopedia Visual de Prompts y Estéticas
+              Galería de Investigación Visual y Construcción de Imágenes
             </h1>
             <p className="text-sm text-[#4A4A55] dark:text-[#B4B2AC] max-w-2xl leading-relaxed">
-              Explora nuestras 8 colecciones curadas. Cada fotografía y fotograma desglosa su técnica, prompts bilingües ES/EN, negative prompt y variaciones listas para cargar en el Constructor.
+              Más que un catálogo: cada una de las {GALLERY_VISUAL_ITEMS.length} láminas curadas desglosa cómo se construye y abre cinco rutas experimentales para probar variaciones de luz, óptica, contexto, secuencia de video y JSON reutilizable.
             </p>
             <div className="flex flex-wrap items-center gap-3 pt-1 text-xs font-mono-code">
               <button
@@ -368,6 +559,74 @@ export const VisualGalleryView: React.FC<VisualGalleryViewProps> = ({
           </div>
         </div>
 
+        {/* 5-Path Collective Visual Research Strip */}
+        <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-[#16161C] border border-[#DEDAD0] dark:border-[#26262E] space-y-3">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <div className="flex items-center gap-2 text-xs font-mono-code font-bold uppercase tracking-wider text-[#101014] dark:text-[#F4F2ED]">
+              <FlaskConical className="w-4 h-4 text-[#7545D6] dark:text-[#F8C300]" />
+              <span>Una misma imagen puede abrir 5 caminos de investigación</span>
+            </div>
+            <span className="text-[11px] font-mono-code text-[#5B5B66] dark:text-[#A09E97]">
+              Haz clic en cualquier camino para probarlo sobre la lámina activa
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2.5">
+            {[
+              {
+                id: 'lighting' as ResearchPathId,
+                num: '01',
+                question: '¿Si cambiamos la iluminación?',
+                detail: 'Rembrandt, Rim Light, High Key, Split o ventana',
+              },
+              {
+                id: 'lens' as ResearchPathId,
+                num: '02',
+                question: '¿Si cambiamos el lente?',
+                detail: '24mm angular, 35mm, 50mm, 85mm o 100mm macro',
+              },
+              {
+                id: 'context' as ResearchPathId,
+                num: '03',
+                question: '¿Si cambiamos de contexto?',
+                detail: 'Taller, galería brutalista, lluvia nocturna o páramo',
+              },
+              {
+                id: 'video' as ResearchPathId,
+                num: '04',
+                question: '¿Si la volvemos video?',
+                detail: 'Dolly In, Tracking, Orbit o Crane al Constructor / Storyboard',
+              },
+              {
+                id: 'json' as ResearchPathId,
+                num: '05',
+                question: '¿Si la pasamos a JSON?',
+                detail: 'Esquema reutilizable para preservar estética exacta',
+              },
+            ].map((path) => (
+              <button
+                key={path.id}
+                type="button"
+                onClick={() => {
+                  const seedItem = filteredItems[0] || GALLERY_VISUAL_ITEMS[0];
+                  openLightbox(seedItem, path.id);
+                }}
+                className="text-left p-3 rounded-xl bg-[#F4F2ED] dark:bg-[#101014] border border-[#DEDAD0] dark:border-[#26262E] hover:border-[#326BFF] dark:hover:border-[#F8C300] transition-colors space-y-1"
+              >
+                <div className="text-[10px] font-mono-code font-bold text-[#7545D6] dark:text-[#F8C300] tabular-nums">
+                  CAMINO {path.num}
+                </div>
+                <div className="text-xs font-bold text-[#101014] dark:text-[#F4F2ED] leading-snug">
+                  {path.question}
+                </div>
+                <p className="text-[11px] text-[#4A4A55] dark:text-[#B4B2AC] leading-snug">
+                  {path.detail}
+                </p>
+              </button>
+            ))}
+          </div>
+        </div>
+
         {/* 8 Collection Selector Strip */}
         <div className="space-y-3">
           <div className="flex flex-wrap gap-2">
@@ -375,7 +634,7 @@ export const VisualGalleryView: React.FC<VisualGalleryViewProps> = ({
               type="button"
               onClick={() => onChangeCollection('Todas')}
               className={`px-3.5 py-2 text-xs font-bold rounded-lg border transition-colors whitespace-nowrap shrink-0 ${
-                activeCollection === 'Todas'
+                normalizedActiveCollection === 'Todas'
                   ? 'bg-[#F8C300] text-[#101014] border-[#F8C300]'
                   : 'bg-white dark:bg-[#16161C] text-[#101014] dark:text-[#F4F2ED] border-[#DEDAD0] dark:border-[#26262E] hover:border-[#326BFF]'
               }`}
@@ -383,7 +642,7 @@ export const VisualGalleryView: React.FC<VisualGalleryViewProps> = ({
               Todas ({collectionCounts.Todas})
             </button>
             {GALLERY_COLLECTIONS.map((col) => {
-              const isActive = activeCollection === col.id;
+              const isActive = normalizedActiveCollection === col.id;
               return (
                 <button
                   key={col.id}
@@ -713,7 +972,7 @@ export const VisualGalleryView: React.FC<VisualGalleryViewProps> = ({
                       </div>
 
                       {/* Quiet Clickable Tags */}
-                      <div className="flex flex-wrap gap-x-2.5 gap-y-1 text-[11px] font-mono-code text-[#5B5B66] dark:text-[#A09E97]">
+                      <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[11px] font-mono-code text-[#5B5B66] dark:text-[#A09E97]">
                         {item.tags.map((tag) => (
                           <button
                             key={tag}
@@ -726,6 +985,11 @@ export const VisualGalleryView: React.FC<VisualGalleryViewProps> = ({
                             #{tag}
                           </button>
                         ))}
+                        {researchNotes[item.id]?.trim() && (
+                          <span className="text-[#7545D6] dark:text-[#F8C300] font-semibold">
+                            · Nota guardada
+                          </span>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -738,14 +1002,15 @@ export const VisualGalleryView: React.FC<VisualGalleryViewProps> = ({
                       className="flex-1 py-2.5 px-3 text-xs font-bold bg-[#F8C300] hover:bg-[#e5b400] text-[#101014] rounded-lg transition-colors flex items-center justify-center gap-1.5 whitespace-nowrap"
                     >
                       <Sparkles className="w-3.5 h-3.5" />
-                      <span>Experimentar con este prompt</span>
+                      <span>Probar en Constructor</span>
                     </button>
                     <button
                       type="button"
-                      onClick={() => openLightbox(item)}
-                      className="py-2.5 px-3 text-xs font-semibold rounded-lg border border-[#D4D0C5] dark:border-[#2C2C36] hover:border-[#326BFF] text-[#101014] dark:text-[#F4F2ED] transition-colors whitespace-nowrap"
+                      onClick={() => openLightbox(item, 'lighting')}
+                      className="py-2.5 px-3 text-xs font-semibold rounded-lg border border-[#D4D0C5] dark:border-[#2C2C36] hover:border-[#326BFF] text-[#101014] dark:text-[#F4F2ED] transition-colors inline-flex items-center gap-1.5 whitespace-nowrap"
                     >
-                      Ficha y variaciones
+                      <FlaskConical className="w-3.5 h-3.5 text-[#7545D6] dark:text-[#F8C300]" />
+                      <span>Investigar (5 caminos)</span>
                     </button>
                   </div>
                 </article>
@@ -864,32 +1129,318 @@ export const VisualGalleryView: React.FC<VisualGalleryViewProps> = ({
                   </p>
                 </div>
 
-                {/* Specs Grid */}
+                {/* Live Specs Grid (reflects active Light/Lens/Context hypothesis) */}
                 <div className="grid grid-cols-2 gap-2.5 text-[11px] p-3.5 rounded-xl bg-white dark:bg-[#101014] border border-[#DEDAD0] dark:border-[#26262E]">
                   <div>
                     <span className="font-mono-code text-[#5B5B66] dark:text-[#A09E97] block">Cámara equiv.</span>
                     <strong className="text-[#101014] dark:text-[#F4F2ED]">{lightboxItem.specs.camera}</strong>
                   </div>
                   <div>
-                    <span className="font-mono-code text-[#5B5B66] dark:text-[#A09E97] block">Óptica</span>
-                    <strong className="text-[#101014] dark:text-[#F4F2ED]">{lightboxItem.specs.lens} ({lightboxItem.specs.aperture})</strong>
+                    <span className="font-mono-code text-[#5B5B66] dark:text-[#A09E97] block">
+                      Óptica {selectedLens ? '· modificada' : ''}
+                    </span>
+                    <strong className={selectedLens ? 'text-[#326BFF] dark:text-[#F8C300]' : 'text-[#101014] dark:text-[#F4F2ED]'}>
+                      {selectedLens?.patch.lens || lightboxItem.specs.lens} ({selectedLens?.patch.aperture || lightboxItem.specs.aperture})
+                    </strong>
                   </div>
                   <div>
-                    <span className="font-mono-code text-[#5B5B66] dark:text-[#A09E97] block">Iluminación</span>
-                    <strong className="text-[#101014] dark:text-[#F4F2ED]">{lightboxItem.specs.lighting}</strong>
+                    <span className="font-mono-code text-[#5B5B66] dark:text-[#A09E97] block">
+                      Iluminación {selectedLighting ? '· modificada' : ''}
+                    </span>
+                    <strong className={selectedLighting ? 'text-[#326BFF] dark:text-[#F8C300]' : 'text-[#101014] dark:text-[#F4F2ED]'}>
+                      {selectedLighting?.patch.lighting || lightboxItem.specs.lighting}
+                    </strong>
                   </div>
                   <div>
-                    <span className="font-mono-code text-[#5B5B66] dark:text-[#A09E97] block">Colorimetría</span>
-                    <strong className="text-[#101014] dark:text-[#F4F2ED]">{lightboxItem.specs.color}</strong>
+                    <span className="font-mono-code text-[#5B5B66] dark:text-[#A09E97] block">
+                      Colorimetría {selectedContext?.patch.colorPalette ? '· modificada' : ''}
+                    </span>
+                    <strong className="text-[#101014] dark:text-[#F4F2ED]">
+                      {selectedContext?.patch.colorPalette || lightboxItem.specs.color}
+                    </strong>
                   </div>
                   <div>
                     <span className="font-mono-code text-[#5B5B66] dark:text-[#A09E97] block">Composición</span>
-                    <strong className="text-[#101014] dark:text-[#F4F2ED]">{lightboxItem.specs.composition}</strong>
+                    <strong className="text-[#101014] dark:text-[#F4F2ED]">
+                      {selectedLens?.patch.composition || lightboxItem.specs.composition}
+                    </strong>
                   </div>
                   <div>
-                    <span className="font-mono-code text-[#5B5B66] dark:text-[#A09E97] block">Textura y atmósfera</span>
-                    <strong className="text-[#101014] dark:text-[#F4F2ED]">{lightboxItem.specs.texture}</strong>
+                    <span className="font-mono-code text-[#5B5B66] dark:text-[#A09E97] block">
+                      Escenario / Atmósfera {selectedContext ? '· modificado' : ''}
+                    </span>
+                    <strong className={selectedContext ? 'text-[#326BFF] dark:text-[#F8C300]' : 'text-[#101014] dark:text-[#F4F2ED]'}>
+                      {selectedContext ? selectedContext.shortSpec : lightboxItem.specs.atmosphere}
+                    </strong>
                   </div>
+                </div>
+
+                {/* 5-Path Visual Research Workbench */}
+                <div className="p-4 rounded-xl bg-white dark:bg-[#101014] border border-[#DEDAD0] dark:border-[#26262E] space-y-3">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <div className="flex items-center gap-1.5 text-xs font-mono-code font-bold uppercase text-[#7545D6] dark:text-[#F8C300]">
+                      <FlaskConical className="w-3.5 h-3.5" />
+                      <span>Espacio de Experimentación (5 Caminos)</span>
+                    </div>
+                    {(selectedLighting || selectedLens || selectedContext) && (
+                      <button
+                        type="button"
+                        onClick={resetLightboxExperiments}
+                        className="text-[11px] font-mono-code font-semibold text-[#326BFF] dark:text-[#F8C300] hover:underline inline-flex items-center gap-1"
+                      >
+                        <RotateCcw className="w-3 h-3" />
+                        <span>Restablecer variables</span>
+                      </button>
+                    )}
+                  </div>
+
+                  {/* 5 Path Segmented Tabs */}
+                  <div className="grid grid-cols-5 gap-1 p-1 rounded-lg bg-[#F4F2ED] dark:bg-[#16161C]">
+                    {[
+                      { id: 'lighting' as ResearchPathId, label: '1. Luz', icon: <Sun className="w-3 h-3" />, active: !!selectedLighting },
+                      { id: 'lens' as ResearchPathId, label: '2. Lente', icon: <Aperture className="w-3 h-3" />, active: !!selectedLens },
+                      { id: 'context' as ResearchPathId, label: '3. Contexto', icon: <MapPin className="w-3 h-3" />, active: !!selectedContext },
+                      { id: 'video' as ResearchPathId, label: '4. Video', icon: <Film className="w-3 h-3" />, active: false },
+                      { id: 'json' as ResearchPathId, label: '5. JSON', icon: <Braces className="w-3 h-3" />, active: false },
+                    ].map((tab) => (
+                      <button
+                        key={tab.id}
+                        type="button"
+                        onClick={() => setActiveResearchPath(tab.id)}
+                        className={`px-2 py-1.5 text-[11px] font-semibold rounded-md transition-colors flex items-center justify-center gap-1 whitespace-nowrap ${
+                          activeResearchPath === tab.id
+                            ? 'bg-[#101014] dark:bg-[#F8C300] text-[#F4F2ED] dark:text-[#101014] font-bold'
+                            : tab.active
+                            ? 'text-[#7545D6] dark:text-[#F8C300] font-bold'
+                            : 'text-[#4A4A55] dark:text-[#B4B2AC] hover:text-[#101014] dark:hover:text-[#F4F2ED]'
+                        }`}
+                      >
+                        {tab.icon}
+                        <span>{tab.label}</span>
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Camino 1: Lighting */}
+                  {activeResearchPath === 'lighting' && (
+                    <div className="space-y-2.5">
+                      <p className="text-[11px] text-[#4A4A55] dark:text-[#B4B2AC]">
+                        <strong>¿Qué sucede si cambiamos la iluminación?</strong> Elige una hipótesis lumínica para transformar el volumen y el tono emocional (puedes combinarla con Lente y Contexto):
+                      </p>
+                      <div className="flex flex-wrap gap-1.5">
+                        {LIGHTING_HYPOTHESES.map((opt) => {
+                          const isChosen = selectedLighting?.id === opt.id;
+                          return (
+                            <button
+                              key={opt.id}
+                              type="button"
+                              onClick={() => updateResearchHypothesis('lighting', opt)}
+                              className={`px-2.5 py-1.5 text-xs font-semibold rounded-lg border transition-colors ${
+                                isChosen
+                                  ? 'bg-[#F8C300] text-[#101014] border-[#F8C300] font-bold'
+                                  : 'bg-[#F4F2ED] dark:bg-[#16161C] text-[#101014] dark:text-[#F4F2ED] border-[#DEDAD0] dark:border-[#26262E] hover:border-[#326BFF]'
+                              }`}
+                            >
+                              {opt.label}
+                            </button>
+                          );
+                        })}
+                      </div>
+                      {selectedLighting && (
+                        <div className="p-2.5 rounded-lg bg-[#F4F2ED] dark:bg-[#16161C] text-[11px] text-[#101014] dark:text-[#D8D5CD] leading-relaxed">
+                          <strong className="text-[#7545D6] dark:text-[#F8C300]">
+                            Efecto óptico/narrativo ({selectedLighting.shortSpec}):
+                          </strong>{' '}
+                          {selectedLighting.effectExplanation}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Camino 2: Lens */}
+                  {activeResearchPath === 'lens' && (
+                    <div className="space-y-2.5">
+                      <p className="text-[11px] text-[#4A4A55] dark:text-[#B4B2AC]">
+                        <strong>¿Qué sucede si cambiamos el lente?</strong> Compara cómo varía la compresión espacial, profundidad de campo y lectura del sujeto:
+                      </p>
+                      <div className="flex flex-wrap gap-1.5">
+                        {LENS_HYPOTHESES.map((opt) => {
+                          const isChosen = selectedLens?.id === opt.id;
+                          return (
+                            <button
+                              key={opt.id}
+                              type="button"
+                              onClick={() => updateResearchHypothesis('lens', opt)}
+                              className={`px-2.5 py-1.5 text-xs font-semibold rounded-lg border transition-colors ${
+                                isChosen
+                                  ? 'bg-[#326BFF] text-white border-[#326BFF] font-bold'
+                                  : 'bg-[#F4F2ED] dark:bg-[#16161C] text-[#101014] dark:text-[#F4F2ED] border-[#DEDAD0] dark:border-[#26262E] hover:border-[#326BFF]'
+                              }`}
+                            >
+                              {opt.label}
+                            </button>
+                          );
+                        })}
+                      </div>
+                      {selectedLens && (
+                        <div className="p-2.5 rounded-lg bg-[#F4F2ED] dark:bg-[#16161C] text-[11px] text-[#101014] dark:text-[#D8D5CD] leading-relaxed">
+                          <strong className="text-[#326BFF] dark:text-[#F8C300]">
+                            Efecto óptico ({selectedLens.shortSpec}):
+                          </strong>{' '}
+                          {selectedLens.effectExplanation}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Camino 3: Context */}
+                  {activeResearchPath === 'context' && (
+                    <div className="space-y-2.5">
+                      <p className="text-[11px] text-[#4A4A55] dark:text-[#B4B2AC]">
+                        <strong>¿Qué sucede si trasladamos la escena a otro contexto?</strong> Reubica el mismo sujeto o gesto visual en otro territorio o espacio físico:
+                      </p>
+                      <div className="flex flex-wrap gap-1.5">
+                        {CONTEXT_HYPOTHESES.map((opt) => {
+                          const isChosen = selectedContext?.id === opt.id;
+                          return (
+                            <button
+                              key={opt.id}
+                              type="button"
+                              onClick={() => updateResearchHypothesis('context', opt)}
+                              className={`px-2.5 py-1.5 text-xs font-semibold rounded-lg border transition-colors ${
+                                isChosen
+                                  ? 'bg-[#7545D6] text-white border-[#7545D6] font-bold'
+                                  : 'bg-[#F4F2ED] dark:bg-[#16161C] text-[#101014] dark:text-[#F4F2ED] border-[#DEDAD0] dark:border-[#26262E] hover:border-[#7545D6]'
+                              }`}
+                            >
+                              {opt.label}
+                            </button>
+                          );
+                        })}
+                      </div>
+                      {selectedContext && (
+                        <div className="p-2.5 rounded-lg bg-[#F4F2ED] dark:bg-[#16161C] text-[11px] text-[#101014] dark:text-[#D8D5CD] leading-relaxed">
+                          <strong className="text-[#7545D6] dark:text-[#F8C300]">
+                            Cambio narrativo ({selectedContext.shortSpec}):
+                          </strong>{' '}
+                          {selectedContext.effectExplanation}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Camino 4: Video Sequence */}
+                  {activeResearchPath === 'video' && (
+                    <div className="space-y-2.5">
+                      <p className="text-[11px] text-[#4A4A55] dark:text-[#B4B2AC]">
+                        <strong>¿Qué sucede si transformamos esta fotografía en una secuencia de video?</strong> Selecciona un movimiento de cámara real para convertir el fotograma en toma audiovisual:
+                      </p>
+                      <div className="flex flex-wrap gap-1.5">
+                        {VIDEO_MOVEMENT_PRESETS.map((preset) => {
+                          const isChosen = selectedVideoPreset.id === preset.id;
+                          return (
+                            <button
+                              key={preset.id}
+                              type="button"
+                              onClick={() => setSelectedVideoPreset(preset)}
+                              className={`px-2.5 py-1.5 text-xs font-semibold rounded-lg border transition-colors ${
+                                isChosen
+                                  ? 'bg-[#F8C300] text-[#101014] border-[#F8C300] font-bold'
+                                  : 'bg-[#F4F2ED] dark:bg-[#16161C] text-[#101014] dark:text-[#F4F2ED] border-[#DEDAD0] dark:border-[#26262E] hover:border-[#326BFF]'
+                              }`}
+                            >
+                              {preset.label} · {preset.duration}
+                            </button>
+                          );
+                        })}
+                      </div>
+                      <div className="p-2.5 rounded-lg bg-[#F4F2ED] dark:bg-[#16161C] space-y-2">
+                        <div className="text-[11px] text-[#4A4A55] dark:text-[#B4B2AC]">
+                          <strong className="text-[#101014] dark:text-[#F4F2ED]">Por qué funciona:</strong>{' '}
+                          {selectedVideoPreset.effectExplanation}
+                        </div>
+                        <p className="text-[11px] font-mono-code text-[#101014] dark:text-[#D8D5CD] leading-relaxed">
+                          {liveVideoSequencePrompt}
+                        </p>
+                        <div className="flex flex-wrap gap-2 pt-1">
+                          <button
+                            type="button"
+                            onClick={() => handleCopy(liveVideoSequencePrompt, 'lightbox-video')}
+                            className="px-2.5 py-1.5 text-[11px] font-semibold rounded border border-[#D4D0C5] dark:border-[#2C2C36] inline-flex items-center gap-1"
+                          >
+                            {copiedId === 'lightbox-video' ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
+                            <span>{copiedId === 'lightbox-video' ? 'Copiado' : 'Copiar prompt de video'}</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => sendItemToBuilder(lightboxItem, liveVideoSequencePrompt, null, true)}
+                            className="px-3 py-1.5 text-[11px] font-bold rounded bg-[#326BFF] hover:bg-[#2555d6] text-white inline-flex items-center gap-1"
+                          >
+                            <Film className="w-3 h-3" />
+                            <span>Abrir en Constructor (Video)</span>
+                          </button>
+                          {onAddToStoryboard && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const scene = buildStoryboardSceneFromPlate(
+                                  lightboxItem,
+                                  selectedVideoPreset,
+                                  selectedLighting,
+                                  selectedContext
+                                );
+                                setLightboxItem(null);
+                                onAddToStoryboard(scene);
+                              }}
+                              className="px-3 py-1.5 text-[11px] font-bold rounded bg-[#7545D6] hover:bg-[#5e34b5] text-white inline-flex items-center gap-1"
+                            >
+                              <Clapperboard className="w-3 h-3" />
+                              <span>Añadir al Storyboard</span>
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Camino 5: Reusable JSON */}
+                  {activeResearchPath === 'json' && liveJsonProfile && (
+                    <div className="space-y-2.5">
+                      <p className="text-[11px] text-[#4A4A55] dark:text-[#B4B2AC]">
+                        <strong>¿Qué sucede si convertimos su lenguaje visual en un JSON reutilizable?</strong> Este bloque preserva óptica, iluminación y colorimetría (incluyendo tus hipótesis activas) para replicar la estética en otras escenas:
+                      </p>
+                      <pre className="p-2.5 rounded-lg bg-[#101014] text-[#F4F2ED] text-[10px] font-mono-code overflow-x-auto max-h-40 leading-relaxed">
+                        {JSON.stringify(liveJsonProfile, null, 2)}
+                      </pre>
+                      <div className="flex flex-wrap gap-2">
+                        <button
+                          type="button"
+                          onClick={() =>
+                            handleCopy(JSON.stringify(liveJsonProfile, null, 2), 'lightbox-json')
+                          }
+                          className="px-2.5 py-1.5 text-[11px] font-semibold rounded border border-[#D4D0C5] dark:border-[#2C2C36] inline-flex items-center gap-1"
+                        >
+                          {copiedId === 'lightbox-json' ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
+                          <span>{copiedId === 'lightbox-json' ? 'JSON copiado' : 'Copiar JSON'}</span>
+                        </button>
+                        {onAnalyzeInJsonLab && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const target = lightboxItem;
+                              const customProf = liveJsonProfile;
+                              setLightboxItem(null);
+                              onAnalyzeInJsonLab(target, customProf);
+                            }}
+                            className="px-3 py-1.5 text-[11px] font-bold rounded bg-[#7545D6] hover:bg-[#5e34b5] text-white inline-flex items-center gap-1"
+                          >
+                            <Braces className="w-3 h-3" />
+                            <span>Editar en JSON Lab</span>
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {/* Editable Prompt + Language Toggle */}
@@ -897,7 +1448,7 @@ export const VisualGalleryView: React.FC<VisualGalleryViewProps> = ({
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <span className="text-xs font-mono-code font-bold uppercase text-[#101014] dark:text-[#F4F2ED]">
-                        Prompt editable
+                        Prompt experimental editable
                       </span>
                       <div className="inline-flex rounded border border-[#D4D0C5] dark:border-[#2C2C36] overflow-hidden text-[11px] font-mono-code">
                         <button
@@ -970,11 +1521,11 @@ export const VisualGalleryView: React.FC<VisualGalleryViewProps> = ({
                   </button>
                 </div>
 
-                {/* 1-Click Prompt Variations */}
+                {/* Curated Plate-Specific Quick Variations */}
                 <div className="space-y-2">
                   <div className="text-[11px] font-mono-code font-bold uppercase text-[#5B5B66] dark:text-[#A09E97] flex items-center gap-1.5">
                     <Wand2 className="w-3.5 h-3.5 text-[#7545D6]" />
-                    <span>Variaciones rápidas (clic para mezclar al prompt)</span>
+                    <span>Variaciones específicas de esta lámina</span>
                   </div>
                   <div className="flex flex-wrap gap-2">
                     {lightboxItem.variations.map((v) => (
@@ -990,21 +1541,56 @@ export const VisualGalleryView: React.FC<VisualGalleryViewProps> = ({
                   </div>
                 </div>
 
+                {/* Researcher Local Bitácora / Hypothesis Note */}
+                <div className="p-3.5 rounded-xl bg-white dark:bg-[#101014] border border-[#DEDAD0] dark:border-[#26262E] space-y-2">
+                  <div className="flex items-center justify-between gap-2">
+                    <label
+                      htmlFor={`note-${lightboxItem.id}`}
+                      className="text-[11px] font-mono-code font-bold uppercase text-[#101014] dark:text-[#F4F2ED] inline-flex items-center gap-1.5"
+                    >
+                      <FileText className="w-3.5 h-3.5 text-[#326BFF] dark:text-[#F8C300]" />
+                      <span>Bitácora de Investigación (guardado local)</span>
+                    </label>
+                    <button
+                      type="button"
+                      onClick={handleDownloadResearchDossier}
+                      className="text-[11px] font-mono-code font-semibold text-[#326BFF] dark:text-[#F8C300] hover:underline inline-flex items-center gap-1"
+                    >
+                      <Download className="w-3 h-3" />
+                      <span>Descargar ficha (.TXT)</span>
+                    </button>
+                  </div>
+                  <textarea
+                    id={`note-${lightboxItem.id}`}
+                    rows={2}
+                    value={researchNotes[lightboxItem.id] || ''}
+                    onChange={(e) =>
+                      setResearchNotes((prev) => ({
+                        ...prev,
+                        [lightboxItem.id]: e.target.value,
+                      }))
+                    }
+                    placeholder="Anota tu hipótesis, qué cambio de luz o lente funcionó mejor, o hallazgos para tu taller..."
+                    className="w-full p-2.5 rounded-lg bg-[#F4F2ED] dark:bg-[#16161C] border border-[#DEDAD0] dark:border-[#26262E] text-xs text-[#101014] dark:text-[#F4F2ED] focus:outline-none focus:border-[#326BFF]"
+                  />
+                </div>
+
                 {/* Primary Lightbox CTAs */}
-                <div className="pt-2 flex flex-wrap items-center gap-3">
+                <div className="pt-1 flex flex-wrap items-center gap-2.5">
                   <button
                     type="button"
                     onClick={() =>
                       sendItemToBuilder(
                         lightboxItem,
                         lightboxDraftPrompt,
-                        appliedVariationPatch
+                        appliedVariationPatch,
+                        false
                       )
                     }
-                    className="flex-1 py-3 px-4 text-xs sm:text-sm font-bold bg-[#F8C300] hover:bg-[#e5b400] text-[#101014] rounded-xl transition-colors flex items-center justify-center gap-2"
+                    className="flex-1 py-3 px-4 text-xs sm:text-sm font-bold bg-[#F8C300] hover:bg-[#e5b400] text-[#101014] rounded-xl transition-colors flex items-center justify-center gap-2 whitespace-nowrap"
                   >
                     <Sparkles className="w-4 h-4" />
-                    <span>Experimentar en Constructor</span>
+                    <span>Probar en Constructor</span>
                   </button>
 
                   <button
@@ -1014,24 +1600,25 @@ export const VisualGalleryView: React.FC<VisualGalleryViewProps> = ({
                       setLightboxItem(null);
                       onOpenTechnicalModule(mod);
                     }}
-                    className="py-3 px-4 text-xs font-semibold rounded-xl border border-[#D4D0C5] dark:border-[#2C2C36] bg-white dark:bg-[#101014] hover:border-[#326BFF] inline-flex items-center gap-1.5"
+                    className="py-3 px-3.5 text-xs font-semibold rounded-xl border border-[#D4D0C5] dark:border-[#2C2C36] bg-white dark:bg-[#101014] hover:border-[#326BFF] inline-flex items-center gap-1.5 whitespace-nowrap"
                   >
                     <BookOpen className="w-3.5 h-3.5 text-[#326BFF]" />
-                    <span>Ver Módulo Técnico</span>
+                    <span>Ver Módulo</span>
                   </button>
 
-                  {onAnalyzeInJsonLab && (
+                  {onAnalyzeInJsonLab && liveJsonProfile && (
                     <button
                       type="button"
                       onClick={() => {
                         const target = lightboxItem;
+                        const prof = liveJsonProfile;
                         setLightboxItem(null);
-                        onAnalyzeInJsonLab(target);
+                        onAnalyzeInJsonLab(target, prof);
                       }}
-                      className="py-3 px-4 text-xs font-semibold rounded-xl border border-[#D4D0C5] dark:border-[#2C2C36] bg-white dark:bg-[#101014] hover:border-[#7545D6] inline-flex items-center gap-1.5"
+                      className="py-3 px-3.5 text-xs font-semibold rounded-xl border border-[#D4D0C5] dark:border-[#2C2C36] bg-white dark:bg-[#101014] hover:border-[#7545D6] inline-flex items-center gap-1.5 whitespace-nowrap"
                     >
                       <Braces className="w-3.5 h-3.5 text-[#7545D6] dark:text-[#F8C300]" />
-                      <span>Abrir en JSON Lab</span>
+                      <span>JSON Lab</span>
                     </button>
                   )}
                 </div>
