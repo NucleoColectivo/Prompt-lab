@@ -120,7 +120,7 @@ export const RECIPES: RecipeItem[] = [
     title: 'Retrato Cinematográfico Neo Noir',
     subtitle: 'Claroscuro moderno con separación cromática teal & orange',
     type: 'photo',
-    image: '/src/assets/images/recipe_neo_noir_portrait_1794436191840.jpg',
+    image: '/images/recipe_neo_noir_portrait_1794436191840.jpg',
     commands: [
       '/cinematicportrait',
       '/neonoir',
@@ -149,7 +149,7 @@ export const RECIPES: RecipeItem[] = [
     title: 'Publicidad de Producto de Lujo',
     subtitle: 'Bodegón comercial premium con control de reflejos y fluidos',
     type: 'ads',
-    image: '/src/assets/images/recipe_luxury_product_1794436192275.jpg',
+    image: '/images/recipe_luxury_product_1794436192275.jpg',
     commands: [
       '/premiumshowcase',
       '/mediumformat',
@@ -177,7 +177,7 @@ export const RECIPES: RecipeItem[] = [
     title: 'Video Experimental Generativo',
     subtitle: 'Estructuras orgánicas de partículas, fluidos y audio-reactividad',
     type: 'experimental',
-    image: '/src/assets/images/recipe_generative_art_1794436193380.jpg',
+    image: '/images/recipe_generative_art_1794436193380.jpg',
     commands: [
       '/generativevideo',
       '/particle-simulation',
@@ -204,7 +204,7 @@ export const RECIPES: RecipeItem[] = [
     title: 'Fotografía Documental Analógica',
     subtitle: 'Textura 35mm, luz natural y autenticidad espontánea',
     type: 'photo',
-    image: '/src/assets/images/recipe_analog_documentary_1794437087703.jpg',
+    image: '/images/recipe_analog_documentary_1794437087703.jpg',
     commands: [
       '/documentary',
       '/35mmfilm',
@@ -232,7 +232,7 @@ export const RECIPES: RecipeItem[] = [
     title: 'Recorrido Cinematográfico en Obra de Arte',
     subtitle: 'Toma continua alrededor de escultura o instalación física',
     type: 'video',
-    image: '/src/assets/images/recipe_artwork_tour_1794437087396.jpg',
+    image: '/images/recipe_artwork_tour_1794437087396.jpg',
     commands: [
       '/artfilm',
       '/orbit-shot',
@@ -259,7 +259,7 @@ export const RECIPES: RecipeItem[] = [
     title: 'Loop Audiovisual Infinito para Pantallas',
     subtitle: 'Continuidad matemática perfecta entre el fotograma inicial y final',
     type: 'video',
-    image: '/src/assets/images/recipe_infinite_loop_1794437088322.jpg',
+    image: '/images/recipe_infinite_loop_1794437088322.jpg',
     commands: [
       '/loopvideo',
       '/orbit-shot',
@@ -285,7 +285,7 @@ export const RECIPES: RecipeItem[] = [
     title: 'Valla 3D Gigante en Times Square',
     subtitle: 'Publicidad anamórfica de impacto urbano monumental',
     type: 'ads',
-    image: '/src/assets/images/example_timesquare_billboard_1794437088499.jpg',
+    image: '/images/example_timesquare_billboard_1794437088499.jpg',
     commands: [
       '/timesquare',
       '/3dbillboard',

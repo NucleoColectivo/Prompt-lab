@@ -474,7 +474,7 @@ export const VisualComparisonStrip: React.FC = () => {
           <div className="relative h-48 rounded overflow-hidden border border-stone-200 dark:border-stone-800 bg-stone-900">
             {/* Background blurred layer */}
             <img
-              src="/src/assets/images/mod_territory_memory_1794593014725.jpg"
+              src="/images/mod_territory_memory_1794593014725.jpg"
               alt="Fondo arquitectónico de prueba óptica"
               className={`w-full h-full object-cover transition-all duration-300 ${apertureBlurMap[selectedAperture]}`}
               loading="lazy"
@@ -483,7 +483,7 @@ export const VisualComparisonStrip: React.FC = () => {
             <div className="absolute inset-0 flex items-center justify-center p-4 pointer-events-none">
               <div className="w-28 h-32 rounded border-2 border-amber-400/90 overflow-hidden shadow-xl bg-stone-950">
                 <img
-                  src="/src/assets/images/recipe_neo_noir_portrait_1794436191840.jpg"
+                  src="/images/recipe_neo_noir_portrait_1794436191840.jpg"
                   alt="Sujeto en plano de enfoque"
                   className="w-full h-full object-cover"
                   loading="lazy"
@@ -537,7 +537,7 @@ export const VisualComparisonStrip: React.FC = () => {
 
           <div className="relative h-48 rounded overflow-hidden border border-stone-200 dark:border-stone-800 bg-stone-900">
             <img
-              src="/src/assets/images/mod_composition_cinematography_1794593015294.jpg"
+              src="/images/mod_composition_cinematography_1794593015294.jpg"
               alt="Escena arquitectónica con temperatura de color variable"
               style={{ filter: kelvinFilterMap[selectedKelvin].filter }}
               className="w-full h-full object-cover transition-all duration-300"

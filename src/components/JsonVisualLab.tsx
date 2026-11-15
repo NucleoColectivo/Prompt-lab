@@ -256,7 +256,7 @@ export const JsonVisualLab: React.FC<JsonVisualLabProps> = ({ onApplyStyleToBuil
           <div className="lg:col-span-5">
             <div className="rounded-xl overflow-hidden border border-stone-200 dark:border-stone-800 bg-stone-950 shadow-sm">
               <img
-                src="/src/assets/images/comp_json_style_transfer_1794593016651.jpg"
+                src="/images/comp_json_style_transfer_1794593016651.jpg"
                 alt="Ejemplo de transferencia de estilo vía JSON manteniendo identidad del sujeto"
                 loading="lazy"
                 className="w-full h-56 object-cover"

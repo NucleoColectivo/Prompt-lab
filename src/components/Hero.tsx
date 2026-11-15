@@ -90,7 +90,7 @@ export const Hero: React.FC<HeroProps> = ({
               
               {/* High-Fidelity Studio Image */}
               <img
-                src="/src/assets/images/hero_cinematic_studio_1794436191894.jpg"
+                src="/images/hero_cinematic_studio_1794436191894.jpg"
                 alt="Plató cinematográfico y laboratorio de fotografía Núcleo Colectivo"
                 className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-700"
                 referrerPolicy="no-referrer"

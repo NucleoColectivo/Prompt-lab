@@ -614,10 +614,10 @@ export const InteractiveCreativeLabs: React.FC<InteractiveCreativeLabsProps> = (
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {[
-                    { title: '01. Lente 35mm vs 85mm', caption: 'Amplitud espacial vs compresión y bokeh', img: '/src/assets/images/comp_focal_35_85_1794593013583.jpg', filter: 'none' },
-                    { title: '02. Luz Rembrandt vs High Key', caption: 'Contraste psicológico 4:1 vs luminoso suave', img: '/src/assets/images/comp_lighting_rembrandt_highkey_1794593014446.jpg', filter: 'none' },
-                    { title: '03. Color Frío 7200K vs Cálido 3200K', caption: 'Melancolía nocturna vs intimidad dorada', img: '/src/assets/images/mod_composition_cinematography_1794593015294.jpg', filter: 'sepia(0.28) saturate(1.15)' },
-                    { title: '04. Textura JSON Transferida', caption: 'Preservación de identidad + estilo editorial', img: '/src/assets/images/comp_json_style_transfer_1794593016651.jpg', filter: 'contrast(1.06)' },
+                    { title: '01. Lente 35mm vs 85mm', caption: 'Amplitud espacial vs compresión y bokeh', img: '/images/comp_focal_35_85_1794593013583.jpg', filter: 'none' },
+                    { title: '02. Luz Rembrandt vs High Key', caption: 'Contraste psicológico 4:1 vs luminoso suave', img: '/images/comp_lighting_rembrandt_highkey_1794593014446.jpg', filter: 'none' },
+                    { title: '03. Color Frío 7200K vs Cálido 3200K', caption: 'Melancolía nocturna vs intimidad dorada', img: '/images/mod_composition_cinematography_1794593015294.jpg', filter: 'sepia(0.28) saturate(1.15)' },
+                    { title: '04. Textura JSON Transferida', caption: 'Preservación de identidad + estilo editorial', img: '/images/comp_json_style_transfer_1794593016651.jpg', filter: 'contrast(1.06)' },
                   ].map((cell) => (
                     <div key={cell.title} className="rounded-lg border border-stone-200 dark:border-stone-800 bg-[#FAF8F5] dark:bg-stone-950 overflow-hidden">
                       <img src={cell.img} alt={cell.title} style={{ filter: cell.filter }} className="w-full h-40 object-cover" loading="lazy" />
@@ -974,7 +974,7 @@ export const InteractiveCreativeLabs: React.FC<InteractiveCreativeLabsProps> = (
             <div className="lg:col-span-6 grid grid-cols-1 sm:grid-cols-2 gap-4 items-stretch">
               <div className="relative rounded-xl overflow-hidden border border-stone-200 dark:border-stone-800 bg-stone-950 min-h-[260px]">
                 <img
-                  src="/src/assets/images/recipe_neo_noir_portrait_1794436191840.jpg"
+                  src="/images/recipe_neo_noir_portrait_1794436191840.jpg"
                   alt="Simulación de iluminación sobre retrato"
                   className="w-full h-full object-cover"
                 />

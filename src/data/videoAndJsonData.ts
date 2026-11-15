@@ -1,22 +1,22 @@
 import { LibraryEntry } from './modulesData';
 
 const IMG = {
-  studio: '/src/assets/images/hero_cinematic_studio_1794436191894.jpg',
-  noir: '/src/assets/images/recipe_neo_noir_portrait_1794436191840.jpg',
-  product: '/src/assets/images/recipe_luxury_product_1794436192275.jpg',
-  generative: '/src/assets/images/recipe_generative_art_1794436193380.jpg',
-  analog: '/src/assets/images/recipe_analog_documentary_1794437087703.jpg',
-  artwork: '/src/assets/images/recipe_artwork_tour_1794437087396.jpg',
-  loop: '/src/assets/images/recipe_infinite_loop_1794437088322.jpg',
-  billboard: '/src/assets/images/example_timesquare_billboard_1794437088499.jpg',
-  botanical: '/src/assets/images/mod_botanical_illustration_1794593012433.jpg',
-  compFocal: '/src/assets/images/comp_focal_35_85_1794593013583.jpg',
-  compLight: '/src/assets/images/comp_lighting_rembrandt_highkey_1794593014446.jpg',
-  territory: '/src/assets/images/mod_territory_memory_1794593014725.jpg',
-  composition: '/src/assets/images/mod_composition_cinematography_1794593015294.jpg',
-  videoRig: '/src/assets/images/mod_video_camera_rig_1794593015892.jpg',
-  compJson: '/src/assets/images/comp_json_style_transfer_1794593016651.jpg',
-  hybrid: '/src/assets/images/mod_hybrid_organism_art_1794593016294.jpg',
+  studio: '/images/hero_cinematic_studio_1794436191894.jpg',
+  noir: '/images/recipe_neo_noir_portrait_1794436191840.jpg',
+  product: '/images/recipe_luxury_product_1794436192275.jpg',
+  generative: '/images/recipe_generative_art_1794436193380.jpg',
+  analog: '/images/recipe_analog_documentary_1794437087703.jpg',
+  artwork: '/images/recipe_artwork_tour_1794437087396.jpg',
+  loop: '/images/recipe_infinite_loop_1794437088322.jpg',
+  billboard: '/images/example_timesquare_billboard_1794437088499.jpg',
+  botanical: '/images/mod_botanical_illustration_1794593012433.jpg',
+  compFocal: '/images/comp_focal_35_85_1794593013583.jpg',
+  compLight: '/images/comp_lighting_rembrandt_highkey_1794593014446.jpg',
+  territory: '/images/mod_territory_memory_1794593014725.jpg',
+  composition: '/images/mod_composition_cinematography_1794593015294.jpg',
+  videoRig: '/images/mod_video_camera_rig_1794593015892.jpg',
+  compJson: '/images/comp_json_style_transfer_1794593016651.jpg',
+  hybrid: '/images/mod_hybrid_organism_art_1794593016294.jpg',
 };
 
 // ============================================================================

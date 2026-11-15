@@ -338,7 +338,7 @@ export const PromptFundamentals: React.FC<PromptFundamentalsProps> = ({
                 <div className="lg:col-span-5">
                   <div className="rounded-xl overflow-hidden border border-stone-200 dark:border-stone-800 bg-stone-900 shadow-sm">
                     <img
-                      src="/src/assets/images/comp_lighting_rembrandt_highkey_1794593014446.jpg"
+                      src="/images/comp_lighting_rembrandt_highkey_1794593014446.jpg"
                       alt="Comparación visual mostrando cómo cambia un retrato según las instrucciones del prompt"
                       className="w-full h-64 object-cover"
                     />
@@ -495,7 +495,7 @@ export const PromptFundamentals: React.FC<PromptFundamentalsProps> = ({
                 <div className="lg:col-span-5">
                   <div className="rounded-xl overflow-hidden border border-stone-200 dark:border-stone-800 bg-stone-900 shadow-sm">
                     <img
-                      src="/src/assets/images/mod_video_camera_rig_1794593015892.jpg"
+                      src="/images/mod_video_camera_rig_1794593015892.jpg"
                       alt="Cámara de cine sobre estabilizador Steadicam y rieles de movimiento orbital"
                       className="w-full h-64 object-cover"
                     />
