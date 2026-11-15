@@ -24,6 +24,7 @@ export interface PromptBuilderState {
   subject: string;
   action?: string;
   setting?: string;
+  composition?: string;
   genre: string;
   camera: string;
   lens: string;
@@ -44,7 +45,7 @@ export interface PromptBuilderState {
   negativeAvoid: string[];
 }
 
-interface SavedFavoritePrompt {
+export interface SavedFavoritePrompt {
   id: string;
   title: string;
   projectName?: string;
@@ -67,7 +68,7 @@ export const PromptBuilder: React.FC<PromptBuilderProps> = ({
 }) => {
   const [copied, setCopied] = useState(false);
   const [outputMode, setOutputMode] = useState<'breve' | 'avanzado' | 'cinematografico'>('avanzado');
-  const [showAdvancedFields, setShowAdvancedFields] = useState(false);
+  const [builderDensity, setBuilderDensity] = useState<'all12' | 'essential'>('all12');
   const [isEnriching, setIsEnriching] = useState(false);
   const [enrichError, setEnrichError] = useState<string | null>(null);
   const [geminiSuggestion, setGeminiSuggestion] = useState<{
@@ -98,6 +99,9 @@ export const PromptBuilder: React.FC<PromptBuilderProps> = ({
   useEffect(() => {
     try {
       localStorage.setItem('nc_fav_prompts_v1', JSON.stringify(savedPrompts));
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('nc-favorites-updated'));
+      }
     } catch {
       // ignore storage quota errors
     }
@@ -255,6 +259,41 @@ export const PromptBuilder: React.FC<PromptBuilderProps> = ({
     'Polvo dorado al atardecer',
   ];
 
+  const COMPOSITIONS = [
+    'Regla de tercios equilibrada',
+    'Simetría central arquitectónica',
+    'Espacio negativo editorial',
+    'Líneas guía en perspectiva',
+    'Encuadre dentro del encuadre',
+    'Diagonales dinámicas',
+    'Flat-lay cenital 90°',
+  ];
+
+  const VISUAL_STYLE_PRESETS = [
+    'Editorial Contemporáneo',
+    'Neo Noir',
+    'Minimalismo Escultórico',
+    'Documental Analógico 35mm',
+    'Lujo Publicitario',
+    'Collage Experimental',
+    'Cine de Ciencia Ficción Orgánico',
+  ];
+
+  const TEXTURE_PRESETS = [
+    'natural texture, visible pores',
+    'grano fino orgánico Kodak 35mm, sin suavizado plástico',
+    'superficie mineral mate con pátina táctil real',
+    'tejido natural con fibras visibles y desgaste sutil',
+    'reflejo especular limpio en vidrio y metal cepillado',
+  ];
+
+  const QUALITY_PRESETS = [
+    'RAW editorial authenticity, natural microtextures',
+    'acabado cinematográfico sin sobreenfoque digital',
+    'rango dinámico amplio con transición suave en luces altas',
+    'fidelidad óptica real de estudio sin HDR artificial',
+  ];
+
   // Detect incompatible parameter combinations
   const incompatibilities = useMemo(() => {
     const warnings: { msg: string; fixLabel: string; applyFix: () => void }[] = [];
@@ -319,6 +358,7 @@ export const PromptBuilder: React.FC<PromptBuilderProps> = ({
         : 'A sculptural luxury object on dark mineral stone');
     const actionStr = builderState.action ? `, ${builderState.action}` : '';
     const settingStr = builderState.setting ? `, set in ${builderState.setting}` : '';
+    const compStr = builderState.composition || 'Regla de tercios equilibrada';
     const shotStr = builderState.shotSize || 'Plano Medio (MS)';
     const angleStr = builderState.cameraAngle || 'Normal (Eye Level)';
     const tempStr = builderState.temperature || 'Neutra equilibrada (5500K)';
@@ -327,94 +367,68 @@ export const PromptBuilder: React.FC<PromptBuilderProps> = ({
 
     if (outputMode === 'breve') {
       return isVid
-        ? `${baseSubject}${actionStr}${settingStr}. ${shotStr}, ${angleStr}, ${builderState.motion}, shot on ${builderState.camera}, ${builderState.lens}, ${builderState.lighting}, ${builderState.colorPalette}, ${builderState.fps}, aspect ratio ${builderState.aspectRatio}. Avoid: ${builderState.negativeAvoid.join(', ')}.`
-        : `${baseSubject}${actionStr}${settingStr}. ${shotStr}, ${angleStr}, ${builderState.genre}, aesthetic reference ${builderState.camera}, ${builderState.lens}, ${builderState.aperture}, ${builderState.lighting}, ${builderState.colorPalette}, ${qualityStr}, aspect ratio ${builderState.aspectRatio}. Avoid: ${builderState.negativeAvoid.join(', ')}.`;
+        ? `${baseSubject}${actionStr}${settingStr}. ${compStr}, ${shotStr}, ${angleStr}, ${builderState.motion}, aesthetic reference ${builderState.camera}, ${builderState.lens}, ${builderState.lighting}, ${builderState.colorPalette}, ${atmosStr}, ${builderState.fps}, aspect ratio ${builderState.aspectRatio}. Avoid: ${builderState.negativeAvoid.join(', ')}.`
+        : `${baseSubject}${actionStr}${settingStr}. ${compStr}, ${shotStr}, ${angleStr}, ${builderState.genre}, ${builderState.visualStyle}, aesthetic reference ${builderState.camera}, ${builderState.lens}, ${builderState.aperture}, ${builderState.lighting}, ${builderState.colorPalette}, ${qualityStr}, aspect ratio ${builderState.aspectRatio}. Avoid: ${builderState.negativeAvoid.join(', ')}.`;
     }
 
     if (outputMode === 'cinematografico') {
       return isVid
         ? `CINEMATOGRAPHY MASTER SCRIPT — NÚCLEO COLECTIVO
-[01] ESCENA Y ACCIÓN: ${baseSubject}${actionStr}${settingStr}.
-[02] GÉNERO Y TONO: ${builderState.genre} · Estilo ${builderState.visualStyle}.
-[03] ENCUADRE Y ÁNGULO: ${shotStr} · Ángulo ${angleStr}.
+[01] SUJETO Y ACCIÓN: ${baseSubject}${actionStr}.
+[02] ESCENARIO Y CONTEXTO: ${builderState.setting || 'Espacio arquitectónico coherente con profundidad tonal'}.
+[03] COMPOSICIÓN Y PLANO: ${compStr} · ${shotStr} · Ángulo ${angleStr}.
 [04] CÁMARA Y ÓPTICA: Referencia ${builderState.camera}, ${builderState.lens}, ${builderState.aperture}.
 [05] MOVIMIENTO Y TEMPORALIDAD: ${builderState.motion} · Cadencia ${builderState.fps} · Duración ${builderState.duration || '6–8 segundos continuos'}.
-[06] ILUMINACIÓN Y ATMÓSFERA: ${builderState.lighting} · Temperatura ${tempStr} · ${atmosStr}.
-[07] COLORIMETRÍA: ${builderState.colorPalette} (referencia estética).
-[08] TEXTURA Y CALIDAD: ${builderState.texture}, ${qualityStr}.
-[09] FORMATO: Aspect ratio ${builderState.aspectRatio}.
-[10] CONTINUIDAD Y NEGATIVAS: Mantener identidad, geometría y luz estable. Avoid: ${builderState.negativeAvoid.join(', ')}.`
+[06] ILUMINACIÓN: ${builderState.lighting}.
+[07] COLOR Y TEMPERATURA: ${builderState.colorPalette} · ${tempStr}.
+[08] GÉNERO Y ESTILO: ${builderState.genre} · ${builderState.visualStyle}.
+[09] TEXTURA Y CALIDAD: ${builderState.texture}, ${qualityStr}.
+[10] ATMÓSFERA Y FORMATO: ${atmosStr} · Aspect ratio ${builderState.aspectRatio}.
+[11] CONTINUIDAD Y NEGATIVAS: Mantener identidad, geometría y luz estable. Avoid: ${builderState.negativeAvoid.join(', ')}.`
         : `ART DIRECTION MASTER SHEET — NÚCLEO COLECTIVO
-[01] SUJETO Y ACCIÓN: ${baseSubject}${actionStr}.
-[02] ESCENARIO Y CONTEXTO: ${builderState.setting || 'Entorno editorial coherente con luz natural'}.
-[03] PLANO Y ÁNGULO: ${shotStr} · ${angleStr}.
-[04] GÉNERO Y ESTILO: ${builderState.genre} · ${builderState.visualStyle}.
-[05] CÁMARA DE REFERENCIA: ${builderState.camera} (referencia estética, no requisito obligatorio).
-[06] ÓPTICA Y DIAFRAGMA: ${builderState.lens}, ${builderState.aperture}, caída óptica natural.
-[07] ESQUEMA DE LUZ: ${builderState.lighting} · Temperatura ${tempStr}.
-[08] ATMÓSFERA Y COLOR: ${atmosStr} · ${builderState.colorPalette}.
-[09] TEXTURA Y ACABADO: ${builderState.texture}, ${qualityStr}.
-[10] FORMATO Y NEGATIVAS: Aspect ratio ${builderState.aspectRatio}. Avoid: ${builderState.negativeAvoid.join(', ')}.`;
+[01] SUJETO: ${baseSubject}.
+[02] ACCIÓN: ${builderState.action || 'Presencia serena y postura natural'}.
+[03] ESCENARIO: ${builderState.setting || 'Entorno editorial coherente con luz natural'}.
+[04] COMPOSICIÓN Y ENCUADRE: ${compStr} · ${shotStr} · ${angleStr}.
+[05] CÁMARA Y ÓPTICA (REFERENCIA): ${builderState.camera}, ${builderState.lens}, ${builderState.aperture}.
+[06] ILUMINACIÓN: ${builderState.lighting}.
+[07] COLOR Y TEMPERATURA: ${builderState.colorPalette} · ${tempStr}.
+[08] GÉNERO Y ESTILO: ${builderState.genre} · ${builderState.visualStyle}.
+[09] TEXTURA Y CALIDAD: ${builderState.texture}, ${qualityStr}.
+[10] ATMÓSFERA: ${atmosStr}.
+[11] FORMATO: Aspect ratio ${builderState.aspectRatio}.
+[12] NEGATIVAS: Avoid: ${builderState.negativeAvoid.join(', ')}.`;
     }
 
     if (isVid) {
-      return `MASTER VIDEO PROMPT — CINEMATOGRAPHY & MOTION
-01. SCENE & SUBJECT:
-${baseSubject}${actionStr}${settingStr}.
-
-02. GENRE & FRAMING:
-${builderState.genre || '/cinematicvideo'} · ${shotStr} · ${angleStr}.
-
-03. CAMERA & OPTICS:
-Shot on ${builderState.camera || 'ARRI Alexa 35'}, ${builderState.lens || 'Cooke 40mm anamorphic prime lens'}, ${builderState.aperture || 'T2.3 cinematic aperture'}.
-
-04. CAMERA MOVEMENT:
-${builderState.motion || 'Smooth continuous orbit shot around the subject'} (${builderState.fps}, ${builderState.duration || '6-8s'}).
-
-05. LIGHTING & ATMOSPHERE:
-${builderState.lighting || 'Volumetric light shafts cutting through soft atmospheric haze'}, ${tempStr}, ${atmosStr}.
-
-06. COLOR SCIENCE:
-${builderState.colorPalette || 'Kodak 2383 print film look with soft highlight roll-off'}.
-
-07. STYLE & TEXTURE:
-${builderState.visualStyle || 'Contemporary cinematic editorial'}, ${builderState.texture}, ${qualityStr}.
-
-08. OUTPUT & SPECS:
-Aspect ratio: ${builderState.aspectRatio || '16:9'}.
-
-09. CONTINUITY & NEGATIVES:
-Maintain subject identity, object geometry, and lighting consistency throughout the sequence.
-Avoid: ${builderState.negativeAvoid.length > 0 ? builderState.negativeAvoid.join(', ') : 'plastic textures, morphing, jitter, warping, artificial motion, text, logos'}.`;
+      return `MASTER VIDEO PROMPT — 12 MÓDULOS DE DIRECCIÓN
+01. SUJETO: ${baseSubject}.
+02. ACCIÓN: ${builderState.action || 'Movimiento contenido y natural acorde a la escena'}.
+03. ESCENARIO: ${builderState.setting || 'Espacio arquitectónico o natural con profundidad real'}.
+04. COMPOSICIÓN Y ENCUADRE: ${compStr}, ${shotStr}, ${angleStr}.
+05. CÁMARA Y ÓPTICA (REFERENCIA): Shot on ${builderState.camera || 'ARRI Alexa 35'}, ${builderState.lens || 'Cooke 40mm anamorphic prime lens'}, ${builderState.aperture || 'T2.3 cinematic aperture'}.
+06. ILUMINACIÓN: ${builderState.lighting || 'Volumetric light shafts cutting through soft atmospheric haze'}.
+07. COLOR Y TEMPERATURA: ${builderState.colorPalette || 'Kodak 2383 print film look'}, ${tempStr}.
+08. GÉNERO Y ESTILO: ${builderState.genre || '/cinematicvideo'}, ${builderState.visualStyle || 'Contemporary cinematic editorial'}.
+09. TEXTURA Y CALIDAD: ${builderState.texture}, ${qualityStr}.
+10. ATMÓSFERA: ${atmosStr}.
+11. FORMATO: Aspect ratio ${builderState.aspectRatio || '16:9'}.
+12. MOVIMIENTO Y NEGATIVAS: ${builderState.motion || 'Smooth continuous orbit shot'} (${builderState.fps}, ${builderState.duration || '6-8s'}). Avoid: ${builderState.negativeAvoid.length > 0 ? builderState.negativeAvoid.join(', ') : 'plastic textures, morphing, jitter, warping, text, logos'}.`;
     }
 
-    return `MASTER PROMPT — PHOTOGRAPHY & VISUAL ART
-01. SUBJECT:
-${baseSubject}${actionStr}${settingStr}.
-
-02. GENRE & FRAMING:
-${builderState.genre || '/editorial'} · ${shotStr} · ${angleStr}.
-
-03. CAMERA & SENSOR (REFERENCIA ESTÉTICA):
-Shot on ${builderState.camera || 'Hasselblad X2D'}.
-
-04. OPTICS & APERTURE:
-${builderState.lens || '85mm portrait prime lens'}, ${builderState.aperture || 'f/2.8 aperture'}, realistic optical fall-off.
-
-05. LIGHTING SETUP & ATMOSPHERE:
-${builderState.lighting || 'Rembrandt lighting, directional light with cheek triangle'}, ${tempStr}, ${atmosStr}.
-
-06. COLOR GRADING:
-${builderState.colorPalette || 'Teal and orange cinematic grading with warm skin and cool shadows'}.
-
-07. STYLE & FINISH:
-${builderState.visualStyle || 'Lujo Publicitario Contemporáneo'}, ${builderState.texture}, ${qualityStr}.
-
-08. OUTPUT FORMAT:
-Aspect ratio: ${builderState.aspectRatio || '4:5'}.
-
-09. NEGATIVE INSTRUCTIONS:
-Avoid: ${builderState.negativeAvoid.length > 0 ? builderState.negativeAvoid.join(', ') : 'plastic skin, artificial lighting, oversaturation, fake bokeh, distorted anatomy, text, watermarks'}.`;
+    return `MASTER PHOTO PROMPT — 12 MÓDULOS DE DIRECCIÓN
+01. SUJETO: ${baseSubject}.
+02. ACCIÓN: ${builderState.action || 'Presencia serena con gesto auténtico'}.
+03. ESCENARIO: ${builderState.setting || 'Entorno coherente con luz direccional real'}.
+04. COMPOSICIÓN Y ENCUADRE: ${compStr}, ${shotStr}, ${angleStr}.
+05. CÁMARA Y ÓPTICA (REFERENCIA): Aesthetic reference ${builderState.camera || 'Hasselblad X2D'}, ${builderState.lens || '85mm portrait prime lens'}, ${builderState.aperture || 'f/2.8 aperture'}.
+06. ILUMINACIÓN: ${builderState.lighting || 'Rembrandt lighting, directional light with cheek triangle'}.
+07. COLOR Y TEMPERATURA: ${builderState.colorPalette || 'Teal and orange cinematic grading'}, ${tempStr}.
+08. GÉNERO Y ESTILO: ${builderState.genre || '/editorial'}, ${builderState.visualStyle || 'Editorial Contemporáneo'}.
+09. TEXTURA Y CALIDAD: ${builderState.texture}, ${qualityStr}.
+10. ATMÓSFERA: ${atmosStr}.
+11. FORMATO: Aspect ratio ${builderState.aspectRatio || '4:5'}.
+12. NEGATIVAS: Avoid: ${builderState.negativeAvoid.length > 0 ? builderState.negativeAvoid.join(', ') : 'plastic skin, artificial lighting, oversaturation, fake bokeh, distorted anatomy, text, watermarks'}.`;
   };
 
   const currentPrompt = generatePrompt();
@@ -538,17 +552,26 @@ Avoid: ${builderState.negativeAvoid.length > 0 ? builderState.negativeAvoid.join
     setBuilderState({
       mode: 'photo',
       subject: '',
+      action: '',
+      setting: '',
+      composition: 'Regla de tercios equilibrada',
       genre: '/editorial',
       camera: 'Hasselblad X2D (Medio Formato)',
       lens: '85mm portrait prime lens',
       aperture: 'f/1.8 creamy bokeh',
+      shotSize: 'Plano Medio (MS)',
+      cameraAngle: 'Normal (Eye Level)',
       lighting: 'Rembrandt lighting, directional light with cheek triangle',
       colorPalette: 'Teal and orange cinematic grading with warm skin and cool shadows',
-      visualStyle: 'Neo Noir',
+      temperature: 'Neutra equilibrada (5500K)',
+      atmosphere: 'Aire limpio natural',
+      visualStyle: 'Editorial Contemporáneo',
       motion: 'Slow smooth dolly-in moving physically towards the subject',
       fps: '24 fps',
+      duration: '6–8 segundos',
       aspectRatio: '4:5',
       texture: 'natural texture, visible pores',
+      quality: 'RAW editorial authenticity, natural microtextures',
       negativeAvoid: ['Evitar piel plástica artificial (/noartificialskin)', 'Sin texto ni marcas inventadas (/notext)']
     });
     setGeminiSuggestion(null);
@@ -562,17 +585,26 @@ Avoid: ${builderState.negativeAvoid.length > 0 ? builderState.negativeAvoid.join
     setBuilderState({
       mode: isVideoRecipe ? 'video' : 'photo',
       subject: r.description,
+      action: '',
+      setting: '',
+      composition: 'Regla de tercios equilibrada',
       genre: r.commands[0] || (isVideoRecipe ? '/cinematicvideo' : '/editorial'),
       camera: r.specs.camera,
       lens: r.specs.lens,
       aperture: isVideoRecipe ? 'T2.3 cinematic aperture' : 'f/1.8 creamy bokeh',
+      shotSize: 'Plano Medio (MS)',
+      cameraAngle: 'Normal (Eye Level)',
       lighting: r.specs.lighting,
       colorPalette: r.specs.color,
+      temperature: 'Neutra equilibrada (5500K)',
+      atmosphere: 'Aire limpio natural',
       visualStyle: r.title,
       motion: r.specs.motion || 'Continuous smooth 360-degree orbit shot',
       fps: '24 fps',
+      duration: '6–8 segundos',
       aspectRatio: r.specs.aspectRatio.includes('16:9') ? '16:9' : r.specs.aspectRatio.includes('4:5') ? '4:5' : '3:2',
       texture: 'organic film grain, realistic physics',
+      quality: 'RAW editorial authenticity, natural microtextures',
       negativeAvoid: ['Evitar piel plástica artificial (/noartificialskin)', 'Sin texto ni marcas inventadas (/notext)']
     });
   };
@@ -590,22 +622,22 @@ Avoid: ${builderState.negativeAvoid.length > 0 ? builderState.negativeAvoid.join
   };
 
   return (
-    <section id="builder" className="py-16 border-b border-stone-200 dark:border-stone-800 bg-[#FAF8F5] dark:bg-stone-950 transition-colors">
+    <section id="builder" className="py-14 border-b border-[#DEDAD0] dark:border-[#26262E] bg-[#F4F2ED] dark:bg-[#101014] transition-colors">
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
         
         {/* Section Header */}
         <div className="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4">
           <div>
-            <div className="flex items-center gap-2 text-xs uppercase tracking-widest text-amber-700 dark:text-amber-400 font-mono-code mb-2">
-              <span>MÓDULO INTERACTIVO</span>
-              <span aria-hidden="true" className="text-stone-400">/</span>
-              <span>CONSTRUCTOR MAESTRO</span>
+            <div className="flex items-center gap-2 text-xs uppercase tracking-widest text-[#7545D6] dark:text-[#F8C300] font-mono-code font-bold mb-2">
+              <span>LABORATORIO DE COMPOSICIÓN</span>
+              <span aria-hidden="true" className="text-[#9E9B93]">·</span>
+              <span>12 MÓDULOS PROGRESIVOS</span>
             </div>
-            <h2 className="text-3xl sm:text-4xl font-bold font-serif-title text-stone-900 dark:text-stone-100">
-              Prompt Builder
+            <h2 className="text-3xl sm:text-4xl font-extrabold font-display-sans text-[#101014] dark:text-[#F4F2ED]">
+              Constructor Maestro de Prompts
             </h2>
-            <p className="text-sm text-stone-600 dark:text-stone-400 mt-1 max-w-xl">
-              Configura tus parámetros fotográficos u ópticos y genera un prompt profesional estructurado listo para copiar en ChatGPT, Midjourney, Flux o Runway.
+            <p className="text-sm text-[#4A4A55] dark:text-[#B4B2AC] mt-1 max-w-2xl">
+              Estructura tu escena paso a paso en 12 módulos —desde sujeto, acción y composición hasta cámara, luz, atmósfera y control negativo— y cópiala lista para usar en tus herramientas de IA.
             </p>
           </div>
 
@@ -614,10 +646,10 @@ Avoid: ${builderState.negativeAvoid.length > 0 ? builderState.negativeAvoid.join
             <button
               type="button"
               onClick={onOpenExporter}
-              className="px-3 py-1.5 text-xs font-semibold uppercase tracking-wider text-stone-800 dark:text-stone-200 bg-white dark:bg-stone-900 hover:bg-stone-100 dark:hover:bg-stone-800 border border-stone-300 dark:border-stone-700 rounded transition-colors flex items-center gap-1.5 shadow-xs"
+              className="px-3 py-1.5 text-xs font-semibold uppercase tracking-wider text-[#101014] dark:text-[#F4F2ED] bg-white dark:bg-[#16161C] hover:border-[#326BFF] border border-[#DEDAD0] dark:border-[#26262E] rounded-lg transition-colors flex items-center gap-1.5"
               title="Exportar ficha técnica para talleres en PDF o PNG"
             >
-              <FileDown className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+              <FileDown className="w-3.5 h-3.5 text-[#7545D6] dark:text-[#F8C300]" />
               <span>Exportar Ficha Taller</span>
             </button>
 
@@ -625,7 +657,7 @@ Avoid: ${builderState.negativeAvoid.length > 0 ? builderState.negativeAvoid.join
               onChange={(e) => handleLoadRecipe(e.target.value)}
               defaultValue=""
               aria-label="Cargar receta predefinida en el constructor"
-              className="text-xs bg-white dark:bg-stone-900 border border-stone-300 dark:border-stone-700 text-stone-800 dark:text-stone-200 px-3 py-1.5 rounded focus:outline-none focus:border-amber-500 font-medium"
+              className="text-xs bg-white dark:bg-[#16161C] border border-[#DEDAD0] dark:border-[#26262E] text-[#101014] dark:text-[#F4F2ED] px-3 py-1.5 rounded-lg focus:outline-none focus:border-[#F8C300] font-medium"
             >
               <option value="" disabled>Cargar Receta...</option>
               {RECIPES.map((r) => (
@@ -636,42 +668,67 @@ Avoid: ${builderState.negativeAvoid.length > 0 ? builderState.negativeAvoid.join
             <button
               type="button"
               onClick={handleReset}
-              className="p-1.5 text-stone-500 hover:text-stone-800 dark:text-stone-400 dark:hover:text-stone-200 hover:bg-stone-200 dark:hover:bg-stone-800 rounded transition-colors"
-              title="Restablecer valores"
-              aria-label="Restablecer valores"
+              className="p-1.5 text-[#4A4A55] hover:text-[#101014] dark:text-[#B4B2AC] dark:hover:text-[#F4F2ED] bg-white dark:bg-[#16161C] border border-[#DEDAD0] dark:border-[#26262E] rounded-lg transition-colors"
+              title="Restablecer los 12 módulos"
+              aria-label="Restablecer los 12 módulos"
             >
               <RotateCcw className="w-4 h-4" />
             </button>
           </div>
         </div>
 
-        {/* Mode Selector Segmented Control */}
-        <div className="flex items-center justify-center mb-8">
-          <div className="inline-flex p-1 bg-white dark:bg-stone-900 rounded-lg border border-stone-200 dark:border-stone-800 shadow-xs">
+        {/* Mode Selector & Progressive View Toggle */}
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 mb-7">
+          <div className="inline-flex p-1 bg-white dark:bg-[#16161C] rounded-xl border border-[#DEDAD0] dark:border-[#26262E]">
             <button
               type="button"
               onClick={() => setBuilderState((p) => ({ ...p, mode: 'photo' }))}
-              className={`px-5 py-2 text-xs font-semibold uppercase tracking-wider rounded-md transition-all flex items-center gap-2 ${
+              className={`px-4 py-2 text-xs font-semibold uppercase tracking-wider rounded-lg transition-all flex items-center gap-2 ${
                 builderState.mode === 'photo'
-                  ? 'bg-amber-400 text-stone-950 shadow-xs'
-                  : 'text-stone-600 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-200'
+                  ? 'bg-[#F8C300] text-[#101014] font-bold'
+                  : 'text-[#4A4A55] dark:text-[#B4B2AC] hover:text-[#101014] dark:hover:text-[#F4F2ED]'
               }`}
             >
               <Camera className="w-3.5 h-3.5" />
-              <span>Modo Fotografía & ADS</span>
+              <span>Fotografía & Arte Visual</span>
             </button>
 
             <button
               type="button"
               onClick={() => setBuilderState((p) => ({ ...p, mode: 'video' }))}
-              className={`px-5 py-2 text-xs font-semibold uppercase tracking-wider rounded-md transition-all flex items-center gap-2 ${
+              className={`px-4 py-2 text-xs font-semibold uppercase tracking-wider rounded-lg transition-all flex items-center gap-2 ${
                 builderState.mode === 'video'
-                  ? 'bg-amber-400 text-stone-950 shadow-xs'
-                  : 'text-stone-600 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-200'
+                  ? 'bg-[#F8C300] text-[#101014] font-bold'
+                  : 'text-[#4A4A55] dark:text-[#B4B2AC] hover:text-[#101014] dark:hover:text-[#F4F2ED]'
               }`}
             >
               <Video className="w-3.5 h-3.5" />
-              <span>Modo Video & Cinematografía</span>
+              <span>Video & Cinematografía</span>
+            </button>
+          </div>
+
+          <div className="inline-flex p-1 bg-white dark:bg-[#16161C] rounded-xl border border-[#DEDAD0] dark:border-[#26262E]">
+            <button
+              type="button"
+              onClick={() => setBuilderDensity('all12')}
+              className={`px-3 py-1.5 text-[11px] font-mono-code font-semibold rounded-lg transition-colors ${
+                builderDensity === 'all12'
+                  ? 'bg-[#101014] text-[#F4F2ED] dark:bg-[#7545D6] dark:text-white'
+                  : 'text-[#4A4A55] dark:text-[#B4B2AC]'
+              }`}
+            >
+              12 Módulos Completos
+            </button>
+            <button
+              type="button"
+              onClick={() => setBuilderDensity('essential')}
+              className={`px-3 py-1.5 text-[11px] font-mono-code font-semibold rounded-lg transition-colors ${
+                builderDensity === 'essential'
+                  ? 'bg-[#101014] text-[#F4F2ED] dark:bg-[#7545D6] dark:text-white'
+                  : 'text-[#4A4A55] dark:text-[#B4B2AC]'
+              }`}
+            >
+              Modo Rápido (6 Clave)
             </button>
           </div>
         </div>
@@ -679,32 +736,31 @@ Avoid: ${builderState.negativeAvoid.length > 0 ? builderState.negativeAvoid.join
         {/* Builder Main Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           
-          {/* Controls Column (7 Cols) */}
-          <div className="lg:col-span-7 space-y-6 bg-white dark:bg-stone-900/60 p-6 rounded-lg border border-stone-200 dark:border-stone-800 shadow-xs">
+          {/* Controls Column (7 Cols) — 12 Progressive Modules */}
+          <div className="lg:col-span-7 space-y-5 bg-white dark:bg-[#16161C] p-5 sm:p-6 rounded-2xl border border-[#DEDAD0] dark:border-[#26262E]">
             
-            {/* 1. Sujeto / Qué quieres crear + GEMINI ENRICHER BUTTON */}
-            <div>
+            {/* MÓDULO 01. Sujeto o Escena Principal + Local Enricher */}
+            <div className="pb-5 border-b border-[#EFECE4] dark:border-[#26262E]">
               <div className="flex items-center justify-between mb-2">
-                <label className="block text-xs font-mono-code uppercase tracking-wider text-amber-700 dark:text-amber-400 font-bold">
+                <label className="block text-xs font-mono-code uppercase tracking-wider text-[#7545D6] dark:text-[#F8C300] font-bold">
                   01. Sujeto o Escena Principal
                 </label>
 
-                {/* Gemini Enricher Trigger */}
                 <button
                   type="button"
                   onClick={handleEnrichWithGemini}
                   disabled={isEnriching}
-                  className="px-2.5 py-1 text-[11px] font-mono-code text-amber-800 dark:text-amber-300 bg-amber-100/70 dark:bg-amber-950/40 hover:bg-amber-200/80 dark:hover:bg-amber-900/60 border border-amber-300 dark:border-amber-800/80 rounded transition-all flex items-center gap-1.5 disabled:opacity-50"
+                  className="px-2.5 py-1 text-[11px] font-mono-code text-[#101014] bg-[#F8C300]/25 hover:bg-[#F8C300]/45 dark:text-[#F8C300] dark:bg-[#F8C300]/15 border border-[#F8C300]/60 rounded-lg transition-all flex items-center gap-1.5 disabled:opacity-50 font-semibold"
                   title="Ampliar tu idea básica con texturas, luz y dirección de arte"
                 >
                   {isEnriching ? (
                     <>
-                      <Loader2 className="w-3 h-3 animate-spin text-amber-600" />
-                      <span>Ampliando escena...</span>
+                      <Loader2 className="w-3 h-3 animate-spin" />
+                      <span>Ampliando...</span>
                     </>
                   ) : (
                     <>
-                      <Wand2 className="w-3 h-3 text-amber-600 dark:text-amber-400" />
+                      <Wand2 className="w-3 h-3" />
                       <span>Enriquecer Escena</span>
                     </>
                   )}
@@ -718,9 +774,9 @@ Avoid: ${builderState.negativeAvoid.length > 0 ? builderState.negativeAvoid.join
                 placeholder={
                   builderState.mode === 'video'
                     ? "Ej: Una escultura contemporánea en galería mientras la luz entra por el vitral"
-                    : "Ej: Retrato de un artesano trabajando arcilla / Frasco de perfume sobre mármol negro"
+                    : "Ej: Retrato de una ceramista en su taller / Frasco de vidrio sobre piedra volcánica"
                 }
-                className="w-full bg-stone-50 dark:bg-stone-950 border border-stone-300 dark:border-stone-800 text-stone-900 dark:text-stone-100 text-sm px-4 py-2.5 rounded focus:outline-none focus:border-amber-500 placeholder:text-stone-400 dark:placeholder:text-stone-600 transition-colors"
+                className="w-full bg-[#F4F2ED] dark:bg-[#101014] border border-[#DEDAD0] dark:border-[#2C2C36] text-[#101014] dark:text-[#F4F2ED] text-sm px-4 py-2.5 rounded-xl focus:outline-none focus:border-[#326BFF] placeholder:text-[#787670] transition-colors"
               />
 
               {enrichError && (
@@ -729,68 +785,127 @@ Avoid: ${builderState.negativeAvoid.length > 0 ? builderState.negativeAvoid.join
                 </p>
               )}
 
-              {/* Art Direction Suggestion Panel */}
               {geminiSuggestion && (
-                <div className="mt-3 p-4 bg-amber-50/80 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/40 rounded-lg text-stone-800 dark:text-stone-200 animate-in fade-in">
+                <div className="mt-3 p-4 bg-[#F4F2ED] dark:bg-[#101014] border border-[#F8C300]/60 rounded-xl text-[#101014] dark:text-[#F4F2ED]">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs font-mono-code font-bold text-amber-800 dark:text-amber-400 flex items-center gap-1.5">
-                      <Sparkles className="w-3.5 h-3.5 text-amber-600" />
+                    <span className="text-xs font-mono-code font-bold text-[#7545D6] dark:text-[#F8C300] flex items-center gap-1.5">
+                      <Sparkles className="w-3.5 h-3.5" />
                       <span>Propuesta de Dirección de Arte</span>
                     </span>
                     <button
                       type="button"
                       onClick={applyGeminiSuggestion}
-                      className="px-3 py-1 text-xs font-semibold text-stone-950 bg-amber-400 hover:bg-amber-300 rounded shadow-xs transition-colors flex items-center gap-1"
+                      className="px-3 py-1 text-xs font-bold text-[#101014] bg-[#F8C300] hover:bg-[#e5b400] rounded-lg transition-colors flex items-center gap-1"
                     >
-                      <Check className="w-3 h-3 text-stone-950" />
+                      <Check className="w-3 h-3" />
                       <span>Aplicar al Prompt</span>
                     </button>
                   </div>
 
-                  <p className="text-xs text-stone-700 dark:text-stone-300 leading-relaxed mb-2 font-medium">
+                  <p className="text-xs text-[#4A4A55] dark:text-[#B4B2AC] leading-relaxed mb-2">
                     {geminiSuggestion.enrichedDescription}
                   </p>
 
-                  <div className="flex flex-wrap items-center gap-1.5 text-[11px] font-mono-code text-stone-600 dark:text-stone-400">
-                    <span className="font-semibold text-amber-700 dark:text-amber-400">Claves:</span>
-                    {geminiSuggestion.visualCues.map((cue) => (
-                      <span key={cue} className="px-1.5 py-0.5 bg-white dark:bg-stone-900 border border-amber-200 dark:border-stone-800 rounded">
-                        {cue}
-                      </span>
-                    ))}
-                    <span className="ml-2 text-stone-500">· Luz sugerida: {geminiSuggestion.lightingAdvice}</span>
+                  <div className="flex flex-wrap items-center gap-1.5 text-[11px] font-mono-code text-[#5B5B66] dark:text-[#A09E97]">
+                    <span className="font-semibold text-[#7545D6] dark:text-[#F8C300]">Claves:</span>
+                    <span>{geminiSuggestion.visualCues.join(' · ')}</span>
+                    <span>· {geminiSuggestion.lightingAdvice}</span>
                   </div>
                 </div>
               )}
             </div>
 
-            {/* 2. Género / Intención */}
-            <div>
-              <label className="block text-xs font-mono-code uppercase tracking-wider text-stone-600 dark:text-stone-400 mb-2">
-                02. Género Visual / Comando Clave
+            {/* MÓDULO 02 & MÓDULO 03: Acción y Escenario */}
+            {builderDensity === 'all12' && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pb-5 border-b border-[#EFECE4] dark:border-[#26262E]">
+                <div>
+                  <label className="block text-xs font-mono-code uppercase tracking-wider text-[#4A4A55] dark:text-[#B4B2AC] font-bold mb-1.5">
+                    02. Acción o Gesto
+                  </label>
+                  <input
+                    type="text"
+                    value={builderState.action || ''}
+                    onChange={(e) => setBuilderState((p) => ({ ...p, action: e.target.value }))}
+                    placeholder="Ej: moldeando arcilla, mirando hacia la ventana"
+                    className="w-full bg-[#F4F2ED] dark:bg-[#101014] border border-[#DEDAD0] dark:border-[#2C2C36] rounded-xl px-3 py-2 text-xs text-[#101014] dark:text-[#F4F2ED] placeholder:text-[#787670] focus:outline-none focus:border-[#326BFF]"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-mono-code uppercase tracking-wider text-[#4A4A55] dark:text-[#B4B2AC] font-bold mb-1.5">
+                    03. Escenario y Contexto
+                  </label>
+                  <input
+                    type="text"
+                    value={builderState.setting || ''}
+                    onChange={(e) => setBuilderState((p) => ({ ...p, setting: e.target.value }))}
+                    placeholder="Ej: taller brutalista con ventanal norte"
+                    className="w-full bg-[#F4F2ED] dark:bg-[#101014] border border-[#DEDAD0] dark:border-[#2C2C36] rounded-xl px-3 py-2 text-xs text-[#101014] dark:text-[#F4F2ED] placeholder:text-[#787670] focus:outline-none focus:border-[#326BFF]"
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* MÓDULO 04: Composición, Plano y Ángulo */}
+            <div className="pb-5 border-b border-[#EFECE4] dark:border-[#26262E] space-y-3">
+              <label className="block text-xs font-mono-code uppercase tracking-wider text-[#7545D6] dark:text-[#F8C300] font-bold">
+                04. Composición, Plano y Ángulo
               </label>
-              <div className="flex flex-wrap gap-2">
-                {(builderState.mode === 'photo' ? GENRES_PHOTO : GENRES_VIDEO).map((item) => (
-                  <button
-                    key={item.cmd}
-                    type="button"
-                    onClick={() => setBuilderState((p) => ({ ...p, genre: item.cmd }))}
-                    className={`px-3 py-1.5 text-xs font-mono-code rounded transition-all ${
-                      builderState.genre === item.cmd
-                        ? 'bg-amber-400/20 text-amber-800 dark:text-amber-300 border border-amber-400/60 font-semibold'
-                        : 'bg-stone-100 dark:bg-stone-950 text-stone-700 dark:text-stone-400 border border-stone-200 dark:border-stone-800 hover:border-stone-300 dark:hover:border-stone-700'
-                    }`}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div>
+                  <span className="block text-[11px] font-mono-code text-[#5B5B66] dark:text-[#A09E97] mb-1">
+                    Regla compositiva
+                  </span>
+                  <select
+                    value={builderState.composition || COMPOSITIONS[0]}
+                    onChange={(e) => setBuilderState((p) => ({ ...p, composition: e.target.value }))}
+                    aria-label="Seleccionar regla de composición"
+                    className="w-full bg-[#F4F2ED] dark:bg-[#101014] border border-[#DEDAD0] dark:border-[#2C2C36] text-[#101014] dark:text-[#F4F2ED] text-xs px-3 py-2 rounded-xl focus:outline-none focus:border-[#326BFF]"
                   >
-                    {item.cmd} <span className="text-stone-500 font-sans font-normal">({item.label})</span>
-                  </button>
-                ))}
+                    {builderState.composition && !COMPOSITIONS.includes(builderState.composition) && (
+                      <option value={builderState.composition}>{builderState.composition}</option>
+                    )}
+                    {COMPOSITIONS.map((comp) => (
+                      <option key={comp} value={comp}>{comp}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <span className="block text-[11px] font-mono-code text-[#5B5B66] dark:text-[#A09E97] mb-1">
+                    Tipo de plano
+                  </span>
+                  <select
+                    value={builderState.shotSize || 'Plano Medio (MS)'}
+                    onChange={(e) => setBuilderState((p) => ({ ...p, shotSize: e.target.value }))}
+                    aria-label="Seleccionar tipo de plano"
+                    className="w-full bg-[#F4F2ED] dark:bg-[#101014] border border-[#DEDAD0] dark:border-[#2C2C36] text-[#101014] dark:text-[#F4F2ED] text-xs px-3 py-2 rounded-xl focus:outline-none focus:border-[#326BFF]"
+                  >
+                    {SHOT_SIZES.map((s) => (
+                      <option key={s} value={s}>{s}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <span className="block text-[11px] font-mono-code text-[#5B5B66] dark:text-[#A09E97] mb-1">
+                    Ángulo de cámara
+                  </span>
+                  <select
+                    value={builderState.cameraAngle || 'Normal (Eye Level)'}
+                    onChange={(e) => setBuilderState((p) => ({ ...p, cameraAngle: e.target.value }))}
+                    aria-label="Seleccionar ángulo de cámara"
+                    className="w-full bg-[#F4F2ED] dark:bg-[#101014] border border-[#DEDAD0] dark:border-[#2C2C36] text-[#101014] dark:text-[#F4F2ED] text-xs px-3 py-2 rounded-xl focus:outline-none focus:border-[#326BFF]"
+                  >
+                    {CAMERA_ANGLES.map((a) => (
+                      <option key={a} value={a}>{a}</option>
+                    ))}
+                  </select>
+                </div>
               </div>
             </div>
 
-            {/* 3. Cámara & Sensor */}
-            <div>
-              <label className="block text-xs font-mono-code uppercase tracking-wider text-stone-600 dark:text-stone-400 mb-2">
-                03. Cámara de Referencia & Sensor
+            {/* MÓDULO 05: Cámara de Referencia, Lente y Apertura */}
+            <div className="pb-5 border-b border-[#EFECE4] dark:border-[#26262E] space-y-3">
+              <label className="block text-xs font-mono-code uppercase tracking-wider text-[#4A4A55] dark:text-[#B4B2AC] font-bold">
+                05. Cámara de Referencia, Lente y Apertura
               </label>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                 {(builderState.mode === 'photo' ? CAMERAS_PHOTO : CAMERAS_VIDEO).map((cam) => (
@@ -798,125 +913,243 @@ Avoid: ${builderState.negativeAvoid.length > 0 ? builderState.negativeAvoid.join
                     key={cam}
                     type="button"
                     onClick={() => setBuilderState((p) => ({ ...p, camera: cam }))}
-                    className={`p-2.5 text-left text-xs rounded transition-all border ${
+                    className={`p-2.5 text-left text-xs rounded-xl transition-all border ${
                       builderState.camera === cam
-                        ? 'bg-amber-50 dark:bg-stone-850 text-amber-900 dark:text-amber-300 border-amber-400/60 font-medium'
-                        : 'bg-stone-50 dark:bg-stone-950 text-stone-700 dark:text-stone-400 border-stone-200 dark:border-stone-800 hover:border-stone-300 dark:hover:border-stone-700'
+                        ? 'bg-[#F8C300]/20 text-[#101014] dark:text-[#F8C300] border-[#F8C300] font-semibold'
+                        : 'bg-[#F4F2ED] dark:bg-[#101014] text-[#4A4A55] dark:text-[#B4B2AC] border-[#DEDAD0] dark:border-[#2C2C36] hover:border-[#326BFF]'
                     }`}
                   >
-                    <span className="font-medium block truncate">{cam.split(' (')[0]}</span>
-                    <span className="text-[10px] text-stone-500 block truncate">
-                      {cam.includes('(') ? cam.split('(')[1].replace(')', '') : 'Digital'}
+                    <span className="font-semibold block truncate">{cam.split(' (')[0]}</span>
+                    <span className="text-[10px] text-[#6B6B76] dark:text-[#A09E97] block truncate">
+                      {cam.includes('(') ? cam.split('(')[1].replace(')', '') : 'Referencia estética'}
                     </span>
                   </button>
                 ))}
               </div>
-            </div>
-
-            {/* 4. Óptica & Apertura */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-xs font-mono-code uppercase tracking-wider text-stone-600 dark:text-stone-400 mb-2">
-                  04. Lente / Distancia Focal
-                </label>
-                <select
-                  value={builderState.lens}
-                  onChange={(e) => setBuilderState((p) => ({ ...p, lens: e.target.value }))}
-                  aria-label="Seleccionar lente o distancia focal"
-                  className="w-full bg-stone-50 dark:bg-stone-950 border border-stone-200 dark:border-stone-800 text-stone-900 dark:text-stone-200 text-xs px-3 py-2 rounded focus:outline-none focus:border-amber-500"
-                >
-                  {LENSES.map((l) => (
-                    <option key={l.val} value={l.val}>{l.label}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-xs font-mono-code uppercase tracking-wider text-stone-600 dark:text-stone-400 mb-2">
-                  Apertura / Profundidad de Campo
-                </label>
-                <select
-                  value={builderState.aperture}
-                  onChange={(e) => setBuilderState((p) => ({ ...p, aperture: e.target.value }))}
-                  aria-label="Seleccionar apertura y profundidad de campo"
-                  className="w-full bg-stone-50 dark:bg-stone-950 border border-stone-200 dark:border-stone-800 text-stone-900 dark:text-stone-200 text-xs px-3 py-2 rounded focus:outline-none focus:border-amber-500"
-                >
-                  {APERTURES.map((a) => (
-                    <option key={a.val} value={a.val}>{a.label}</option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            {/* 5. Movimiento de Cámara (solo si es modo Video) */}
-            {builderState.mode === 'video' && (
-              <div>
-                <label className="block text-xs font-mono-code uppercase tracking-wider text-amber-700 dark:text-amber-400 mb-2 flex items-center gap-1.5 font-bold">
-                  <Film className="w-3.5 h-3.5" />
-                  <span>05. Movimiento Cinematográfico de Cámara</span>
-                </label>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  {MOTIONS_VIDEO.map((m) => (
-                    <button
-                      key={m.val}
-                      type="button"
-                      onClick={() => setBuilderState((p) => ({ ...p, motion: m.val }))}
-                      className={`p-2.5 text-left text-xs rounded transition-all border ${
-                        builderState.motion === m.val
-                          ? 'bg-amber-100/60 dark:bg-amber-400/10 text-amber-900 dark:text-amber-300 border-amber-500/50 font-medium'
-                          : 'bg-stone-50 dark:bg-stone-950 text-stone-700 dark:text-stone-400 border-stone-200 dark:border-stone-800 hover:border-stone-300'
-                      }`}
-                    >
-                      <span className="font-mono-code block font-semibold text-stone-900 dark:text-stone-200">
-                        {m.label.split(' (')[0]}
-                      </span>
-                      <span className="text-[11px] text-stone-500 block truncate mt-0.5">
-                        {m.label.split('(')[1]?.replace(')', '') || m.val}
-                      </span>
-                    </button>
-                  ))}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                <div>
+                  <span className="block text-[11px] font-mono-code text-[#5B5B66] dark:text-[#A09E97] mb-1">
+                    Lente / Distancia focal
+                  </span>
+                  <select
+                    value={builderState.lens}
+                    onChange={(e) => setBuilderState((p) => ({ ...p, lens: e.target.value }))}
+                    aria-label="Seleccionar lente o distancia focal"
+                    className="w-full bg-[#F4F2ED] dark:bg-[#101014] border border-[#DEDAD0] dark:border-[#2C2C36] text-[#101014] dark:text-[#F4F2ED] text-xs px-3 py-2 rounded-xl focus:outline-none focus:border-[#326BFF]"
+                  >
+                    {builderState.lens && !LENSES.some((l) => l.val === builderState.lens) && (
+                      <option value={builderState.lens}>{builderState.lens}</option>
+                    )}
+                    {LENSES.map((l) => (
+                      <option key={l.val} value={l.val}>{l.label}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <span className="block text-[11px] font-mono-code text-[#5B5B66] dark:text-[#A09E97] mb-1">
+                    Apertura / Profundidad de campo
+                  </span>
+                  <select
+                    value={builderState.aperture}
+                    onChange={(e) => setBuilderState((p) => ({ ...p, aperture: e.target.value }))}
+                    aria-label="Seleccionar apertura y profundidad de campo"
+                    className="w-full bg-[#F4F2ED] dark:bg-[#101014] border border-[#DEDAD0] dark:border-[#2C2C36] text-[#101014] dark:text-[#F4F2ED] text-xs px-3 py-2 rounded-xl focus:outline-none focus:border-[#326BFF]"
+                  >
+                    {builderState.aperture && !APERTURES.some((a) => a.val === builderState.aperture) && (
+                      <option value={builderState.aperture}>{builderState.aperture}</option>
+                    )}
+                    {APERTURES.map((a) => (
+                      <option key={a.val} value={a.val}>{a.label}</option>
+                    ))}
+                  </select>
                 </div>
               </div>
-            )}
+            </div>
 
-            {/* 6. Iluminación */}
-            <div>
-              <label className="block text-xs font-mono-code uppercase tracking-wider text-stone-600 dark:text-stone-400 mb-2">
-                {builderState.mode === 'video' ? '06' : '05'}. Esquema de Iluminación
+            {/* MÓDULO 06: Iluminación */}
+            <div className="pb-5 border-b border-[#EFECE4] dark:border-[#26262E]">
+              <label className="block text-xs font-mono-code uppercase tracking-wider text-[#4A4A55] dark:text-[#B4B2AC] font-bold mb-2">
+                06. Esquema de Iluminación
               </label>
               <select
                 value={builderState.lighting}
                 onChange={(e) => setBuilderState((p) => ({ ...p, lighting: e.target.value }))}
                 aria-label="Seleccionar esquema de iluminación"
-                className="w-full bg-stone-50 dark:bg-stone-950 border border-stone-200 dark:border-stone-800 text-stone-900 dark:text-stone-200 text-xs px-3 py-2 rounded focus:outline-none focus:border-amber-500"
+                className="w-full bg-[#F4F2ED] dark:bg-[#101014] border border-[#DEDAD0] dark:border-[#2C2C36] text-[#101014] dark:text-[#F4F2ED] text-xs px-3 py-2.5 rounded-xl focus:outline-none focus:border-[#326BFF]"
               >
+                {builderState.lighting && !LIGHTINGS.some((l) => l.val === builderState.lighting) && (
+                  <option value={builderState.lighting}>{builderState.lighting}</option>
+                )}
                 {LIGHTINGS.map((l) => (
                   <option key={l.val} value={l.val}>{l.label}</option>
                 ))}
               </select>
             </div>
 
-            {/* 7. Paleta de Color & Film Look */}
-            <div>
-              <label className="block text-xs font-mono-code uppercase tracking-wider text-stone-600 dark:text-stone-400 mb-2">
-                {builderState.mode === 'video' ? '07' : '06'}. Colorimetría & Emulsión
-              </label>
-              <select
-                value={builderState.colorPalette}
-                onChange={(e) => setBuilderState((p) => ({ ...p, colorPalette: e.target.value }))}
-                aria-label="Seleccionar colorimetría y emulsión fotográfica"
-                className="w-full bg-stone-50 dark:bg-stone-950 border border-stone-200 dark:border-stone-800 text-stone-900 dark:text-stone-200 text-xs px-3 py-2 rounded focus:outline-none focus:border-amber-500"
-              >
-                {COLOR_PALETTES.map((c) => (
-                  <option key={c.val} value={c.val}>{c.label}</option>
-                ))}
-              </select>
-            </div>
+            {/* MÓDULO 07: Color y Temperatura */}
+            {builderDensity === 'all12' && (
+              <div className="pb-5 border-b border-[#EFECE4] dark:border-[#26262E] space-y-3">
+                <label className="block text-xs font-mono-code uppercase tracking-wider text-[#4A4A55] dark:text-[#B4B2AC] font-bold">
+                  07. Colorimetría y Temperatura
+                </label>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <span className="block text-[11px] font-mono-code text-[#5B5B66] dark:text-[#A09E97] mb-1">
+                      Paleta / Emulsión de color
+                    </span>
+                    <select
+                      value={builderState.colorPalette}
+                      onChange={(e) => setBuilderState((p) => ({ ...p, colorPalette: e.target.value }))}
+                      aria-label="Seleccionar colorimetría y emulsión fotográfica"
+                      className="w-full bg-[#F4F2ED] dark:bg-[#101014] border border-[#DEDAD0] dark:border-[#2C2C36] text-[#101014] dark:text-[#F4F2ED] text-xs px-3 py-2 rounded-xl focus:outline-none focus:border-[#326BFF]"
+                    >
+                      {builderState.colorPalette && !COLOR_PALETTES.some((c) => c.val === builderState.colorPalette) && (
+                        <option value={builderState.colorPalette}>{builderState.colorPalette}</option>
+                      )}
+                      {COLOR_PALETTES.map((c) => (
+                        <option key={c.val} value={c.val}>{c.label}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <span className="block text-[11px] font-mono-code text-[#5B5B66] dark:text-[#A09E97] mb-1">
+                      Temperatura Kelvin
+                    </span>
+                    <select
+                      value={builderState.temperature || 'Neutra equilibrada (5500K)'}
+                      onChange={(e) => setBuilderState((p) => ({ ...p, temperature: e.target.value }))}
+                      aria-label="Seleccionar temperatura de color"
+                      className="w-full bg-[#F4F2ED] dark:bg-[#101014] border border-[#DEDAD0] dark:border-[#2C2C36] text-[#101014] dark:text-[#F4F2ED] text-xs px-3 py-2 rounded-xl focus:outline-none focus:border-[#326BFF]"
+                    >
+                      {TEMPERATURES.map((t) => (
+                        <option key={t} value={t}>{t}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+              </div>
+            )}
 
-            {/* 8. Formato / Aspect Ratio */}
-            <div>
-              <label className="block text-xs font-mono-code uppercase tracking-wider text-stone-600 dark:text-stone-400 mb-2">
-                {builderState.mode === 'video' ? '08' : '07'}. Relación de Aspecto
+            {/* MÓDULO 08: Género y Estilo Visual */}
+            {builderDensity === 'all12' && (
+              <div className="pb-5 border-b border-[#EFECE4] dark:border-[#26262E] space-y-3">
+                <label className="block text-xs font-mono-code uppercase tracking-wider text-[#4A4A55] dark:text-[#B4B2AC] font-bold">
+                  08. Género y Estilo Visual
+                </label>
+                <div className="flex flex-wrap gap-1.5">
+                  {(builderState.mode === 'photo' ? GENRES_PHOTO : GENRES_VIDEO).map((item) => (
+                    <button
+                      key={item.cmd}
+                      type="button"
+                      onClick={() => setBuilderState((p) => ({ ...p, genre: item.cmd }))}
+                      className={`px-2.5 py-1.5 text-xs font-mono-code rounded-lg transition-all border ${
+                        builderState.genre === item.cmd
+                          ? 'bg-[#7545D6]/15 text-[#7545D6] dark:bg-[#F8C300]/20 dark:text-[#F8C300] border-[#7545D6]/50 dark:border-[#F8C300] font-bold'
+                          : 'bg-[#F4F2ED] dark:bg-[#101014] text-[#4A4A55] dark:text-[#B4B2AC] border-[#DEDAD0] dark:border-[#2C2C36] hover:border-[#326BFF]'
+                      }`}
+                    >
+                      {item.cmd} <span className="font-sans font-normal opacity-80">({item.label})</span>
+                    </button>
+                  ))}
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                  <div>
+                    <span className="block text-[11px] font-mono-code text-[#5B5B66] dark:text-[#A09E97] mb-1">
+                      Dirección de arte / Estilo
+                    </span>
+                    <input
+                      type="text"
+                      value={builderState.visualStyle}
+                      onChange={(e) => setBuilderState((p) => ({ ...p, visualStyle: e.target.value }))}
+                      placeholder="Ej: Editorial Contemporáneo, Neo Noir"
+                      className="w-full bg-[#F4F2ED] dark:bg-[#101014] border border-[#DEDAD0] dark:border-[#2C2C36] rounded-xl px-3 py-2 text-xs text-[#101014] dark:text-[#F4F2ED]"
+                    />
+                  </div>
+                  <div>
+                    <span className="block text-[11px] font-mono-code text-[#5B5B66] dark:text-[#A09E97] mb-1">
+                      Atajos de estilo
+                    </span>
+                    <select
+                      value=""
+                      onChange={(e) => {
+                        if (e.target.value) setBuilderState((p) => ({ ...p, visualStyle: e.target.value }));
+                      }}
+                      aria-label="Elegir estilo visual rápido"
+                      className="w-full bg-[#F4F2ED] dark:bg-[#101014] border border-[#DEDAD0] dark:border-[#2C2C36] rounded-xl px-3 py-2 text-xs text-[#101014] dark:text-[#F4F2ED]"
+                    >
+                      <option value="">Elegir preset de estilo...</option>
+                      {VISUAL_STYLE_PRESETS.map((st) => (
+                        <option key={st} value={st}>{st}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* MÓDULO 09 & 10: Textura, Calidad y Atmósfera */}
+            {builderDensity === 'all12' && (
+              <div className="pb-5 border-b border-[#EFECE4] dark:border-[#26262E] grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="block text-xs font-mono-code uppercase tracking-wider text-[#4A4A55] dark:text-[#B4B2AC] font-bold">
+                    09. Textura y Calidad
+                  </label>
+                  <select
+                    value={builderState.texture}
+                    onChange={(e) => setBuilderState((p) => ({ ...p, texture: e.target.value }))}
+                    aria-label="Seleccionar textura superficial"
+                    className="w-full bg-[#F4F2ED] dark:bg-[#101014] border border-[#DEDAD0] dark:border-[#2C2C36] rounded-xl px-3 py-2 text-xs text-[#101014] dark:text-[#F4F2ED]"
+                  >
+                    {builderState.texture && !TEXTURE_PRESETS.includes(builderState.texture) && (
+                      <option value={builderState.texture}>{builderState.texture}</option>
+                    )}
+                    {TEXTURE_PRESETS.map((tx) => (
+                      <option key={tx} value={tx}>{tx}</option>
+                    ))}
+                  </select>
+                  <select
+                    value={builderState.quality || QUALITY_PRESETS[0]}
+                    onChange={(e) => setBuilderState((p) => ({ ...p, quality: e.target.value }))}
+                    aria-label="Seleccionar nivel de acabado"
+                    className="w-full bg-[#F4F2ED] dark:bg-[#101014] border border-[#DEDAD0] dark:border-[#2C2C36] rounded-xl px-3 py-2 text-xs text-[#101014] dark:text-[#F4F2ED]"
+                  >
+                    {builderState.quality && !QUALITY_PRESETS.includes(builderState.quality) && (
+                      <option value={builderState.quality}>{builderState.quality}</option>
+                    )}
+                    {QUALITY_PRESETS.map((q) => (
+                      <option key={q} value={q}>{q}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="block text-xs font-mono-code uppercase tracking-wider text-[#4A4A55] dark:text-[#B4B2AC] font-bold">
+                    10. Atmósfera y Clima
+                  </label>
+                  <select
+                    value={builderState.atmosphere || 'Aire limpio natural'}
+                    onChange={(e) => setBuilderState((p) => ({ ...p, atmosphere: e.target.value }))}
+                    aria-label="Seleccionar atmósfera ambiental"
+                    className="w-full bg-[#F4F2ED] dark:bg-[#101014] border border-[#DEDAD0] dark:border-[#2C2C36] rounded-xl px-3 py-2 text-xs text-[#101014] dark:text-[#F4F2ED]"
+                  >
+                    {builderState.atmosphere && !ATMOSPHERES.includes(builderState.atmosphere) && (
+                      <option value={builderState.atmosphere}>{builderState.atmosphere}</option>
+                    )}
+                    {ATMOSPHERES.map((at) => (
+                      <option key={at} value={at}>{at}</option>
+                    ))}
+                  </select>
+                  <p className="text-[11px] text-[#5B5B66] dark:text-[#A09E97]">
+                    Define densidad del aire, bruma, partículas en contraluz o clima exterior.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* MÓDULO 11: Relación de Aspecto */}
+            <div className="pb-5 border-b border-[#EFECE4] dark:border-[#26262E]">
+              <label className="block text-xs font-mono-code uppercase tracking-wider text-[#4A4A55] dark:text-[#B4B2AC] font-bold mb-2">
+                11. Relación de Aspecto y Formato
               </label>
               <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
                 {ASPECT_RATIOS.map((ar) => (
@@ -924,10 +1157,10 @@ Avoid: ${builderState.negativeAvoid.length > 0 ? builderState.negativeAvoid.join
                     key={ar.val}
                     type="button"
                     onClick={() => setBuilderState((p) => ({ ...p, aspectRatio: ar.val }))}
-                    className={`py-2 text-center text-xs font-mono-code rounded transition-all border ${
+                    className={`py-2 text-center text-xs font-mono-code rounded-xl transition-all border ${
                       builderState.aspectRatio === ar.val
-                        ? 'bg-amber-400 text-stone-950 font-bold border-amber-400 shadow-xs'
-                        : 'bg-stone-50 dark:bg-stone-950 text-stone-700 dark:text-stone-400 border-stone-200 dark:border-stone-800 hover:text-stone-900 hover:border-stone-300'
+                        ? 'bg-[#F8C300] text-[#101014] font-bold border-[#F8C300]'
+                        : 'bg-[#F4F2ED] dark:bg-[#101014] text-[#4A4A55] dark:text-[#B4B2AC] border-[#DEDAD0] dark:border-[#2C2C36] hover:border-[#326BFF]'
                     }`}
                   >
                     {ar.val}
@@ -936,148 +1169,77 @@ Avoid: ${builderState.negativeAvoid.length > 0 ? builderState.negativeAvoid.join
               </div>
             </div>
 
-            {/* 8B. Parámetros Avanzados de Dirección (Acción, Escenario, Plano, Ángulo, Temperatura, Atmósfera, Calidad) */}
-            <div className="pt-2 border-t border-stone-200 dark:border-stone-800">
-              <button
-                type="button"
-                onClick={() => setShowAdvancedFields((prev) => !prev)}
-                className="w-full py-2 px-3 rounded bg-stone-50 dark:bg-stone-950 border border-stone-200 dark:border-stone-800 text-xs font-mono-code text-stone-800 dark:text-stone-200 flex items-center justify-between hover:border-amber-500 transition-colors"
-              >
-                <span className="flex items-center gap-2 font-semibold">
-                  <Sliders className="w-3.5 h-3.5 text-amber-600" />
-                  <span>Parámetros Extendidos (Acción, Escenario, Plano, Ángulo, Temperatura, Atmósfera)</span>
+            {/* MÓDULO 12: Movimiento / Video e Instrucciones Negativas */}
+            <div className="space-y-4">
+              <label className="block text-xs font-mono-code uppercase tracking-wider text-[#7545D6] dark:text-[#F8C300] font-bold flex items-center gap-1.5">
+                <ShieldAlert className="w-3.5 h-3.5" />
+                <span>
+                  12. {builderState.mode === 'video' ? 'Movimiento de Cámara, FPS e Instrucciones Negativas' : 'Control Negativo (Qué evitar en la imagen)'}
                 </span>
-                <span className="text-amber-700 dark:text-amber-400">
-                  {showAdvancedFields ? 'Ocultar' : 'Desplegar'}
-                </span>
-              </button>
+              </label>
 
-              {showAdvancedFields && (
-                <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
-                  <div>
-                    <label className="block text-[11px] font-mono-code text-stone-500 mb-1">
-                      Acción o Gesto del Sujeto
-                    </label>
-                    <input
-                      type="text"
-                      value={builderState.action || ''}
-                      onChange={(e) => setBuilderState((p) => ({ ...p, action: e.target.value }))}
-                      placeholder="Ej: moldeando arcilla, caminando bajo lluvia ligera"
-                      className="w-full bg-stone-50 dark:bg-stone-950 border border-stone-200 dark:border-stone-800 rounded px-3 py-2 text-stone-900 dark:text-stone-100"
-                    />
+              {builderState.mode === 'video' && (
+                <div className="space-y-3 p-3.5 rounded-xl bg-[#F4F2ED] dark:bg-[#101014] border border-[#DEDAD0] dark:border-[#26262E]">
+                  <div className="flex items-center gap-1.5 text-[11px] font-mono-code font-bold text-[#7545D6] dark:text-[#F8C300]">
+                    <Film className="w-3.5 h-3.5" />
+                    <span>Trayectoria de cámara</span>
                   </div>
-                  <div>
-                    <label className="block text-[11px] font-mono-code text-stone-500 mb-1">
-                      Escenario / Contexto Espacial
-                    </label>
-                    <input
-                      type="text"
-                      value={builderState.setting || ''}
-                      onChange={(e) => setBuilderState((p) => ({ ...p, setting: e.target.value }))}
-                      placeholder="Ej: taller de carpintería con ventanal norte, galería brutalista"
-                      className="w-full bg-stone-50 dark:bg-stone-950 border border-stone-200 dark:border-stone-800 rounded px-3 py-2 text-stone-900 dark:text-stone-100"
-                    />
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    {MOTIONS_VIDEO.map((m) => (
+                      <button
+                        key={m.val}
+                        type="button"
+                        onClick={() => setBuilderState((p) => ({ ...p, motion: m.val }))}
+                        className={`p-2 text-left text-xs rounded-lg transition-all border ${
+                          builderState.motion === m.val
+                            ? 'bg-[#F8C300]/20 text-[#101014] dark:text-[#F8C300] border-[#F8C300] font-semibold'
+                            : 'bg-white dark:bg-[#16161C] text-[#4A4A55] dark:text-[#B4B2AC] border-[#DEDAD0] dark:border-[#2C2C36]'
+                        }`}
+                      >
+                        <span className="font-mono-code block font-semibold">
+                          {m.label.split(' (')[0]}
+                        </span>
+                        <span className="text-[11px] opacity-80 block truncate">
+                          {m.label.split('(')[1]?.replace(')', '') || m.val}
+                        </span>
+                      </button>
+                    ))}
                   </div>
-                  <div>
-                    <label className="block text-[11px] font-mono-code text-stone-500 mb-1">
-                      Tipo de Plano / Encuadre
-                    </label>
-                    <select
-                      value={builderState.shotSize || 'Plano Medio (MS)'}
-                      onChange={(e) => setBuilderState((p) => ({ ...p, shotSize: e.target.value }))}
-                      className="w-full bg-stone-50 dark:bg-stone-950 border border-stone-200 dark:border-stone-800 rounded px-3 py-2 text-stone-900 dark:text-stone-100"
-                    >
-                      {SHOT_SIZES.map((s) => (
-                        <option key={s} value={s}>{s}</option>
-                      ))}
-                    </select>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                    <div>
+                      <span className="block text-[11px] font-mono-code text-[#5B5B66] dark:text-[#A09E97] mb-1">
+                        Cadencia (FPS)
+                      </span>
+                      <select
+                        value={builderState.fps}
+                        onChange={(e) => setBuilderState((p) => ({ ...p, fps: e.target.value }))}
+                        className="w-full bg-white dark:bg-[#16161C] border border-[#DEDAD0] dark:border-[#2C2C36] rounded-lg px-3 py-1.5 text-xs text-[#101014] dark:text-[#F4F2ED]"
+                      >
+                        <option value="24 fps">24 fps (Cine Estándar)</option>
+                        <option value="12 fps (Stop Motion)">12 fps (Stop Motion Artesanal)</option>
+                        <option value="60 fps (Fluido)">60 fps (Movimiento Fluido)</option>
+                        <option value="120 fps (Slow Motion)">120 fps (Slow Motion)</option>
+                      </select>
+                    </div>
+                    <div>
+                      <span className="block text-[11px] font-mono-code text-[#5B5B66] dark:text-[#A09E97] mb-1">
+                        Duración del clip
+                      </span>
+                      <select
+                        value={builderState.duration || '6–8 segundos'}
+                        onChange={(e) => setBuilderState((p) => ({ ...p, duration: e.target.value }))}
+                        className="w-full bg-white dark:bg-[#16161C] border border-[#DEDAD0] dark:border-[#2C2C36] rounded-lg px-3 py-1.5 text-xs text-[#101014] dark:text-[#F4F2ED]"
+                      >
+                        <option value="4 segundos">4 segundos (Plano corto)</option>
+                        <option value="6–8 segundos">6–8 segundos (Estándar)</option>
+                        <option value="10 segundos continuos">10 segundos (Secuencia)</option>
+                        <option value="Loop infinito continuo">Loop infinito sin corte</option>
+                      </select>
+                    </div>
                   </div>
-                  <div>
-                    <label className="block text-[11px] font-mono-code text-stone-500 mb-1">
-                      Ángulo de Cámara
-                    </label>
-                    <select
-                      value={builderState.cameraAngle || 'Normal (Eye Level)'}
-                      onChange={(e) => setBuilderState((p) => ({ ...p, cameraAngle: e.target.value }))}
-                      className="w-full bg-stone-50 dark:bg-stone-950 border border-stone-200 dark:border-stone-800 rounded px-3 py-2 text-stone-900 dark:text-stone-100"
-                    >
-                      {CAMERA_ANGLES.map((a) => (
-                        <option key={a} value={a}>{a}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-[11px] font-mono-code text-stone-500 mb-1">
-                      Temperatura de Color
-                    </label>
-                    <select
-                      value={builderState.temperature || 'Neutra equilibrada (5500K)'}
-                      onChange={(e) => setBuilderState((p) => ({ ...p, temperature: e.target.value }))}
-                      className="w-full bg-stone-50 dark:bg-stone-950 border border-stone-200 dark:border-stone-800 rounded px-3 py-2 text-stone-900 dark:text-stone-100"
-                    >
-                      {TEMPERATURES.map((t) => (
-                        <option key={t} value={t}>{t}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-[11px] font-mono-code text-stone-500 mb-1">
-                      Atmósfera / Clima
-                    </label>
-                    <select
-                      value={builderState.atmosphere || 'Aire limpio natural'}
-                      onChange={(e) => setBuilderState((p) => ({ ...p, atmosphere: e.target.value }))}
-                      className="w-full bg-stone-50 dark:bg-stone-950 border border-stone-200 dark:border-stone-800 rounded px-3 py-2 text-stone-900 dark:text-stone-100"
-                    >
-                      {ATMOSPHERES.map((at) => (
-                        <option key={at} value={at}>{at}</option>
-                      ))}
-                    </select>
-                  </div>
-                  {builderState.mode === 'video' && (
-                    <>
-                      <div>
-                        <label className="block text-[11px] font-mono-code text-stone-500 mb-1">
-                          Cadencia / Velocidad (FPS)
-                        </label>
-                        <select
-                          value={builderState.fps}
-                          onChange={(e) => setBuilderState((p) => ({ ...p, fps: e.target.value }))}
-                          className="w-full bg-stone-50 dark:bg-stone-950 border border-stone-200 dark:border-stone-800 rounded px-3 py-2 text-stone-900 dark:text-stone-100"
-                        >
-                          <option value="24 fps">24 fps (Cine Estándar)</option>
-                          <option value="12 fps (Stop Motion)">12 fps (Stop Motion Artesanal)</option>
-                          <option value="60 fps (Fluido)">60 fps (Movimiento Fluido)</option>
-                          <option value="120 fps (Slow Motion)">120 fps (Slow Motion)</option>
-                        </select>
-                      </div>
-                      <div>
-                        <label className="block text-[11px] font-mono-code text-stone-500 mb-1">
-                          Duración del Clip
-                        </label>
-                        <select
-                          value={builderState.duration || '6–8 segundos'}
-                          onChange={(e) => setBuilderState((p) => ({ ...p, duration: e.target.value }))}
-                          className="w-full bg-stone-50 dark:bg-stone-950 border border-stone-200 dark:border-stone-800 rounded px-3 py-2 text-stone-900 dark:text-stone-100"
-                        >
-                          <option value="4 segundos">4 segundos (Plano corto)</option>
-                          <option value="6–8 segundos">6–8 segundos (Estándar)</option>
-                          <option value="10 segundos continuos">10 segundos (Secuencia)</option>
-                          <option value="Loop infinito continuo">Loop infinito sin corte</option>
-                        </select>
-                      </div>
-                    </>
-                  )}
                 </div>
               )}
-            </div>
 
-            {/* 9. Instrucciones Negativas */}
-            <div>
-              <label className="block text-xs font-mono-code uppercase tracking-wider text-stone-600 dark:text-stone-400 mb-2 flex items-center gap-1.5">
-                <ShieldAlert className="w-3.5 h-3.5 text-stone-500" />
-                <span>Instrucciones Negativas (Qué evitar)</span>
-              </label>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 {NEGATIVE_OPTIONS.map((neg) => {
                   const isChecked = builderState.negativeAvoid.includes(neg);
@@ -1086,15 +1248,15 @@ Avoid: ${builderState.negativeAvoid.length > 0 ? builderState.negativeAvoid.join
                       key={neg}
                       type="button"
                       onClick={() => toggleNegative(neg)}
-                      className={`text-left px-3 py-2 rounded text-xs transition-colors border flex items-center justify-between ${
+                      className={`text-left px-3 py-2 rounded-xl text-xs transition-colors border flex items-center justify-between ${
                         isChecked
-                          ? 'bg-amber-50 dark:bg-stone-850 text-stone-900 dark:text-stone-200 border-amber-400/50 font-medium'
-                          : 'bg-stone-50 dark:bg-stone-950 text-stone-500 border-stone-200 dark:border-stone-850 hover:text-stone-700'
+                          ? 'bg-[#F8C300]/15 text-[#101014] dark:text-[#F4F2ED] border-[#F8C300]/70 font-medium'
+                          : 'bg-[#F4F2ED] dark:bg-[#101014] text-[#5B5B66] dark:text-[#A09E97] border-[#DEDAD0] dark:border-[#2C2C36] hover:border-[#326BFF]'
                       }`}
                     >
                       <span className="truncate">{neg}</span>
-                      <span className={`w-3.5 h-3.5 rounded flex items-center justify-center text-[10px] shrink-0 ml-2 ${
-                        isChecked ? 'bg-amber-400 text-stone-950 font-bold' : 'border border-stone-300 dark:border-stone-700'
+                      <span className={`w-4 h-4 rounded flex items-center justify-center text-[10px] shrink-0 ml-2 ${
+                        isChecked ? 'bg-[#F8C300] text-[#101014] font-bold' : 'border border-[#C9C4B8] dark:border-[#3A3A46]'
                       }`}>
                         {isChecked && '✓'}
                       </span>
@@ -1108,16 +1270,16 @@ Avoid: ${builderState.negativeAvoid.length > 0 ? builderState.negativeAvoid.join
 
           {/* Live Prompt Preview Output Box (5 Cols) */}
           <div className="lg:col-span-5 sticky top-20 space-y-4">
-            <div className="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded-lg p-5 flex flex-col shadow-lg">
+            <div className="bg-white dark:bg-[#16161C] border border-[#DEDAD0] dark:border-[#26262E] rounded-2xl p-5 flex flex-col shadow-lg">
               
-              <div className="flex items-center justify-between pb-3 border-b border-stone-200 dark:border-stone-800 mb-3">
+              <div className="flex items-center justify-between pb-3 border-b border-[#EFECE4] dark:border-[#26262E] mb-3">
                 <div className="flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-amber-500"></span>
-                  <span className="text-xs font-mono-code uppercase tracking-wider text-stone-800 dark:text-stone-200 font-semibold">
-                    Prompt Maestro Generado
+                  <Sliders className="w-3.5 h-3.5 text-[#7545D6] dark:text-[#F8C300]" />
+                  <span className="text-xs font-mono-code uppercase tracking-wider text-[#101014] dark:text-[#F4F2ED] font-bold">
+                    Prompt Maestro · 12 Módulos
                   </span>
                 </div>
-                <span className="text-[11px] font-mono-code text-stone-500">
+                <span className="text-[11px] font-mono-code text-[#5B5B66] dark:text-[#A09E97]">
                   {currentPrompt.length} carácteres · {currentPrompt.split(/\s+/).filter(Boolean).length} palabras
                 </span>
               </div>

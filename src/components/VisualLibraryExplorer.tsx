@@ -15,6 +15,8 @@ import {
   Sparkles,
   Images,
   Layers,
+  Braces,
+  Sliders,
 } from 'lucide-react';
 import {
   MODULES_META,
@@ -40,6 +42,43 @@ export interface VisualLibraryExplorerProps {
   activeModule: ModuleId;
   onChangeModule: (modId: ModuleId) => void;
   onApplyEntryToBuilder: (entry: LibraryEntry) => void;
+  onOpenGalleryCollection?: (collection: string) => void;
+  onOpenJsonLab?: () => void;
+  onOpenLabs?: () => void;
+}
+
+function getGalleryCollectionForModule(modId: ModuleId): string {
+  switch (modId) {
+    case 'mod-01':
+    case 'mod-03':
+    case 'mod-20':
+      return '01. Retrato';
+    case 'mod-11':
+    case 'mod-16':
+      return '02. Paisaje';
+    case 'mod-15':
+    case 'mod-19':
+      return '03. Producto';
+    case 'mod-04':
+    case 'mod-14':
+    case 'mod-18':
+      return '04. Arte Digital';
+    case 'mod-02':
+    case 'mod-05':
+    case 'mod-06':
+    case 'mod-09':
+    case 'mod-10':
+    case 'mod-12':
+      return '06. Cine';
+    case 'mod-17':
+      return '07. Macro y Naturaleza';
+    case 'mod-08':
+    case 'mod-13':
+    case 'mod-22':
+      return '08. Motion y Video';
+    default:
+      return 'Todas';
+  }
 }
 
 const ALL_MODULES_META: ModuleMeta[] = [
@@ -59,6 +98,9 @@ export const VisualLibraryExplorer: React.FC<VisualLibraryExplorerProps> = ({
   activeModule,
   onChangeModule,
   onApplyEntryToBuilder,
+  onOpenGalleryCollection,
+  onOpenJsonLab,
+  onOpenLabs,
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedSubcategory, setSelectedSubcategory] = useState<string>('Todas');
@@ -85,6 +127,9 @@ export const VisualLibraryExplorer: React.FC<VisualLibraryExplorerProps> = ({
   useEffect(() => {
     try {
       localStorage.setItem(FAV_STORAGE_KEY, JSON.stringify(favorites));
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('nc-favorites-updated'));
+      }
     } catch {
       // ignore storage quota issues
     }
@@ -267,6 +312,39 @@ export const VisualLibraryExplorer: React.FC<VisualLibraryExplorerProps> = ({
               >
                 <Star className={`w-3.5 h-3.5 ${onlyFavorites ? 'fill-current' : 'text-amber-500'}`} />
                 <span>Favoritos ({favorites.length})</span>
+              </button>
+            )}
+
+            {onOpenGalleryCollection && (
+              <button
+                type="button"
+                onClick={() => onOpenGalleryCollection(getGalleryCollectionForModule(activeModule))}
+                className="px-3.5 py-2 text-xs font-semibold uppercase tracking-wider rounded border border-[#DEDAD0] dark:border-[#2C2C36] bg-white dark:bg-[#16161C] hover:border-[#F8C300] text-[#101014] dark:text-[#F4F2ED] transition-colors flex items-center gap-1.5"
+              >
+                <Images className="w-3.5 h-3.5 text-[#7545D6] dark:text-[#F8C300]" />
+                <span>Ver en Galería</span>
+              </button>
+            )}
+
+            {onOpenJsonLab && activeModule === 'mod-07' && (
+              <button
+                type="button"
+                onClick={onOpenJsonLab}
+                className="px-3.5 py-2 text-xs font-semibold uppercase tracking-wider rounded bg-[#7545D6] hover:bg-[#6134bf] text-white transition-colors flex items-center gap-1.5"
+              >
+                <Braces className="w-3.5 h-3.5" />
+                <span>Abrir Lab JSON</span>
+              </button>
+            )}
+
+            {onOpenLabs && activeModule !== 'mod-07' && (
+              <button
+                type="button"
+                onClick={onOpenLabs}
+                className="px-3.5 py-2 text-xs font-semibold uppercase tracking-wider rounded border border-[#DEDAD0] dark:border-[#2C2C36] bg-white dark:bg-[#16161C] hover:border-[#326BFF] text-[#101014] dark:text-[#F4F2ED] transition-colors flex items-center gap-1.5"
+              >
+                <Sliders className="w-3.5 h-3.5 text-[#326BFF]" />
+                <span>Practicar en Labs</span>
               </button>
             )}
           </div>
@@ -929,7 +1007,21 @@ export const VisualLibraryExplorer: React.FC<VisualLibraryExplorerProps> = ({
                   })}
                 </div>
 
-                <div className="flex items-center gap-3 shrink-0">
+                <div className="flex flex-wrap items-center gap-2 shrink-0">
+                  {onOpenGalleryCollection && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const targetCol = getGalleryCollectionForModule(selectedEntry.moduleId);
+                        setSelectedEntry(null);
+                        onOpenGalleryCollection(targetCol);
+                      }}
+                      className="px-3 py-2 text-xs font-semibold border border-stone-300 dark:border-stone-700 hover:border-amber-500 rounded flex items-center gap-1.5"
+                    >
+                      <Images className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+                      <span>Láminas en Galería</span>
+                    </button>
+                  )}
                   {selectedEntry.builderPatch && (
                     <button
                       type="button"

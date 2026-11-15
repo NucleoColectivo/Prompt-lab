@@ -11,6 +11,7 @@ import {
   Compass,
   FileDown,
   ExternalLink,
+  Images,
 } from 'lucide-react';
 import type { AppSectionId } from '../types/navigation';
 import { AI_TOOLS_DIRECTORY } from '../data/extendedModulesData';
@@ -20,8 +21,83 @@ import { ToolBrandLogo } from './ToolBrandLogo';
 
 interface HomeViewProps {
   onNavigateSection: (section: AppSectionId, subTab?: string) => void;
+  onOpenGalleryCollection?: (collectionTag: string) => void;
   onOpenWelcomeWizard?: () => void;
 }
+
+const CURATED_COLLECTIONS_PREVIEW: {
+  id: string;
+  number: string;
+  title: string;
+  subtitle: string;
+  image: string;
+  accent: string;
+}[] = [
+  {
+    id: 'Retrato',
+    number: '01',
+    title: 'Retrato',
+    subtitle: 'Rembrandt, Split, High Key y textura real',
+    image: VISUAL_LIBRARY_PATHS.lightRembrandt,
+    accent: '#F8C300',
+  },
+  {
+    id: 'Paisaje',
+    number: '02',
+    title: 'Paisaje',
+    subtitle: 'Andes brumosos, arquitectura y escala territorial',
+    image: VISUAL_LIBRARY_PATHS.compExtremeWide,
+    accent: '#326BFF',
+  },
+  {
+    id: 'Producto',
+    number: '03',
+    title: 'Producto',
+    subtitle: 'Salpicaduras 1/4000s, bodegón y lujo mineral',
+    image: VISUAL_LIBRARY_PATHS.adSplash,
+    accent: '#F8C300',
+  },
+  {
+    id: 'Arte Digital',
+    number: '04',
+    title: 'Arte Digital',
+    subtitle: 'Botánica, hibridación y arte generativo',
+    image: VISUAL_LIBRARY_PATHS.artHybridOrganism,
+    accent: '#7545D6',
+  },
+  {
+    id: 'Moda',
+    number: '05',
+    title: 'Moda',
+    subtitle: 'Editorial brutalista, tejidos crudos y duotono',
+    image: VISUAL_LIBRARY_PATHS.photoFashion,
+    accent: '#7545D6',
+  },
+  {
+    id: 'Cine',
+    number: '06',
+    title: 'Cine',
+    subtitle: 'Teal & Orange, OTS, ángulo holandés y 35mm',
+    image: VISUAL_LIBRARY_PATHS.colorTealOrange,
+    accent: '#326BFF',
+  },
+  {
+    id: 'Macro y Naturaleza',
+    number: '07',
+    title: 'Macro y Naturaleza',
+    subtitle: 'Óptica 100mm 1:1, rocío y microtexturas',
+    image: VISUAL_LIBRARY_PATHS.focal100mmMacro,
+    accent: '#F8C300',
+  },
+  {
+    id: 'Motion y Video',
+    number: '08',
+    title: 'Motion y Video',
+    subtitle: 'Drone FPV, mapping, stop motion y VFX fluidos',
+    image: VISUAL_LIBRARY_PATHS.videoDroneFpv,
+    accent: '#326BFF',
+  },
+];
 
 const PLATFORM_SECTIONS: {
   section: AppSectionId;
@@ -34,6 +110,16 @@ const PLATFORM_SECTIONS: {
   icon: React.ReactNode;
 }[] = [
   {
+    section: 'galeria',
+    code: 'PRIORIDAD 01 · 8 COLECCIONES',
+    title: 'Galería Visual Experimental e Interactiva',
+    whatYouFind:
+      'Explora fotografías y fotogramas organizados en 8 colecciones curadas con prompts ES/EN, negative prompt, cámara/lente, filtro combinado, visor Lightbox y envío directo al Constructor.',
+    idealFor: 'Encontrar referentes reales y experimentar variaciones en un clic.',
+    image: VISUAL_LIBRARY_PATHS.photoNeoNoir,
+    icon: <Images className="w-4 h-4 text-[#7545D6]" />,
+  },
+  {
     section: 'fundamentos',
     code: 'MÓDULO 00 · INICIO GUIADO',
     title: '¿Qué es un Prompt? y Fórmula de 7 Elementos',
@@ -41,17 +127,17 @@ const PLATFORM_SECTIONS: {
       'Explicación clara sin tecnicismos de cómo funciona un prompt, comparativa entre una instrucción ambigua y una dirección de arte completa, diferencias Imagen vs Video y reto práctico de 15 minutos.',
     idealFor: 'Personas que comienzan desde cero o docentes preparando su primera clase.',
     image: VISUAL_LIBRARY_PATHS.lightComparison,
-    icon: <BookOpen className="w-4 h-4 text-amber-600" />,
+    icon: <BookOpen className="w-4 h-4 text-[#326BFF]" />,
   },
   {
     section: 'biblioteca',
-    code: 'MÓDULOS 01–26 · ENCICLOPEDIA VISUAL',
+    code: 'MÓDULOS 01–26 · 130 FICHAS',
     title: 'Biblioteca Visual de Dirección de Arte y Cine',
     whatYouFind:
       '26 módulos ilustrados con ejemplos ES/EN, diagramas técnicos y fichas prácticas: óptica 8–400mm, cámaras, iluminación, color, storytelling, storyboard, worldbuilding, 3D, VFX, sonido y ética.',
     idealFor: 'Consultar referentes visuales, estudiar planos o copiar prompts probados.',
     image: VISUAL_LIBRARY_PATHS.focalComparison,
-    icon: <Layers className="w-4 h-4 text-amber-600" />,
+    icon: <Layers className="w-4 h-4 text-[#326BFF]" />,
   },
   {
     section: 'laboratorios',
@@ -62,7 +148,7 @@ const PLATFORM_SECTIONS: {
       'Simulador de iluminación, visor de cámara 3D y distancia focal, comparador A/B, editor de Storyboard, selector HEX y analizador local de fotografías para convertir cualquier estilo en JSON/YAML.',
     idealFor: 'Experimentar cómo cambian la luz, los lentes y el color antes de generar.',
     image: VISUAL_LIBRARY_PATHS.colorJsonTransfer,
-    icon: <Sliders className="w-4 h-4 text-amber-600" />,
+    icon: <Sliders className="w-4 h-4 text-[#7545D6]" />,
   },
   {
     section: 'film-director',
@@ -72,27 +158,17 @@ const PLATFORM_SECTIONS: {
       'Transforma una idea breve en concepto creativo, logline, arco narrativo, dirección de fotografía, desglose de escenas con prompts de imagen/video por plano, diseño sonoro y plan de montaje.',
     idealFor: 'Cortometrajes, cápsulas culturales, documentales de barrio y videoarte.',
     image: VISUAL_LIBRARY_PATHS.camCinemaRig,
-    icon: <Clapperboard className="w-4 h-4 text-amber-600" />,
+    icon: <Clapperboard className="w-4 h-4 text-[#326BFF]" />,
   },
   {
     section: 'builder',
-    code: 'CONSTRUCTOR + PDF / PNG',
+    code: '12 MÓDULOS + PDF / PNG',
     title: 'Constructor Maestro de Prompts y Fichas Taller',
     whatYouFind:
       'Ensambla prompts de Fotografía o Video paso a paso con detector de incompatibilidades ópticas, colecciones por proyecto, exportador de fichas PDF/PNG para talleres y copia directa a apps IA.',
     idealFor: 'Armar prompts listos para pegar en ChatGPT, Midjourney, FLUX o Runway.',
     image: VISUAL_LIBRARY_PATHS.adLuxury,
-    icon: <Sparkles className="w-4 h-4 text-amber-600" />,
-  },
-  {
-    section: 'academia',
-    code: `${AI_TOOLS_DIRECTORY.length} APPS + RETOS + GLOSARIO`,
-    title: 'Directorio de Aplicaciones IA, Retos y Glosario ES–EN',
-    whatYouFind:
-      'Catálogo visual con logos y ejemplos de Google AI Studio, Gemini, Claude, NotebookLM, ChatGPT, CapCut, Lovable, Bolt, Runway y más; acompañado de rutas, retos interactivos y diccionario bilingüe.',
-    idealFor: 'Elegir en qué app practicar cada tarea sin perder tiempo.',
-    image: VISUAL_LIBRARY_PATHS.animGenerativeParticles,
-    icon: <Wrench className="w-4 h-4 text-amber-600" />,
+    icon: <Sparkles className="w-4 h-4 text-[#F8C300]" />,
   },
 ];
 
@@ -111,22 +187,23 @@ const FEATURED_APP_IDS = [
 
 export const HomeView: React.FC<HomeViewProps> = ({
   onNavigateSection,
+  onOpenGalleryCollection,
   onOpenWelcomeWizard,
 }) => {
   const featuredApps = AI_TOOLS_DIRECTORY.filter((t) => FEATURED_APP_IDS.includes(t.id));
 
   return (
-    <div className="bg-[#FAF8F5] dark:bg-stone-950 transition-colors">
+    <div className="bg-[#F4F2ED] dark:bg-[#101014] transition-colors">
       {/* 1. Qué es esta página + Cómo usarla en 3 pasos */}
       <section
         id="que-encuentras"
-        className="py-12 border-b border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900/40 scroll-mt-16"
+        className="py-14 border-b border-[#DEDAD0] dark:border-[#26262E] bg-white dark:bg-[#16161C] scroll-mt-16"
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 space-y-8">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
             <div className="lg:col-span-7 space-y-3">
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <div className="flex items-center gap-2 text-xs font-mono-code uppercase tracking-wider text-amber-700 dark:text-amber-400 font-bold">
+                <div className="flex items-center gap-2 text-xs font-mono-code uppercase tracking-wider text-[#326BFF] dark:text-[#F8C300] font-bold">
                   <Compass className="w-3.5 h-3.5" />
                   <span>QUÉ ENCUENTRAS EN ESTA PÁGINA</span>
                 </div>
@@ -134,50 +211,50 @@ export const HomeView: React.FC<HomeViewProps> = ({
                   <button
                     type="button"
                     onClick={onOpenWelcomeWizard}
-                    className="px-3 py-1.5 text-[11px] font-mono-code font-bold uppercase tracking-wider bg-amber-400/20 hover:bg-amber-400 text-amber-800 dark:text-amber-300 hover:text-stone-950 border border-amber-400/50 rounded-lg transition-colors inline-flex items-center gap-1.5"
+                    className="px-3 py-1.5 text-[11px] font-mono-code font-bold uppercase tracking-wider bg-[#F8C300]/20 hover:bg-[#F8C300] text-[#101014] dark:text-[#F8C300] dark:hover:text-[#101014] border border-[#F8C300]/60 rounded-lg transition-colors inline-flex items-center gap-1.5"
                   >
                     <Sparkles className="w-3 h-3" />
                     <span>Ver Tour 3 Pasos</span>
                   </button>
                 )}
               </div>
-              <h2 className="text-3xl sm:text-4xl font-bold font-serif-title text-stone-900 dark:text-stone-100 leading-tight">
-                Una caja de herramientas abierta para dirigir imagen, cine, diseño y audio con IA
+              <h2 className="text-3xl sm:text-4xl font-bold font-display-sans text-[#101014] dark:text-[#F4F2ED] leading-tight text-balance">
+                Una plataforma híbrida para descubrir, comprender y dirigir imagen y video con IA
               </h2>
-              <p className="text-sm sm:text-base text-stone-600 dark:text-stone-400 leading-relaxed">
-                <strong>Núcleo Colectivo · Visual & Motion Prompt Lab</strong> reúne en un solo lugar teoría visual, simuladores interactivos, un constructor de prompts, un planificador audiovisual y un directorio con más de {AI_TOOLS_DIRECTORY.length} aplicaciones reales. No necesitas programar ni configurar claves API: aprendes el lenguaje visual aquí, copias tu prompt y lo practicas directamente en las apps externas.
+              <p className="text-sm sm:text-base text-[#4A4A55] dark:text-[#B4B2AC] leading-relaxed">
+                <strong>Núcleo Colectivo · Visual Prompt Lab</strong> integra en un solo ecosistema una galería curada de referencias visuales, enciclopedia técnica de 26 módulos, simuladores interactivos, constructor modular de 12 bloques, planificador audiovisual y directorio con {AI_TOOLS_DIRECTORY.length} aplicaciones reales. Aprendes aquí, copias tu prompt y lo practicas directamente en las apps externas.
               </p>
             </div>
 
             <div className="lg:col-span-5 grid grid-cols-1 gap-3">
               {[
                 {
-                  step: 'PASO 01 · COMPRENDER',
-                  title: 'Aprende el lenguaje visual sin jerga',
-                  desc: 'Empieza en Fundamentos (Módulo 00) o consulta los 26 módulos con fotografías, diagramas y ejemplos reales.',
+                  step: '01 · DESCUBRIR',
+                  title: 'Explora la Galería Visual y 26 Módulos',
+                  desc: 'Observa iluminación, lentes, color y encuadre con prompts bilingües reales y sin clichés.',
                 },
                 {
-                  step: 'PASO 02 · DISEÑAR Y SIMULAR',
-                  title: 'Prueba luz, óptica, JSON o guion aquí mismo',
-                  desc: 'Usa los Laboratorios, el Planificador de 8 Etapas o el Constructor Maestro con exportación a PDF/PNG.',
+                  step: '02 · CONSTRUIR Y VARIAR',
+                  title: 'Experimenta en el Constructor de 12 Módulos',
+                  desc: 'Carga cualquier imagen de la galería al constructor, ajusta luz o lente y exporta PDF/PNG.',
                 },
                 {
-                  step: 'PASO 03 · PRACTICAR EN APPS REALES',
+                  step: '03 · PRACTICAR EN APPS REALES',
                   title: 'Lleva tu prompt a la herramienta ideal',
                   desc: 'Abre Google AI Studio, Gemini, Claude, NotebookLM, CapCut, Lovable, Bolt, Midjourney o Runway en un clic.',
                 },
               ].map((item) => (
                 <div
                   key={item.step}
-                  className="p-3.5 rounded-lg bg-[#FAF8F5] dark:bg-stone-950 border border-stone-200 dark:border-stone-800"
+                  className="p-4 rounded-xl bg-[#F4F2ED] dark:bg-[#101014] border border-[#DEDAD0] dark:border-[#26262E]"
                 >
-                  <div className="text-[11px] font-mono-code font-bold text-amber-700 dark:text-amber-400">
+                  <div className="text-[11px] font-mono-code font-bold text-[#7545D6] dark:text-[#F8C300]">
                     {item.step}
                   </div>
-                  <div className="text-xs font-bold text-stone-900 dark:text-stone-100 mt-0.5">
+                  <div className="text-xs font-bold text-[#101014] dark:text-[#F4F2ED] mt-0.5">
                     {item.title}
                   </div>
-                  <p className="text-xs text-stone-600 dark:text-stone-400 mt-0.5 leading-relaxed">
+                  <p className="text-xs text-[#4A4A55] dark:text-[#B4B2AC] mt-0.5 leading-relaxed">
                     {item.desc}
                   </p>
                 </div>
@@ -187,25 +264,88 @@ export const HomeView: React.FC<HomeViewProps> = ({
         </div>
       </section>
 
-      {/* 2. Mapa Visual de Todas las Secciones de la Plataforma */}
-      <section className="py-14 border-b border-stone-200 dark:border-stone-800">
+      {/* 2. Acceso Directo a las 8 Colecciones de la Galería Visual (Prioridad #1) */}
+      <section className="py-14 border-b border-[#DEDAD0] dark:border-[#26262E]">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+            <div>
+              <div className="text-xs font-mono-code uppercase tracking-wider text-[#7545D6] dark:text-[#F8C300] font-bold mb-1">
+                PRIORIDAD 01 · GALERÍA EXPERIMENTAL
+              </div>
+              <h2 className="text-2xl sm:text-3xl font-bold font-display-sans text-[#101014] dark:text-[#F4F2ED]">
+                8 Colecciones Curadas para Inspirar y Experimentar
+              </h2>
+              <p className="text-xs sm:text-sm text-[#4A4A55] dark:text-[#B4B2AC] mt-1">
+                Cada lámina incluye prompt en español e inglés, negative prompt, especificaciones técnicas y botón directo al Constructor.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => onNavigateSection('galeria')}
+              className="px-4 py-2.5 text-xs font-bold uppercase tracking-wider bg-[#F8C300] hover:bg-[#e5b400] text-[#101014] rounded-lg inline-flex items-center gap-1.5 shrink-0"
+            >
+              <Images className="w-3.5 h-3.5" />
+              <span>Abrir Galería Completa</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            {CURATED_COLLECTIONS_PREVIEW.map((col) => (
+              <button
+                key={col.id}
+                type="button"
+                onClick={() =>
+                  onOpenGalleryCollection
+                    ? onOpenGalleryCollection(col.id)
+                    : onNavigateSection('galeria')
+                }
+                className="group relative aspect-[4/3] rounded-xl overflow-hidden bg-[#101014] border border-[#DEDAD0] dark:border-[#26262E] hover:border-[#F8C300] text-left transition-all"
+              >
+                <ResilientImage
+                  src={col.image}
+                  alt={`Colección ${col.title}`}
+                  objectPosition="top"
+                  containerClassName="w-full h-full"
+                  className="group-hover:scale-105 transition-transform duration-500"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#101014] via-[#101014]/45 to-transparent" />
+                <div className="absolute bottom-3 left-3.5 right-3.5 space-y-0.5">
+                  <div className="text-[10px] font-mono-code font-bold text-[#F8C300]">
+                    {col.number} · COLECCIÓN
+                  </div>
+                  <div className="text-sm sm:text-base font-bold text-[#F4F2ED] group-hover:text-[#F8C300] transition-colors">
+                    {col.title}
+                  </div>
+                  <div className="text-[11px] text-[#D8D5CD] line-clamp-1">
+                    {col.subtitle}
+                  </div>
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* 3. Mapa Visual de Todas las Secciones de la Plataforma */}
+      <section className="py-14 border-b border-[#DEDAD0] dark:border-[#26262E] bg-white dark:bg-[#16161C]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 space-y-8">
           <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
             <div>
-              <div className="text-xs font-mono-code uppercase tracking-wider text-amber-700 dark:text-amber-400 font-bold mb-1">
+              <div className="text-xs font-mono-code uppercase tracking-wider text-[#326BFF] dark:text-[#F8C300] font-bold mb-1">
                 EXPLORAR POR SECCIÓN
               </div>
-              <h2 className="text-2xl sm:text-3xl font-bold font-serif-title text-stone-900 dark:text-stone-100">
+              <h2 className="text-2xl sm:text-3xl font-bold font-display-sans text-[#101014] dark:text-[#F4F2ED]">
                 ¿Qué hay dentro de cada área del laboratorio?
               </h2>
             </div>
             <button
               type="button"
               onClick={() => onNavigateSection('recursos', 'diccionario')}
-              className="px-4 py-2 text-xs font-mono-code font-semibold bg-white dark:bg-stone-900 border border-stone-300 dark:border-stone-700 hover:border-amber-500 rounded-lg text-stone-800 dark:text-stone-200 inline-flex items-center gap-2 shrink-0"
+              className="px-4 py-2 text-xs font-mono-code font-semibold bg-[#F4F2ED] dark:bg-[#101014] border border-[#D4D0C5] dark:border-[#2C2C36] hover:border-[#326BFF] rounded-lg text-[#101014] dark:text-[#F4F2ED] inline-flex items-center gap-2 shrink-0"
             >
-              <BookMarked className="w-3.5 h-3.5 text-amber-600" />
-              <span>Ir a Recetas, Comandos (180+) y Plantillas</span>
+              <BookMarked className="w-3.5 h-3.5 text-[#7545D6]" />
+              <span>Ir a Recetas, Comandos y Plantillas</span>
             </button>
           </div>
 
@@ -213,10 +353,10 @@ export const HomeView: React.FC<HomeViewProps> = ({
             {PLATFORM_SECTIONS.map((item) => (
               <article
                 key={item.title}
-                className="rounded-xl overflow-hidden bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 hover:border-amber-500 transition-all flex flex-col justify-between shadow-xs group"
+                className="rounded-xl overflow-hidden bg-[#F4F2ED] dark:bg-[#101014] border border-[#DEDAD0] dark:border-[#26262E] hover:border-[#F8C300] transition-all flex flex-col justify-between group"
               >
                 <div>
-                  <div className="relative h-40 overflow-hidden bg-stone-900">
+                  <div className="relative h-40 overflow-hidden bg-[#101014]">
                     <ResilientImage
                       src={item.image}
                       alt={item.title}
@@ -224,24 +364,24 @@ export const HomeView: React.FC<HomeViewProps> = ({
                       containerClassName="w-full h-full"
                       className="group-hover:scale-105 transition-transform duration-500"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-stone-950/80 via-stone-950/20 to-transparent pointer-events-none" />
-                    <div className="absolute bottom-2.5 left-3.5 right-3.5 flex items-center justify-between text-[11px] font-mono-code text-amber-300 font-bold">
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#101014]/85 via-[#101014]/25 to-transparent pointer-events-none" />
+                    <div className="absolute bottom-2.5 left-3.5 right-3.5 flex items-center justify-between text-[11px] font-mono-code text-[#F8C300] font-bold">
                       <span>{item.code}</span>
                     </div>
                   </div>
 
                   <div className="p-5 space-y-2.5">
                     <div className="flex items-start justify-between gap-2">
-                      <h3 className="text-lg font-bold font-serif-title text-stone-900 dark:text-stone-100 leading-snug">
+                      <h3 className="text-lg font-bold font-display-sans text-[#101014] dark:text-[#F4F2ED] leading-snug">
                         {item.title}
                       </h3>
                       <span className="shrink-0 mt-1">{item.icon}</span>
                     </div>
-                    <p className="text-xs text-stone-600 dark:text-stone-400 leading-relaxed">
+                    <p className="text-xs text-[#4A4A55] dark:text-[#B4B2AC] leading-relaxed">
                       {item.whatYouFind}
                     </p>
-                    <p className="text-[11px] text-stone-500 dark:text-stone-400 pt-2 border-t border-stone-100 dark:border-stone-800">
-                      <strong className="text-stone-700 dark:text-stone-300">Ideal para:</strong>{' '}
+                    <p className="text-[11px] text-[#5B5B66] dark:text-[#A09E97] pt-2 border-t border-[#DEDAD0] dark:border-[#26262E]">
+                      <strong className="text-[#101014] dark:text-[#F4F2ED]">Ideal para:</strong>{' '}
                       {item.idealFor}
                     </p>
                   </div>
@@ -251,7 +391,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
                   <button
                     type="button"
                     onClick={() => onNavigateSection(item.section, item.subTab)}
-                    className="w-full py-2.5 px-4 text-xs font-bold uppercase tracking-wider bg-[#FAF8F5] dark:bg-stone-950 hover:bg-amber-400 hover:text-stone-950 text-stone-900 dark:text-stone-100 border border-stone-200 dark:border-stone-800 hover:border-amber-400 rounded-lg transition-colors flex items-center justify-center gap-2"
+                    className="w-full py-2.5 px-4 text-xs font-bold uppercase tracking-wider bg-white dark:bg-[#18181F] hover:bg-[#F8C300] hover:text-[#101014] text-[#101014] dark:text-[#F4F2ED] border border-[#DEDAD0] dark:border-[#2C2C36] hover:border-[#F8C300] rounded-lg transition-colors flex items-center justify-center gap-2"
                   >
                     <span>Explorar esta sección</span>
                     <ArrowRight className="w-3.5 h-3.5" />
@@ -263,26 +403,27 @@ export const HomeView: React.FC<HomeViewProps> = ({
         </div>
       </section>
 
-      {/* 3. Vitrina rápida de Apps IA externas para practicar */}
-      <section className="py-12 border-b border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900/40">
+      {/* 4. Vitrina rápida de Apps IA externas para practicar */}
+      <section className="py-12 border-b border-[#DEDAD0] dark:border-[#26262E]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 space-y-6">
           <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
             <div>
-              <div className="text-xs font-mono-code uppercase tracking-wider text-amber-700 dark:text-amber-400 font-bold mb-1">
+              <div className="text-xs font-mono-code uppercase tracking-wider text-[#326BFF] dark:text-[#F8C300] font-bold mb-1">
                 ECOSISTEMA DE PRÁCTICA DIRECTA
               </div>
-              <h2 className="text-2xl font-bold font-serif-title text-stone-900 dark:text-stone-100">
+              <h2 className="text-2xl font-bold font-display-sans text-[#101014] dark:text-[#F4F2ED]">
                 Aplicaciones recomendadas para probar tus prompts
               </h2>
-              <p className="text-xs sm:text-sm text-stone-600 dark:text-stone-400 mt-1">
+              <p className="text-xs sm:text-sm text-[#4A4A55] dark:text-[#B4B2AC] mt-1">
                 Construye aquí tus instrucciones y llévalas directo a asistentes multimodales, editores de video, prototipado web o generadores visuales.
               </p>
             </div>
             <button
               type="button"
               onClick={() => onNavigateSection('academia')}
-              className="px-4 py-2 text-xs font-bold uppercase tracking-wider bg-amber-400 hover:bg-amber-300 text-stone-950 rounded-lg inline-flex items-center gap-1.5 shrink-0"
+              className="px-4 py-2 text-xs font-bold uppercase tracking-wider bg-[#101014] dark:bg-[#F8C300] hover:bg-[#326BFF] dark:hover:bg-[#e5b400] text-[#F4F2ED] dark:text-[#101014] rounded-lg inline-flex items-center gap-1.5 shrink-0 transition-colors"
             >
+              <Wrench className="w-3.5 h-3.5" />
               <span>Ver las {AI_TOOLS_DIRECTORY.length} Apps con Logos</span>
               <ArrowRight className="w-3.5 h-3.5" />
             </button>
@@ -295,7 +436,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
                 href={app.officialUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="p-3.5 rounded-xl bg-[#FAF8F5] dark:bg-stone-950 border border-stone-200 dark:border-stone-800 hover:border-amber-500 transition-colors flex flex-col justify-between gap-3 group"
+                className="p-3.5 rounded-xl bg-white dark:bg-[#16161C] border border-[#DEDAD0] dark:border-[#26262E] hover:border-[#326BFF] transition-colors flex flex-col justify-between gap-3 group"
               >
                 <div className="flex items-center gap-2.5">
                   <ToolBrandLogo
@@ -305,15 +446,15 @@ export const HomeView: React.FC<HomeViewProps> = ({
                     name={app.name}
                   />
                   <div className="min-w-0">
-                    <div className="text-xs font-bold text-stone-900 dark:text-stone-100 truncate group-hover:text-amber-700 dark:group-hover:text-amber-300">
+                    <div className="text-xs font-bold text-[#101014] dark:text-[#F4F2ED] truncate group-hover:text-[#326BFF] dark:group-hover:text-[#F8C300]">
                       {app.name}
                     </div>
-                    <div className="text-[10px] font-mono-code text-stone-500 truncate">
+                    <div className="text-[10px] font-mono-code text-[#5B5B66] dark:text-[#A09E97] truncate">
                       {app.area}
                     </div>
                   </div>
                 </div>
-                <div className="flex items-center justify-between text-[10px] font-mono-code text-amber-700 dark:text-amber-400 font-semibold">
+                <div className="flex items-center justify-between text-[10px] font-mono-code text-[#326BFF] dark:text-[#F8C300] font-semibold">
                   <span>{app.accessType.split('/')[0].trim()}</span>
                   <ExternalLink className="w-3 h-3" />
                 </div>
@@ -323,19 +464,19 @@ export const HomeView: React.FC<HomeViewProps> = ({
         </div>
       </section>
 
-      {/* 4. Recursos rápidos y Talleres */}
-      <section className="py-10">
+      {/* 5. Recursos rápidos y Talleres */}
+      <section className="py-10 bg-white dark:bg-[#16161C]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
-          <div className="p-6 rounded-xl bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div className="p-6 rounded-xl bg-[#F4F2ED] dark:bg-[#101014] border border-[#DEDAD0] dark:border-[#26262E] flex flex-col md:flex-row md:items-center justify-between gap-6">
             <div className="space-y-1.5 max-w-2xl">
-              <div className="flex items-center gap-2 text-xs font-mono-code uppercase font-bold text-amber-700 dark:text-amber-400">
+              <div className="flex items-center gap-2 text-xs font-mono-code uppercase font-bold text-[#7545D6] dark:text-[#F8C300]">
                 <FileDown className="w-4 h-4" />
                 <span>PARA DOCENTES, TALLERES Y PRODUCCIÓN</span>
               </div>
-              <h3 className="text-xl font-bold font-serif-title text-stone-900 dark:text-stone-100">
-                Exporta fichas técnicas en PDF / PNG y consulta 180+ comandos listos
+              <h3 className="text-xl font-bold font-display-sans text-[#101014] dark:text-[#F4F2ED]">
+                Exporta fichas técnicas en PDF / PNG y consulta recetas y comandos listos
               </h3>
-              <p className="text-xs text-stone-600 dark:text-stone-400 leading-relaxed">
+              <p className="text-xs text-[#4A4A55] dark:text-[#B4B2AC] leading-relaxed">
                 Cada parámetro del Constructor puede imprimirse en tarjetas visuales para sesiones presenciales o descargarse en JSON/TXT para documentar proyectos colectivos.
               </p>
             </div>
@@ -343,21 +484,21 @@ export const HomeView: React.FC<HomeViewProps> = ({
               <button
                 type="button"
                 onClick={() => onNavigateSection('recursos', 'recetas')}
-                className="px-4 py-2.5 text-xs font-semibold bg-[#FAF8F5] dark:bg-stone-950 border border-stone-300 dark:border-stone-700 hover:border-amber-500 rounded-lg text-stone-800 dark:text-stone-200"
+                className="px-4 py-2.5 text-xs font-semibold bg-white dark:bg-[#18181F] border border-[#D4D0C5] dark:border-[#2C2C36] hover:border-[#326BFF] rounded-lg text-[#101014] dark:text-[#F4F2ED]"
               >
                 Recetas Maestras
               </button>
               <button
                 type="button"
                 onClick={() => onNavigateSection('recursos', 'plantillas')}
-                className="px-4 py-2.5 text-xs font-semibold bg-[#FAF8F5] dark:bg-stone-950 border border-stone-300 dark:border-stone-700 hover:border-amber-500 rounded-lg text-stone-800 dark:text-stone-200"
+                className="px-4 py-2.5 text-xs font-semibold bg-white dark:bg-[#18181F] border border-[#D4D0C5] dark:border-[#2C2C36] hover:border-[#326BFF] rounded-lg text-[#101014] dark:text-[#F4F2ED]"
               >
                 Plantillas Universales
               </button>
               <button
                 type="button"
                 onClick={() => onNavigateSection('builder')}
-                className="px-4 py-2.5 text-xs font-bold uppercase tracking-wider bg-amber-400 hover:bg-amber-300 text-stone-950 rounded-lg"
+                className="px-4 py-2.5 text-xs font-bold uppercase tracking-wider bg-[#F8C300] hover:bg-[#e5b400] text-[#101014] rounded-lg"
               >
                 Abrir Constructor
               </button>

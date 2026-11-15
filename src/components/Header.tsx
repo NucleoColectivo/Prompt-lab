@@ -1,17 +1,19 @@
 import React, { useState } from 'react';
-import { Sparkles, Sun, Moon, Menu, X } from 'lucide-react';
+import { Sparkles, Sun, Moon, Menu, X, Search, Bookmark } from 'lucide-react';
 import type { AppSectionId } from '../types/navigation';
 
 interface HeaderProps {
   activeSection: AppSectionId;
-  onNavigateSection: (section: AppSectionId) => void;
+  onNavigateSection: (section: AppSectionId, subTab?: string) => void;
   isDarkMode: boolean;
   onToggleTheme: () => void;
+  onOpenGlobalSearch: () => void;
+  favoritesCount: number;
 }
 
 const DESKTOP_NAV_ITEMS: { id: AppSectionId; label: string; href: string }[] = [
   { id: 'home', label: 'Inicio', href: '#inicio' },
-  { id: 'fundamentos', label: 'Fundamentos', href: '#fundamentos' },
+  { id: 'galeria', label: 'Galería', href: '#galeria' },
   { id: 'biblioteca', label: 'Biblioteca', href: '#biblioteca' },
   { id: 'laboratorios', label: 'Laboratorios', href: '#laboratorios' },
   { id: 'film-director', label: 'Planificador', href: '#film-director' },
@@ -23,8 +25,14 @@ const MOBILE_NAV_ITEMS: { id: AppSectionId; label: string; subtitle: string; hre
   {
     id: 'home',
     label: 'Inicio · Qué encuentras en la plataforma',
-    subtitle: 'Portada, mapa general y guía rápida de uso',
+    subtitle: 'Portada editorial, 8 colecciones y mapa general',
     href: '#inicio',
+  },
+  {
+    id: 'galeria',
+    label: 'Galería Visual Experimental (8 Colecciones)',
+    subtitle: 'Retrato, Paisaje, Producto, Arte Digital, Moda, Cine, Macro y Video',
+    href: '#galeria',
   },
   {
     id: 'fundamentos',
@@ -34,14 +42,14 @@ const MOBILE_NAV_ITEMS: { id: AppSectionId; label: string; subtitle: string; hre
   },
   {
     id: 'biblioteca',
-    label: '01–26 · Biblioteca Visual',
+    label: '01–26 · Biblioteca Visual y Técnica',
     subtitle: 'Fotografía, cine, óptica, narrativa, 3D y ética',
     href: '#biblioteca',
   },
   {
     id: 'laboratorios',
     label: 'Laboratorios & JSON Visual',
-    subtitle: 'Simuladores de luz, cámara, color y JSON',
+    subtitle: 'Simuladores de luz, cámara, color y extractor JSON',
     href: '#laboratorios',
   },
   {
@@ -52,9 +60,15 @@ const MOBILE_NAV_ITEMS: { id: AppSectionId; label: string; subtitle: string; hre
   },
   {
     id: 'builder',
-    label: 'Constructor Maestro de Prompts',
+    label: 'Constructor de Prompts (12 Módulos)',
     subtitle: 'Arma prompts, exporta PDF/PNG y practica en apps IA',
     href: '#builder',
+  },
+  {
+    id: 'favoritos',
+    label: 'Favoritos y Colecciones Guardadas',
+    subtitle: 'Prompts, fichas y parámetros guardados localmente',
+    href: '#favoritos',
   },
   {
     id: 'academia',
@@ -64,7 +78,7 @@ const MOBILE_NAV_ITEMS: { id: AppSectionId; label: string; subtitle: string; hre
   },
   {
     id: 'recursos',
-    label: 'Recetas, Comandos (180+) & Plantillas',
+    label: 'Recetas, Comandos & Plantillas',
     subtitle: 'Fórmulas rápidas y estructuras universales',
     href: '#recetas',
   },
@@ -75,6 +89,8 @@ export const Header: React.FC<HeaderProps> = ({
   onNavigateSection,
   isDarkMode,
   onToggleTheme,
+  onOpenGlobalSearch,
+  favoritesCount,
 }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -84,25 +100,24 @@ export const Header: React.FC<HeaderProps> = ({
   };
 
   return (
-    <header className="sticky top-0 z-40 w-full backdrop-blur-md bg-[#FAF8F5]/95 dark:bg-stone-950/95 border-b border-stone-200 dark:border-stone-800 transition-colors">
-      <div className="max-w-7xl mx-auto flex items-center justify-between gap-4 lg:gap-6 px-4 sm:px-6 py-3">
-        {/* Zone 1: Brand Wordmark */}
+    <header className="sticky top-0 z-40 w-full backdrop-blur-md bg-[#F4F2ED]/95 dark:bg-[#101014]/95 border-b border-[#DEDAD0] dark:border-[#26262E] transition-colors">
+      <div className="max-w-7xl mx-auto flex items-center justify-between gap-4 xl:gap-6 px-4 sm:px-6 py-3">
+        {/* Zone 1: Single-line Brand Wordmark */}
         <a
           href="#inicio"
           onClick={(e) => {
             e.preventDefault();
             handleSelect('home');
           }}
-          className="text-sm sm:text-base font-bold tracking-tight text-stone-900 dark:text-stone-100 hover:text-amber-600 dark:hover:text-amber-400 transition-colors whitespace-nowrap shrink-0 flex items-center gap-2"
+          className="text-sm sm:text-base font-extrabold tracking-tight text-[#101014] dark:text-[#F4F2ED] hover:text-[#326BFF] dark:hover:text-[#F8C300] transition-colors whitespace-nowrap shrink-0"
         >
-          <span className="w-2.5 h-2.5 bg-amber-500 rounded-none transform rotate-45 shrink-0 inline-block" />
-          <span>NÚCLEO COLECTIVO · PROMPT LAB</span>
+          NÚCLEO COLECTIVO · PROMPT LAB
         </a>
 
         {/* Zone 2: Desktop Single-Line Navigation */}
         <nav
           aria-label="Navegación principal"
-          className="hidden lg:flex items-center gap-4 text-[11px] uppercase tracking-wider font-semibold text-stone-600 dark:text-stone-400"
+          className="hidden lg:flex items-center gap-4 xl:gap-5 text-[11px] uppercase tracking-wider font-semibold text-[#4A4A55] dark:text-[#B4B2AC]"
         >
           {DESKTOP_NAV_ITEMS.map((item) => {
             const isActive = activeSection === item.id;
@@ -117,8 +132,8 @@ export const Header: React.FC<HeaderProps> = ({
                 aria-current={isActive ? 'page' : undefined}
                 className={`py-1.5 border-b-2 transition-colors whitespace-nowrap shrink-0 ${
                   isActive
-                    ? 'border-amber-500 text-stone-950 dark:text-amber-300'
-                    : 'border-transparent hover:text-stone-950 dark:hover:text-stone-100'
+                    ? 'border-[#F8C300] text-[#101014] dark:text-[#F8C300] font-bold'
+                    : 'border-transparent hover:text-[#101014] dark:hover:text-[#F4F2ED]'
                 }`}
               >
                 {item.label}
@@ -127,29 +142,57 @@ export const Header: React.FC<HeaderProps> = ({
           })}
         </nav>
 
-        {/* Zone 3: Theme Toggle + Builder CTA + Mobile Menu Button */}
-        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+        {/* Zone 3: Global Search, Favorites, Theme Toggle & Builder CTA */}
+        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+          <button
+            type="button"
+            onClick={onOpenGlobalSearch}
+            className="p-2 min-h-[40px] min-w-[40px] flex items-center justify-center gap-1.5 text-[#3F3F48] dark:text-[#C8C6BF] hover:text-[#101014] dark:hover:text-[#F8C300] hover:bg-black/5 dark:hover:bg-white/10 rounded-lg transition-colors whitespace-nowrap shrink-0"
+            title="Buscar en galería, módulos y comandos"
+            aria-label="Abrir buscador global"
+          >
+            <Search className="w-4 h-4" />
+            <span className="hidden xl:inline text-xs font-semibold">Buscar</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => handleSelect('favoritos')}
+            className={`px-2.5 py-2 min-h-[40px] flex items-center justify-center gap-1.5 rounded-lg text-xs font-semibold transition-colors whitespace-nowrap shrink-0 ${
+              activeSection === 'favoritos'
+                ? 'bg-[#7545D6] text-white'
+                : 'text-[#3F3F48] dark:text-[#C8C6BF] hover:text-[#7545D6] dark:hover:text-[#F8C300] hover:bg-black/5 dark:hover:bg-white/10'
+            }`}
+            title="Ver prompts y colecciones guardadas"
+            aria-label={`Favoritos (${favoritesCount} guardados)`}
+          >
+            <Bookmark className="w-4 h-4" />
+            <span className="hidden sm:inline font-mono-code tabular-nums">
+              {favoritesCount}
+            </span>
+          </button>
+
           <button
             type="button"
             onClick={onToggleTheme}
-            className="p-2 text-stone-600 dark:text-stone-400 hover:text-stone-950 dark:hover:text-stone-100 hover:bg-stone-200/60 dark:hover:bg-stone-800/60 rounded-md transition-colors"
+            className="p-2 min-h-[40px] min-w-[40px] flex items-center justify-center text-[#3F3F48] dark:text-[#C8C6BF] hover:text-[#101014] dark:hover:text-[#F8C300] hover:bg-black/5 dark:hover:bg-white/10 rounded-lg transition-colors shrink-0"
             title={isDarkMode ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
             aria-label={isDarkMode ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
           >
             {isDarkMode ? (
-              <Sun className="w-4 h-4 text-amber-400" />
+              <Sun className="w-4 h-4 text-[#F8C300]" />
             ) : (
-              <Moon className="w-4 h-4 text-stone-700" />
+              <Moon className="w-4 h-4 text-[#101014]" />
             )}
           </button>
 
           <button
             type="button"
             onClick={() => handleSelect('builder')}
-            className={`px-3 sm:px-4 py-2 text-xs font-semibold uppercase tracking-wider rounded transition-all whitespace-nowrap shrink-0 flex items-center gap-1.5 shadow-xs ${
+            className={`px-3 sm:px-4 py-2 min-h-[40px] text-xs font-bold uppercase tracking-wider rounded-lg transition-all whitespace-nowrap shrink-0 flex items-center gap-1.5 ${
               activeSection === 'builder'
-                ? 'bg-stone-900 dark:bg-amber-300 text-white dark:text-stone-950'
-                : 'bg-amber-400 hover:bg-amber-300 text-stone-950 active:scale-95'
+                ? 'bg-[#101014] dark:bg-[#F4F2ED] text-[#F4F2ED] dark:text-[#101014]'
+                : 'bg-[#F8C300] hover:bg-[#e5b400] text-[#101014] active:scale-95'
             }`}
           >
             <Sparkles className="w-3.5 h-3.5" />
@@ -160,7 +203,7 @@ export const Header: React.FC<HeaderProps> = ({
           <button
             type="button"
             onClick={() => setIsMobileMenuOpen((prev) => !prev)}
-            className="lg:hidden p-2 min-h-[40px] min-w-[40px] flex items-center justify-center rounded-md border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 text-stone-800 dark:text-stone-200 hover:border-amber-500 transition-colors"
+            className="lg:hidden p-2 min-h-[40px] min-w-[40px] flex items-center justify-center rounded-lg border border-[#D4D0C5] dark:border-[#2C2C36] bg-white dark:bg-[#18181F] text-[#101014] dark:text-[#F4F2ED] hover:border-[#F8C300] transition-colors shrink-0"
             aria-expanded={isMobileMenuOpen}
             aria-controls="mobile-nav-drawer"
             aria-label={isMobileMenuOpen ? 'Cerrar menú de navegación' : 'Abrir menú de navegación'}
@@ -175,7 +218,7 @@ export const Header: React.FC<HeaderProps> = ({
         <nav
           id="mobile-nav-drawer"
           aria-label="Menú de secciones móvil"
-          className="lg:hidden border-t border-stone-200 dark:border-stone-800 bg-[#FAF8F5] dark:bg-stone-950 px-4 py-3 space-y-1.5 max-h-[80vh] overflow-y-auto shadow-lg"
+          className="lg:hidden border-t border-[#DEDAD0] dark:border-[#26262E] bg-[#F4F2ED] dark:bg-[#101014] px-4 py-3 space-y-1.5 max-h-[80vh] overflow-y-auto shadow-lg"
         >
           {MOBILE_NAV_ITEMS.map((item) => {
             const isActive = activeSection === item.id;
@@ -190,12 +233,12 @@ export const Header: React.FC<HeaderProps> = ({
                 aria-current={isActive ? 'page' : undefined}
                 className={`block w-full min-h-[44px] px-3.5 py-2.5 rounded-lg border transition-colors ${
                   isActive
-                    ? 'bg-amber-400/20 border-amber-500 text-stone-950 dark:text-amber-300'
-                    : 'bg-white dark:bg-stone-900 border-stone-200 dark:border-stone-800 text-stone-800 dark:text-stone-200 hover:border-amber-400'
+                    ? 'bg-[#F8C300]/20 border-[#F8C300] text-[#101014] dark:text-[#F8C300]'
+                    : 'bg-white dark:bg-[#18181F] border-[#DEDAD0] dark:border-[#26262E] text-[#101014] dark:text-[#F4F2ED] hover:border-[#326BFF]'
                 }`}
               >
                 <div className="text-xs font-bold uppercase tracking-wider">{item.label}</div>
-                <div className="text-[11px] text-stone-500 dark:text-stone-400 mt-0.5">
+                <div className="text-[11px] text-[#5B5B66] dark:text-[#A09E97] mt-0.5">
                   {item.subtitle}
                 </div>
               </a>

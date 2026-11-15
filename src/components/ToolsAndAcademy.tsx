@@ -177,9 +177,36 @@ export const ToolsAndAcademy: React.FC<ToolsAndAcademyProps> = ({ onJumpToSectio
               Explora {AI_TOOLS_DIRECTORY.length} aplicaciones clave —desde Google AI Studio, Gemini, Claude y NotebookLM hasta CapCut, Lovable, Bolt, Runway y Blender— para practicar tus prompts directamente en herramientas reales.
             </p>
           </div>
-          <span className="text-xs font-mono-code text-stone-500 dark:text-stone-400">
-            Directorio actualizado · {AI_TOOLS_DIRECTORY.length} plataformas
-          </span>
+          <div className="flex flex-wrap items-center gap-2 shrink-0 text-xs font-mono-code">
+            <button
+              type="button"
+              onClick={() => onJumpToSection('galeria')}
+              className="px-3 py-1.5 rounded-lg bg-[#FAF8F5] dark:bg-stone-950 border border-stone-300 dark:border-stone-700 hover:border-amber-500 text-stone-800 dark:text-stone-200 font-semibold"
+            >
+              Galería Visual
+            </button>
+            <button
+              type="button"
+              onClick={() => onJumpToSection('laboratorios')}
+              className="px-3 py-1.5 rounded-lg bg-[#FAF8F5] dark:bg-stone-950 border border-stone-300 dark:border-stone-700 hover:border-amber-500 text-stone-800 dark:text-stone-200 font-semibold"
+            >
+              Laboratorios
+            </button>
+            <button
+              type="button"
+              onClick={() => onJumpToSection('film-director')}
+              className="px-3 py-1.5 rounded-lg bg-[#FAF8F5] dark:bg-stone-950 border border-stone-300 dark:border-stone-700 hover:border-amber-500 text-stone-800 dark:text-stone-200 font-semibold"
+            >
+              Director 8 Etapas
+            </button>
+            <button
+              type="button"
+              onClick={() => onJumpToSection('builder')}
+              className="px-3 py-1.5 rounded-lg bg-[#F8C300] text-[#101014] font-bold"
+            >
+              Constructor
+            </button>
+          </div>
         </div>
 
         {/* 3 Main Tabs */}
@@ -529,8 +556,31 @@ export const ToolsAndAcademy: React.FC<ToolsAndAcademyProps> = ({ onJumpToSectio
                         })}
                       </div>
 
-                      <div className="pt-2 border-t border-stone-200 dark:border-stone-800 text-[11px] text-stone-600 dark:text-stone-400">
-                        <strong className="text-stone-800 dark:text-stone-200">Resultado esperado:</strong> {ch.outcome}
+                      <div className="pt-2 border-t border-stone-200 dark:border-stone-800 flex flex-wrap items-center justify-between gap-2 text-[11px] text-stone-600 dark:text-stone-400">
+                        <span>
+                          <strong className="text-stone-800 dark:text-stone-200">Resultado esperado:</strong> {ch.outcome}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            ch.id === 'reto-01'
+                              ? onJumpToSection('biblioteca', 'mod-03')
+                              : ch.id === 'reto-02'
+                              ? onJumpToSection('biblioteca', 'mod-02')
+                              : ch.id === 'reto-03'
+                              ? onJumpToSection('json-lab')
+                              : onJumpToSection('laboratorios')
+                          }
+                          className="font-mono-code font-bold text-[#326BFF] hover:underline shrink-0"
+                        >
+                          {ch.id === 'reto-01'
+                            ? 'Ver Módulo 03 (Luz) →'
+                            : ch.id === 'reto-02'
+                            ? 'Ver Módulo 02 (Óptica) →'
+                            : ch.id === 'reto-03'
+                            ? 'Abrir Lab JSON →'
+                            : 'Practicar en Labs →'}
+                        </button>
                       </div>
                     </div>
                   );

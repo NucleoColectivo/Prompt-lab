@@ -13,6 +13,9 @@ import {
   Scissors,
   Layers,
   ExternalLink,
+  Images,
+  BookOpen,
+  Braces,
 } from 'lucide-react';
 import type { StoryboardSceneItem } from './InteractiveCreativeLabs';
 import type { PromptBuilderState } from './PromptBuilder';
@@ -66,6 +69,9 @@ export interface FilmProjectDossier {
 interface AiFilmDirectorProps {
   onLoadIntoStoryboard: (scenes: StoryboardSceneItem[]) => void;
   onApplyShotToBuilder: (patch: Partial<PromptBuilderState>) => void;
+  onOpenGalleryCine?: () => void;
+  onOpenVideoModule?: () => void;
+  onOpenJsonLab?: () => void;
 }
 
 const SAMPLE_DOSSIER: FilmProjectDossier = {
@@ -296,6 +302,9 @@ const QUICK_IDEAS = [
 export const AiFilmDirector: React.FC<AiFilmDirectorProps> = ({
   onLoadIntoStoryboard,
   onApplyShotToBuilder,
+  onOpenGalleryCine,
+  onOpenVideoModule,
+  onOpenJsonLab,
 }) => {
   const [idea, setIdea] = useState('Quiero hacer un video de 30 segundos sobre la memoria de un barrio y sus oficios');
   const [format, setFormat] = useState('Cortometraje / Video 30s');
@@ -387,8 +396,37 @@ export const AiFilmDirector: React.FC<AiFilmDirectorProps> = ({
               Describe lo que quieres filmar o crear. El planificador organiza el paquete completo en segundos: concepto, guion, storyboard por escenas, fotografía, prompts de imagen y video por toma, sonido y montaje.
             </p>
           </div>
-          <div className="text-xs font-mono-code text-stone-500 dark:text-stone-400">
-            Flujo integral Núcleo Colectivo · Sin API requerida
+          <div className="flex flex-wrap items-center gap-2 shrink-0 text-xs font-mono-code">
+            {onOpenGalleryCine && (
+              <button
+                type="button"
+                onClick={onOpenGalleryCine}
+                className="px-3 py-1.5 rounded-lg bg-white dark:bg-stone-900 border border-stone-300 dark:border-stone-700 hover:border-amber-500 text-stone-800 dark:text-stone-200 inline-flex items-center gap-1.5"
+              >
+                <Images className="w-3.5 h-3.5 text-[#7545D6] dark:text-[#F8C300]" />
+                <span>Galería Cine</span>
+              </button>
+            )}
+            {onOpenVideoModule && (
+              <button
+                type="button"
+                onClick={onOpenVideoModule}
+                className="px-3 py-1.5 rounded-lg bg-white dark:bg-stone-900 border border-stone-300 dark:border-stone-700 hover:border-amber-500 text-stone-800 dark:text-stone-200 inline-flex items-center gap-1.5"
+              >
+                <BookOpen className="w-3.5 h-3.5 text-[#326BFF]" />
+                <span>Módulo 06 Video</span>
+              </button>
+            )}
+            {onOpenJsonLab && (
+              <button
+                type="button"
+                onClick={onOpenJsonLab}
+                className="px-3 py-1.5 rounded-lg bg-white dark:bg-stone-900 border border-stone-300 dark:border-stone-700 hover:border-amber-500 text-stone-800 dark:text-stone-200 inline-flex items-center gap-1.5"
+              >
+                <Braces className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+                <span>Lab JSON</span>
+              </button>
+            )}
           </div>
         </div>
 

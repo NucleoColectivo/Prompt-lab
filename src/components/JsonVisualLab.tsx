@@ -15,6 +15,9 @@ import {
   Sparkles,
   FileCode2,
   ExternalLink,
+  Images,
+  BookOpen,
+  Sliders,
 } from 'lucide-react';
 import {
   JSON_STYLE_PRESETS,
@@ -23,11 +26,16 @@ import {
   FOLDER_STRUCTURE_SUGGESTION,
   JsonStyleProfile,
 } from '../data/videoAndJsonData';
+import type { ModuleId } from '../data/modulesData';
 import { VISUAL_LIBRARY_PATHS } from '../data/visualLibraryRegistry';
 import { ResilientImage } from './ResilientImage';
 
 interface JsonVisualLabProps {
+  externalProfile?: JsonStyleProfile | null;
   onApplyStyleToBuilder: (profile: JsonStyleProfile) => void;
+  onOpenGallery?: () => void;
+  onOpenLibraryModule?: (moduleId: ModuleId) => void;
+  onOpenLabs?: () => void;
 }
 
 const FAV_JSON_KEY = 'nc_fav_json_styles_v1';
@@ -212,12 +220,25 @@ preservation:
   keep_natural_pose: ${profile.preservation.keep_natural_pose}`;
 }
 
-export const JsonVisualLab: React.FC<JsonVisualLabProps> = ({ onApplyStyleToBuilder }) => {
+export const JsonVisualLab: React.FC<JsonVisualLabProps> = ({
+  externalProfile,
+  onApplyStyleToBuilder,
+  onOpenGallery,
+  onOpenLibraryModule,
+  onOpenLabs,
+}) => {
   const [activeProfile, setActiveProfile] = useState<JsonStyleProfile>(JSON_STYLE_PRESETS[0]);
   const [compareProfileId, setCompareProfileId] = useState<string>(JSON_STYLE_PRESETS[2].id);
   const [showCompare, setShowCompare] = useState(false);
   const [outputFormat, setOutputFormat] = useState<'json' | 'yaml'>('json');
   const [activeTab, setActiveTab] = useState<'editor' | 'prompts' | 'troubleshooting'>('editor');
+
+  useEffect(() => {
+    if (externalProfile) {
+      setActiveProfile(externalProfile);
+      setActiveTab('editor');
+    }
+  }, [externalProfile]);
 
   // Image Upload + Local Canvas Analyzer State
   const [uploadedPreview, setUploadedPreview] = useState<string | null>(null);
@@ -239,6 +260,9 @@ export const JsonVisualLab: React.FC<JsonVisualLabProps> = ({ onApplyStyleToBuil
   useEffect(() => {
     try {
       localStorage.setItem(FAV_JSON_KEY, JSON.stringify(savedFavorites));
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('nc-favorites-updated'));
+      }
     } catch {
       // ignore quota issues
     }
@@ -396,6 +420,46 @@ export const JsonVisualLab: React.FC<JsonVisualLabProps> = ({ onApplyStyleToBuil
                   Copia el prompt de transferencia conservando rostro y postura natural.
                 </p>
               </div>
+            </div>
+
+            {/* Cross-links bar */}
+            <div className="flex flex-wrap items-center gap-3 pt-2 text-xs font-mono-code">
+              {onOpenGallery && (
+                <button
+                  type="button"
+                  onClick={onOpenGallery}
+                  className="text-[#7545D6] dark:text-[#F8C300] hover:underline inline-flex items-center gap-1 font-semibold"
+                >
+                  <Images className="w-3.5 h-3.5" />
+                  <span>Tomar referente de Galería</span>
+                </button>
+              )}
+              {onOpenLibraryModule && (
+                <>
+                  <span className="text-stone-300 dark:text-stone-700">·</span>
+                  <button
+                    type="button"
+                    onClick={() => onOpenLibraryModule('mod-07')}
+                    className="text-[#326BFF] hover:underline inline-flex items-center gap-1 font-semibold"
+                  >
+                    <BookOpen className="w-3.5 h-3.5" />
+                    <span>Ver fichas Módulo 07 (Storytelling / JSON)</span>
+                  </button>
+                </>
+              )}
+              {onOpenLabs && (
+                <>
+                  <span className="text-stone-300 dark:text-stone-700">·</span>
+                  <button
+                    type="button"
+                    onClick={onOpenLabs}
+                    className="text-stone-700 dark:text-stone-300 hover:underline inline-flex items-center gap-1 font-semibold"
+                  >
+                    <Sliders className="w-3.5 h-3.5" />
+                    <span>Ir a 5 Laboratorios</span>
+                  </button>
+                </>
+              )}
             </div>
           </div>
 

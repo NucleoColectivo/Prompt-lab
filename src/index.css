@@ -2,16 +2,44 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 @layer base {
-  body {
-    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  :root {
+    --nc-graphite: #101014;
+    --nc-warm-white: #F4F2ED;
+    --nc-yellow: #F8C300;
+    --nc-violet: #7545D6;
+    --nc-blue: #326BFF;
   }
-  
+
+  body {
+    font-family: 'Montserrat', system-ui, -apple-system, sans-serif;
+    background-color: #F4F2ED;
+    color: #101014;
+  }
+
+  .dark body {
+    background-color: #101014;
+    color: #F4F2ED;
+  }
+
   .font-serif-title {
     font-family: 'Playfair Display', Georgia, serif;
   }
 
+  .font-display-sans {
+    font-family: 'Montserrat', system-ui, sans-serif;
+  }
+
   .font-mono-code {
     font-family: 'JetBrains Mono', monospace;
+    font-variant-numeric: tabular-nums;
   }
 }
 
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

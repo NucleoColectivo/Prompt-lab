@@ -1,5 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Sliders, Braces, BookOpen, Compass, FileText } from 'lucide-react';
+import {
+  Sliders,
+  Braces,
+  BookOpen,
+  Compass,
+  FileText,
+} from 'lucide-react';
 import { Header } from './components/Header';
 import { Hero } from './components/Hero';
 import { HomeView } from './components/HomeView';
@@ -17,9 +23,14 @@ import { Footer } from './components/Footer';
 import { CommandDetailModal } from './components/CommandDetailModal';
 import { WorkshopExporterModal } from './components/WorkshopExporterModal';
 import { WelcomeWizardModal } from './components/WelcomeWizardModal';
+import { VisualGalleryView } from './components/VisualGalleryView';
+import { GlobalSearchModal } from './components/GlobalSearchModal';
+import { FavoritesVaultView } from './components/FavoritesVaultView';
 import { CommandItem, RECIPES } from './data/promptData';
 import { LibraryEntry, ModuleId } from './data/modulesData';
 import { JsonStyleProfile } from './data/videoAndJsonData';
+import { VisualAssetRecord } from './data/visualLibraryRegistry';
+import { GalleryVisualItem } from './data/galleryCollectionsData';
 import type { AppSectionId, LabSubSection, ResourceSubSection } from './types/navigation';
 
 function resolveRouteFromHash(hashValue: string): {
@@ -29,6 +40,10 @@ function resolveRouteFromHash(hashValue: string): {
 } {
   const clean = hashValue.replace(/^#/, '').toLowerCase();
   switch (clean) {
+    case 'galeria':
+      return { section: 'galeria' };
+    case 'favoritos':
+      return { section: 'favoritos' };
     case 'fundamentos':
       return { section: 'fundamentos' };
     case 'biblioteca':
@@ -74,6 +89,17 @@ export default function App() {
   );
 
   const [activeLibraryModule, setActiveLibraryModule] = useState<ModuleId>('mod-01');
+  const [activeGalleryCollection, setActiveGalleryCollection] = useState<string>('Todas');
+  const [isGlobalSearchOpen, setIsGlobalSearchOpen] = useState(false);
+  const [favoritesRevision, setFavoritesRevision] = useState(0);
+  const [galleryFavorites, setGalleryFavorites] = useState<string[]>(() => {
+    try {
+      const raw = localStorage.getItem('nc_fav_gallery_v1');
+      return raw ? JSON.parse(raw) : [];
+    } catch {
+      return [];
+    }
+  });
   const [selectedCommandForModal, setSelectedCommandForModal] = useState<CommandItem | null>(null);
   const [isExporterOpen, setIsExporterOpen] = useState(false);
   const [isWelcomeWizardOpen, setIsWelcomeWizardOpen] = useState<boolean>(() => {
@@ -84,13 +110,57 @@ export default function App() {
     }
   });
   const [externalStoryboardScenes, setExternalStoryboardScenes] = useState<StoryboardSceneItem[]>([]);
+  const [externalJsonProfile, setExternalJsonProfile] = useState<JsonStyleProfile | null>(null);
 
-  // Builder State
+  useEffect(() => {
+    try {
+      localStorage.setItem('nc_fav_gallery_v1', JSON.stringify(galleryFavorites));
+    } catch {
+      // Ignore storage errors inside restricted contexts
+    }
+  }, [galleryFavorites]);
+
+  useEffect(() => {
+    const handleSync = () => setFavoritesRevision((r) => r + 1);
+    window.addEventListener('nc-favorites-updated', handleSync);
+    window.addEventListener('storage', handleSync);
+    return () => {
+      window.removeEventListener('nc-favorites-updated', handleSync);
+      window.removeEventListener('storage', handleSync);
+    };
+  }, []);
+
+  const toggleGalleryFavorite = useCallback((assetId: string) => {
+    setGalleryFavorites((prev) =>
+      prev.includes(assetId) ? prev.filter((id) => id !== assetId) : [...prev, assetId]
+    );
+  }, []);
+
+  const computeFavoritesCount = () => {
+    void favoritesRevision;
+    let total = galleryFavorites.length;
+    try {
+      const rawFichas = localStorage.getItem('nc_fav_fichas_v1');
+      const rawPrompts = localStorage.getItem('nc_fav_prompts_v1');
+      const rawJsonStyles =
+        localStorage.getItem('nc_fav_json_styles_v1') || localStorage.getItem('nc_fav_json_v1');
+      if (rawFichas) total += JSON.parse(rawFichas).length;
+      if (rawPrompts) total += JSON.parse(rawPrompts).length;
+      if (rawJsonStyles) total += JSON.parse(rawJsonStyles).length;
+    } catch {
+      // ignore parse errors
+    }
+    return total;
+  };
+  const favoritesCount = computeFavoritesCount();
+
+  // Builder State (12 Progressive Modules)
   const [builderState, setBuilderState] = useState<PromptBuilderState>({
     mode: 'photo',
     subject: '',
     action: '',
     setting: '',
+    composition: 'Regla de tercios equilibrada',
     genre: '/editorial',
     camera: 'Hasselblad X2D (Medio Formato)',
     lens: '85mm portrait prime lens',
@@ -101,7 +171,7 @@ export default function App() {
     colorPalette: 'Teal and orange cinematic grading with warm skin and cool shadows',
     temperature: 'Neutra equilibrada (5500K)',
     atmosphere: 'Aire limpio natural',
-    visualStyle: 'Neo Noir',
+    visualStyle: 'Editorial Contemporáneo',
     motion: 'Slow smooth dolly-in moving physically towards the subject',
     fps: '24 fps',
     duration: '6–8 segundos',
@@ -178,13 +248,77 @@ export default function App() {
     []
   );
 
+  const openGallery = (collection = 'Todas') => {
+    setActiveGalleryCollection(collection);
+    navigateToSection('galeria');
+  };
+
   const scrollToBuilder = () => navigateToSection('builder');
   const scrollToDictionary = () => navigateToSection('biblioteca');
 
-  const scrollToVideoLab = () => {
-    setActiveLibraryModule('mod-06');
-    setBuilderState((prev) => ({ ...prev, mode: 'video' }));
-    navigateToSection('biblioteca');
+  const handleApplyGalleryItemToBuilder = (item: GalleryVisualItem) => {
+    setBuilderState((prev) => ({
+      ...prev,
+      mode: item.mediaType === 'video' ? 'video' : 'photo',
+      subject: item.promptEs,
+      composition: item.specs.composition,
+      camera: item.specs.camera,
+      lens: item.specs.lens,
+      aperture: item.specs.aperture,
+      lighting: item.specs.lighting,
+      colorPalette: item.specs.color,
+      atmosphere: item.specs.atmosphere,
+      texture: item.specs.texture,
+      visualStyle: item.style,
+      aspectRatio: item.aspectRatio,
+      negativeAvoid: item.negativePrompt
+        .split(',')
+        .map((s) => s.trim())
+        .filter(Boolean),
+    }));
+    navigateToSection('builder');
+  };
+
+  const handleSendGalleryItemToJsonLab = (item: GalleryVisualItem) => {
+    const profile: JsonStyleProfile = {
+      id: `gal-${item.id}`,
+      style_name: `${item.title} (${item.style})`,
+      category: item.collection,
+      photography: `${item.technique} — referencia estética sin EXIF inventado`,
+      camera: item.specs.camera,
+      lens: item.specs.lens,
+      aperture: item.specs.aperture,
+      lighting: item.specs.lighting,
+      composition: item.specs.composition,
+      color: item.specs.color,
+      focus: 'Nítido sobre sujeto principal con transición óptica orgánica',
+      depth_of_field:
+        item.specs.aperture.includes('1.4') || item.specs.aperture.includes('1.8')
+          ? 'Baja (separación suave del fondo)'
+          : 'Media equilibrada con contexto visible',
+      texture: item.specs.texture,
+      atmosphere: item.specs.atmosphere,
+      background: item.description,
+      post_processing: 'Gradación tonal coherente sin saturación artificial ni piel plástica',
+      observable_notes: item.technicalExplanation,
+      preservation: {
+        keep_subject_identity: true,
+        keep_facial_features: true,
+        keep_natural_pose: true,
+      },
+    };
+    setExternalJsonProfile(profile);
+    navigateToSection('laboratorios', 'json');
+  };
+
+  const handleApplyAssetToBuilder = (asset: VisualAssetRecord) => {
+    setBuilderState((prev) => ({
+      ...prev,
+      mode: asset.category === 'Cinematografía y Video' ? 'video' : 'photo',
+      subject: asset.prompt,
+      visualStyle: asset.title,
+    }));
+    navigateToSection('builder');
   };
 
   const handleJumpToSection = (sectionId: string, moduleId?: ModuleId) => {
@@ -309,28 +443,30 @@ export default function App() {
   // Generate current prompt string for exporter
   const currentPromptText =
     builderState.mode === 'video'
-      ? `MASTER VIDEO PROMPT — CINEMATOGRAPHY & MOTION\n01. SCENE & SUBJECT: ${builderState.subject || 'Cinematic sequence of an artwork in a contemporary gallery'}.\n02. GENRE: ${builderState.genre}.\n03. CAMERA: Shot on ${builderState.camera}, ${builderState.lens}, ${builderState.aperture}.\n04. CAMERA MOVEMENT: ${builderState.motion}.\n05. LIGHTING: ${builderState.lighting}.\n06. COLOR SCIENCE: ${builderState.colorPalette}.\n07. OUTPUT: Aspect ratio ${builderState.aspectRatio}.\n08. AVOID: ${builderState.negativeAvoid.join(', ')}.`
-      : `MASTER PROMPT — PHOTOGRAPHY & VISUAL ART\n01. SUBJECT: ${builderState.subject || 'A sculptural luxury object on dark mineral stone'}.\n02. GENRE: ${builderState.genre}.\n03. CAMERA: Shot on ${builderState.camera}.\n04. OPTICS: ${builderState.lens}, ${builderState.aperture}.\n05. LIGHTING: ${builderState.lighting}.\n06. COLOR: ${builderState.colorPalette}.\n07. OUTPUT: Aspect ratio ${builderState.aspectRatio}.\n08. AVOID: ${builderState.negativeAvoid.join(', ')}.`;
+      ? `MASTER VIDEO PROMPT — 12 MÓDULOS\n01. SUJETO: ${builderState.subject || 'Cinematic sequence of an artwork in a contemporary gallery'}.\n02. COMPOSICIÓN: ${builderState.composition || 'Regla de tercios equilibrada'} · ${builderState.shotSize || 'Plano Medio (MS)'}.\n03. GÉNERO: ${builderState.genre}.\n04. CÁMARA: Shot on ${builderState.camera}, ${builderState.lens}, ${builderState.aperture}.\n05. MOVIMIENTO: ${builderState.motion}.\n06. ILUMINACIÓN: ${builderState.lighting}.\n07. COLOR: ${builderState.colorPalette}.\n08. FORMATO: Aspect ratio ${builderState.aspectRatio}.\n09. NEGATIVAS: ${builderState.negativeAvoid.join(', ')}.`
+      : `MASTER PROMPT — 12 MÓDULOS\n01. SUJETO: ${builderState.subject || 'A sculptural luxury object on dark mineral stone'}.\n02. COMPOSICIÓN: ${builderState.composition || 'Regla de tercios equilibrada'} · ${builderState.shotSize || 'Plano Medio (MS)'}.\n03. GÉNERO: ${builderState.genre}.\n04. CÁMARA: Shot on ${builderState.camera}.\n05. ÓPTICA: ${builderState.lens}, ${builderState.aperture}.\n06. ILUMINACIÓN: ${builderState.lighting}.\n07. COLOR: ${builderState.colorPalette}.\n08. FORMATO: Aspect ratio ${builderState.aspectRatio}.\n09. NEGATIVAS: ${builderState.negativeAvoid.join(', ')}.`;
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#FAF8F5] text-stone-900 dark:bg-stone-950 dark:text-stone-100 transition-colors">
+    <div className="min-h-screen flex flex-col bg-[#F4F2ED] text-[#101014] dark:bg-[#101014] dark:text-[#F4F2ED] transition-colors">
       {/* Top Bar Navigation */}
       <Header
         activeSection={activeSection}
-        onNavigateSection={(sec) => navigateToSection(sec)}
+        onNavigateSection={(sec, sub) => navigateToSection(sec, sub)}
         isDarkMode={isDarkMode}
         onToggleTheme={toggleTheme}
+        onOpenGlobalSearch={() => setIsGlobalSearchOpen(true)}
+        favoritesCount={favoritesCount}
       />
 
       {/* Active Workspace Section View */}
       <main className="flex-1">
-        {/* 0. HOME CLARO (Portada Full-Screen + Explicación completa de lo que se encuentra en la página) */}
+        {/* 0. HOME EDITORIAL */}
         {activeSection === 'home' && (
           <>
             <Hero
+              onOpenGallery={() => openGallery('Todas')}
               onScrollToBuilder={scrollToBuilder}
               onScrollToDictionary={scrollToDictionary}
-              onScrollToVideo={scrollToVideoLab}
               onExploreGuide={() => {
                 const el = document.getElementById('que-encuentras');
                 if (el) el.scrollIntoView({ behavior: 'smooth' });
@@ -338,12 +474,33 @@ export default function App() {
             />
             <HomeView
               onNavigateSection={navigateToSection}
+              onOpenGalleryCollection={(col) => openGallery(col)}
               onOpenWelcomeWizard={() => setIsWelcomeWizardOpen(true)}
             />
           </>
         )}
 
-        {/* 1. SECCIÓN FUNDAMENTOS (Módulo 00: ¿Qué es un Prompt?) */}
+        {/* 1. GALERÍA VISUAL EXPERIMENTAL (Prioridad #1 — Masonry / Asimétrica + 8 Colecciones + Lightbox) */}
+        {activeSection === 'galeria' && (
+          <VisualGalleryView
+            activeCollection={activeGalleryCollection}
+            onChangeCollection={setActiveGalleryCollection}
+            favorites={galleryFavorites}
+            onToggleFavorite={toggleGalleryFavorite}
+            onExperimentInBuilder={(patch) => {
+              setBuilderState((prev) => ({ ...prev, ...patch }));
+              navigateToSection('builder');
+            }}
+            onOpenTechnicalModule={(modId) => {
+              setActiveLibraryModule(modId);
+              navigateToSection('biblioteca');
+            }}
+            onAnalyzeInJsonLab={handleSendGalleryItemToJsonLab}
+            onOpenLabs={() => navigateToSection('laboratorios', 'labs')}
+          />
+        )}
+
+        {/* 2. SECCIÓN FUNDAMENTOS (Módulo 00: ¿Qué es un Prompt?) */}
         {activeSection === 'fundamentos' && (
           <PromptFundamentals
             onJumpToSection={handleJumpToSection}
@@ -351,21 +508,24 @@ export default function App() {
           />
         )}
 
-        {/* 2. SECCIÓN BIBLIOTECA VISUAL (Módulos 01–26) */}
+        {/* 3. SECCIÓN BIBLIOTECA VISUAL (Módulos 01–26) */}
         {activeSection === 'biblioteca' && (
           <VisualLibraryExplorer
             activeModule={activeLibraryModule}
             onChangeModule={setActiveLibraryModule}
             onApplyEntryToBuilder={handleApplyLibraryEntryToBuilder}
+            onOpenGalleryCollection={(col) => openGallery(col)}
+            onOpenJsonLab={() => navigateToSection('laboratorios', 'json')}
+            onOpenLabs={() => navigateToSection('laboratorios', 'labs')}
           />
         )}
 
-        {/* 3. SECCIÓN LABORATORIOS (5 Laboratorios Creativos + Laboratorio JSON Visual) */}
+        {/* 4. SECCIÓN LABORATORIOS (5 Laboratorios Creativos + Laboratorio JSON Visual) */}
         {activeSection === 'laboratorios' && (
           <div>
-            <div className="bg-white dark:bg-stone-900 border-b border-stone-200 dark:border-stone-800">
+            <div className="bg-white dark:bg-[#16161C] border-b border-[#DEDAD0] dark:border-[#26262E]">
               <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex flex-wrap items-center justify-between gap-3">
-                <div className="flex items-center gap-2 text-xs font-mono-code uppercase tracking-wider text-stone-600 dark:text-stone-400 font-bold">
+                <div className="flex items-center gap-2 text-xs font-mono-code uppercase tracking-wider text-[#4A4A55] dark:text-[#A09E97] font-bold">
                   <span>ESTACIÓN DE LABORATORIOS</span>
                 </div>
                 <div className="flex flex-wrap gap-2">
@@ -374,8 +534,8 @@ export default function App() {
                     onClick={() => navigateToSection('laboratorios', 'labs')}
                     className={`px-4 py-2 text-xs font-semibold uppercase tracking-wider rounded-lg border transition-colors flex items-center gap-2 ${
                       activeLabSub === 'labs'
-                        ? 'bg-amber-400 text-stone-950 border-amber-400 font-bold'
-                        : 'bg-[#FAF8F5] dark:bg-stone-950 text-stone-700 dark:text-stone-300 border-stone-200 dark:border-stone-800 hover:border-amber-500'
+                        ? 'bg-[#F8C300] text-[#101014] border-[#F8C300] font-bold'
+                        : 'bg-[#F4F2ED] dark:bg-[#101014] text-[#101014] dark:text-[#F4F2ED] border-[#DEDAD0] dark:border-[#26262E] hover:border-[#326BFF]'
                     }`}
                   >
                     <Sliders className="w-3.5 h-3.5" />
@@ -386,8 +546,8 @@ export default function App() {
                     onClick={() => navigateToSection('laboratorios', 'json')}
                     className={`px-4 py-2 text-xs font-semibold uppercase tracking-wider rounded-lg border transition-colors flex items-center gap-2 ${
                       activeLabSub === 'json'
-                        ? 'bg-amber-400 text-stone-950 border-amber-400 font-bold'
-                        : 'bg-[#FAF8F5] dark:bg-stone-950 text-stone-700 dark:text-stone-300 border-stone-200 dark:border-stone-800 hover:border-amber-500'
+                        ? 'bg-[#F8C300] text-[#101014] border-[#F8C300] font-bold'
+                        : 'bg-[#F4F2ED] dark:bg-[#101014] text-[#101014] dark:text-[#F4F2ED] border-[#DEDAD0] dark:border-[#26262E] hover:border-[#326BFF]'
                     }`}
                   >
                     <Braces className="w-3.5 h-3.5" />
@@ -405,14 +565,29 @@ export default function App() {
                   if (shouldSwitch) navigateToSection('builder');
                 }}
                 onJumpToJsonLab={() => navigateToSection('laboratorios', 'json')}
+                onOpenGallery={(col = 'Todas') => openGallery(col)}
+                onOpenDirector={() => navigateToSection('film-director')}
+                onOpenLibraryModule={(modId) => {
+                  setActiveLibraryModule(modId);
+                  navigateToSection('biblioteca');
+                }}
               />
             ) : (
-              <JsonVisualLab onApplyStyleToBuilder={handleApplyJsonStyleToBuilder} />
+              <JsonVisualLab
+                externalProfile={externalJsonProfile}
+                onApplyStyleToBuilder={handleApplyJsonStyleToBuilder}
+                onOpenGallery={() => openGallery('Todas')}
+                onOpenLibraryModule={(modId) => {
+                  setActiveLibraryModule(modId);
+                  navigateToSection('biblioteca');
+                }}
+                onOpenLabs={() => navigateToSection('laboratorios', 'labs')}
+              />
             )}
           </div>
         )}
 
-        {/* 4. SECCIÓN PLANIFICADOR AUDIOVISUAL (8 ETAPAS) */}
+        {/* 5. SECCIÓN PLANIFICADOR AUDIOVISUAL (8 ETAPAS) */}
         {activeSection === 'film-director' && (
           <AiFilmDirector
             onLoadIntoStoryboard={(scenes) => {
@@ -423,10 +598,16 @@ export default function App() {
               setBuilderState((prev) => ({ ...prev, ...patch }));
               navigateToSection('builder');
             }}
+            onOpenGalleryCine={() => openGallery('06. Cine')}
+            onOpenVideoModule={() => {
+              setActiveLibraryModule('mod-06');
+              navigateToSection('biblioteca');
+            }}
+            onOpenJsonLab={() => navigateToSection('laboratorios', 'json')}
           />
         )}
 
-        {/* 5. SECCIÓN CONSTRUCTOR MAESTRO DE PROMPTS */}
+        {/* 6. SECCIÓN CONSTRUCTOR MAESTRO DE PROMPTS */}
         {activeSection === 'builder' && (
           <PromptBuilder
             builderState={builderState}
@@ -435,17 +616,40 @@ export default function App() {
           />
         )}
 
-        {/* 6. SECCIÓN ACADEMIA, APPS EXTERNAS (31) Y RETOS */}
+        {/* 7. SECCIÓN FAVORITOS Y COLECCIONES GUARDADAS (Centro Unificado) */}
+        {activeSection === 'favoritos' && (
+          <FavoritesVaultView
+            galleryFavorites={galleryFavorites}
+            onToggleGalleryFavorite={toggleGalleryFavorite}
+            onOpenGallery={(col = 'Todas') => openGallery(col)}
+            onApplyGalleryItemToBuilder={handleApplyGalleryItemToBuilder}
+            onApplyAssetToBuilder={handleApplyAssetToBuilder}
+            onOpenLibraryModule={(modId) => {
+              setActiveLibraryModule(modId);
+              navigateToSection('biblioteca');
+            }}
+            onApplyLibraryEntryToBuilder={handleApplyLibraryEntryToBuilder}
+            onLoadBuilderState={(state) => {
+              setBuilderState(state);
+              navigateToSection('builder');
+            }}
+            onApplyJsonStyleToBuilder={handleApplyJsonStyleToBuilder}
+            onOpenJsonLab={() => navigateToSection('laboratorios', 'json')}
+            onOpenInteractiveLabs={() => navigateToSection('laboratorios', 'labs')}
+          />
+        )}
+
+        {/* 8. SECCIÓN ACADEMIA, APPS EXTERNAS (31) Y RETOS */}
         {activeSection === 'academia' && (
           <ToolsAndAcademy onJumpToSection={handleJumpToSection} />
         )}
 
-        {/* 7. SECCIÓN RECURSOS (Recetas Maestras, Diccionario 180+, Plantillas Universales) */}
+        {/* 9. SECCIÓN RECURSOS (Recetas Maestras, Diccionario, Plantillas Universales) */}
         {activeSection === 'recursos' && (
           <div>
-            <div className="bg-white dark:bg-stone-900 border-b border-stone-200 dark:border-stone-800">
+            <div className="bg-white dark:bg-[#16161C] border-b border-[#DEDAD0] dark:border-[#26262E]">
               <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex flex-wrap items-center justify-between gap-3">
-                <div className="text-xs font-mono-code uppercase tracking-wider text-stone-600 dark:text-stone-400 font-bold">
+                <div className="text-xs font-mono-code uppercase tracking-wider text-[#4A4A55] dark:text-[#A09E97] font-bold">
                   ARCHIVO Y RECURSOS PRÁCTICOS
                 </div>
                 <div className="flex flex-wrap gap-2">
@@ -457,7 +661,7 @@ export default function App() {
                     },
                     {
                       id: 'diccionario' as ResourceSubSection,
-                      label: 'Diccionario de Comandos (180+)',
+                      label: 'Diccionario de Comandos',
                       icon: <Compass className="w-3.5 h-3.5" />,
                     },
                     {
@@ -472,8 +676,8 @@ export default function App() {
                       onClick={() => navigateToSection('recursos', tab.id)}
                       className={`px-4 py-2 text-xs font-semibold uppercase tracking-wider rounded-lg border transition-colors flex items-center gap-2 ${
                         activeResourceSub === tab.id
-                          ? 'bg-amber-400 text-stone-950 border-amber-400 font-bold'
-                          : 'bg-[#FAF8F5] dark:bg-stone-950 text-stone-700 dark:text-stone-300 border-stone-200 dark:border-stone-800 hover:border-amber-500'
+                          ? 'bg-[#F8C300] text-[#101014] border-[#F8C300] font-bold'
+                          : 'bg-[#F4F2ED] dark:bg-[#101014] text-[#101014] dark:text-[#F4F2ED] border-[#DEDAD0] dark:border-[#26262E] hover:border-[#326BFF]'
                       }`}
                     >
                       {tab.icon}
@@ -500,6 +704,22 @@ export default function App() {
 
       {/* Footer with Full Section Navigation */}
       <Footer onNavigateSection={navigateToSection} />
+
+      {/* Buscador Global Modal (Galería + 26 Módulos + Comandos + Recetas) */}
+      <GlobalSearchModal
+        isOpen={isGlobalSearchOpen}
+        onClose={() => setIsGlobalSearchOpen(false)}
+        onSelectGalleryToBuilder={handleApplyGalleryItemToBuilder}
+        onOpenGalleryCollection={(col) => openGallery(col)}
+        onOpenLibraryModule={(modId) => {
+          setActiveLibraryModule(modId);
+          navigateToSection('biblioteca');
+        }}
+        onApplyLibraryEntryToBuilder={handleApplyLibraryEntryToBuilder}
+        onAddCommandToBuilder={handleAddCommandToBuilder}
+        onSelectCommandForModal={(cmd) => setSelectedCommandForModal(cmd)}
+        onLoadRecipeToBuilder={handleLoadRecipeToBuilder}
+      />
 
       {/* Command Details Modal */}
       <CommandDetailModal

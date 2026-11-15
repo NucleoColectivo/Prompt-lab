@@ -19,6 +19,8 @@ import {
   Send,
   Sparkles,
   Eye,
+  Images,
+  BookOpen,
 } from 'lucide-react';
 import { TechnicalDiagramSVG } from './VisualDiagrams';
 import {
@@ -27,7 +29,7 @@ import {
 } from '../data/visualLibraryRegistry';
 import { ResilientImage } from './ResilientImage';
 import type { PromptBuilderState } from './PromptBuilder';
-import type { DiagramConfig } from '../data/modulesData';
+import type { DiagramConfig, ModuleId } from '../data/modulesData';
 
 export interface StoryboardSceneItem {
   id: string;
@@ -44,6 +46,9 @@ interface InteractiveCreativeLabsProps {
   externalStoryboardScenes?: StoryboardSceneItem[];
   onApplyToBuilder: (patch: Partial<PromptBuilderState>, scrollToBuilder?: boolean) => void;
   onJumpToJsonLab: () => void;
+  onOpenGallery?: (collection?: string) => void;
+  onOpenDirector?: () => void;
+  onOpenLibraryModule?: (moduleId: ModuleId) => void;
 }
 
 type LabTabId = 'comparator' | 'storyboard' | 'lighting' | 'camera' | 'color';
@@ -161,6 +166,9 @@ export const InteractiveCreativeLabs: React.FC<InteractiveCreativeLabsProps> = (
   externalStoryboardScenes,
   onApplyToBuilder,
   onJumpToJsonLab,
+  onOpenGallery,
+  onOpenDirector,
+  onOpenLibraryModule,
 }) => {
   const [activeLab, setActiveLab] = useState<LabTabId>('comparator');
   const [copiedId, setCopiedId] = useState<string | null>(null);
@@ -461,14 +469,58 @@ export const InteractiveCreativeLabs: React.FC<InteractiveCreativeLabsProps> = (
             </p>
           </div>
 
-          <button
-            type="button"
-            onClick={onJumpToJsonLab}
-            className="px-4 py-2 text-xs font-semibold uppercase tracking-wider bg-stone-900 dark:bg-stone-800 text-amber-300 hover:bg-stone-800 rounded flex items-center gap-1.5 shrink-0 transition-colors"
-          >
-            <Braces className="w-3.5 h-3.5" />
-            <span>Lab F · Analizador Visual JSON</span>
-          </button>
+          <div className="flex flex-wrap items-center gap-2 shrink-0">
+            {onOpenGallery && (
+              <button
+                type="button"
+                onClick={() => onOpenGallery('Todas')}
+                className="px-3.5 py-2 text-xs font-semibold uppercase tracking-wider bg-white dark:bg-stone-950 border border-stone-300 dark:border-stone-700 hover:border-amber-500 text-stone-800 dark:text-stone-200 rounded flex items-center gap-1.5 transition-colors"
+              >
+                <Images className="w-3.5 h-3.5 text-[#7545D6] dark:text-[#F8C300]" />
+                <span>Galería</span>
+              </button>
+            )}
+            {onOpenDirector && (
+              <button
+                type="button"
+                onClick={onOpenDirector}
+                className="px-3.5 py-2 text-xs font-semibold uppercase tracking-wider bg-white dark:bg-stone-950 border border-stone-300 dark:border-stone-700 hover:border-amber-500 text-stone-800 dark:text-stone-200 rounded flex items-center gap-1.5 transition-colors"
+              >
+                <Clapperboard className="w-3.5 h-3.5 text-[#326BFF]" />
+                <span>Director (8 Etapas)</span>
+              </button>
+            )}
+            {onOpenLibraryModule && (
+              <button
+                type="button"
+                onClick={() =>
+                  onOpenLibraryModule(
+                    activeLab === 'lighting'
+                      ? 'mod-03'
+                      : activeLab === 'camera'
+                      ? 'mod-02'
+                      : activeLab === 'color'
+                      ? 'mod-04'
+                      : activeLab === 'storyboard'
+                      ? 'mod-08'
+                      : 'mod-01'
+                  )
+                }
+                className="px-3.5 py-2 text-xs font-semibold uppercase tracking-wider bg-white dark:bg-stone-950 border border-stone-300 dark:border-stone-700 hover:border-amber-500 text-stone-800 dark:text-stone-200 rounded flex items-center gap-1.5 transition-colors"
+              >
+                <BookOpen className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+                <span>Módulo Teórico</span>
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={onJumpToJsonLab}
+              className="px-4 py-2 text-xs font-semibold uppercase tracking-wider bg-stone-900 dark:bg-stone-800 text-amber-300 hover:bg-stone-800 rounded flex items-center gap-1.5 transition-colors"
+            >
+              <Braces className="w-3.5 h-3.5" />
+              <span>Lab F · JSON Visual</span>
+            </button>
+          </div>
         </div>
 
         {/* 5 Sub-Lab Navigation Tabs */}
