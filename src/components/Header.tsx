@@ -50,8 +50,8 @@ const MOBILE_NAV_ITEMS: { id: AppSectionId; label: string; subtitle: string; hre
   },
   {
     id: 'laboratorios',
-    label: 'Laboratorios Creativos (7 Estudios)',
-    subtitle: 'Mi Primera Imagen, Dibujo a Imagen, Restauración, Producto, Web IA, Simuladores y JSON',
+    label: 'Laboratorios Creativos (8 Estudios)',
+    subtitle: 'Mi Primera Imagen, Dibujo, Restauración, Producto, Web IA, Interactivo/Videoarte, Simuladores y JSON',
     href: '#laboratorios',
   },
   {

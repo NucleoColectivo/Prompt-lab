@@ -18,6 +18,7 @@ export type LabSubSection =
   | 'restauracion'
   | 'producto'
   | 'web'
+  | 'interactivo'
   | 'labs'
   | 'json';
 

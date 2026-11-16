@@ -85,11 +85,20 @@ export const Footer: React.FC<FooterProps> = ({ onNavigateSection }) => {
               </li>
               <li>
                 <a
+                  href="#interactivo"
+                  onClick={(e) => handleLink(e, 'laboratorios', 'interactivo')}
+                  className="hover:text-[#326BFF] dark:hover:text-[#F8C300] transition-colors"
+                >
+                  Lab Interactivo · Tracking, Cámara, Micrófono & Videoarte
+                </a>
+              </li>
+              <li>
+                <a
                   href="#laboratorios"
                   onClick={(e) => handleLink(e, 'laboratorios', 'labs')}
                   className="hover:text-[#326BFF] dark:hover:text-[#F8C300] transition-colors"
                 >
-                  5 Laboratorios Creativos & Lab JSON Visual
+                  5 Simuladores Creativos & Lab JSON Visual
                 </a>
               </li>
               <li>

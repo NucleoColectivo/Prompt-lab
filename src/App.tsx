@@ -10,6 +10,7 @@ import {
   History,
   ShoppingBag,
   Globe,
+  Activity,
 } from 'lucide-react';
 import { Header } from './components/Header';
 import { Hero } from './components/Hero';
@@ -25,6 +26,7 @@ import { PhotoRestorationLab } from './components/studios/PhotoRestorationLab';
 import { ProductCommerceLab } from './components/studios/ProductCommerceLab';
 import { BeginnerFirstImageLab } from './components/studios/BeginnerFirstImageLab';
 import { DrawingToImageLab } from './components/studios/DrawingToImageLab';
+import { InteractiveMediaLab } from './components/studios/InteractiveMediaLab';
 import { PromptBuilder, PromptBuilderState } from './components/PromptBuilder';
 import { DictionaryBrowser } from './components/DictionaryBrowser';
 import { RecipesSection } from './components/RecipesSection';
@@ -76,6 +78,11 @@ function resolveRouteFromHash(hashValue: string): {
     case 'web-lab':
     case 'web':
       return { section: 'laboratorios', labSub: 'web' };
+    case 'interactivo':
+    case 'videoarte':
+    case 'tracking':
+    case 'sensores':
+      return { section: 'laboratorios', labSub: 'interactivo' };
     case 'laboratorios':
       return { section: 'laboratorios', labSub: 'labs' };
     case 'json-lab':
@@ -274,6 +281,7 @@ export default function App() {
           'restauracion',
           'producto',
           'web',
+          'interactivo',
           'labs',
           'json',
         ];
@@ -287,6 +295,7 @@ export default function App() {
           restauracion: 'restauracion',
           producto: 'producto-lab',
           web: 'web-lab',
+          interactivo: 'interactivo',
           labs: 'laboratorios',
           json: 'json-lab',
         };
@@ -657,6 +666,11 @@ export default function App() {
                       icon: <Globe className="w-3.5 h-3.5 shrink-0" />,
                     },
                     {
+                      id: 'interactivo' as LabSubSection,
+                      label: 'Interactivo & Videoarte',
+                      icon: <Activity className="w-3.5 h-3.5 shrink-0" />,
+                    },
+                    {
                       id: 'labs' as LabSubSection,
                       label: '5 Simuladores',
                       icon: <Sliders className="w-3.5 h-3.5 shrink-0" />,
@@ -730,6 +744,16 @@ export default function App() {
             {activeLabSub === 'web' && (
               <WebDesignLab
                 onOpenChallenges={() => navigateToSection('academia', 'challenges')}
+              />
+            )}
+
+            {activeLabSub === 'interactivo' && (
+              <InteractiveMediaLab
+                onApplyToBuilder={(patch) => {
+                  setBuilderState((prev) => ({ ...prev, ...patch }));
+                  navigateToSection('builder');
+                }}
+                onOpenWebLab={() => navigateToSection('laboratorios', 'web')}
               />
             )}
 

@@ -332,6 +332,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
                 { label: 'Restauración', action: () => onNavigateSection('laboratorios', 'restauracion') },
                 { label: 'Publicidad y Producto', action: () => onNavigateSection('laboratorios', 'producto') },
                 { label: 'Arte Digital y Dibujo', action: () => onNavigateSection('laboratorios', 'dibujo') },
+                { label: 'Interactivo, Tracking & Videoarte', action: () => onNavigateSection('laboratorios', 'interactivo') },
                 { label: 'Ética IA y Sesgos', action: () => onNavigateSection('etica-ia') },
                 { label: 'Documentales y Películas IA', action: () => onNavigateSection('movies-ia') },
               ].map((d) => (

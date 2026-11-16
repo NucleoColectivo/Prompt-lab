@@ -13,6 +13,10 @@ const app = express();
 const port = process.env.PORT || 3000;
 
 app.use(express.json({ limit: '10mb' }));
+app.use((_req, res, next) => {
+  res.setHeader('Permissions-Policy', 'camera=(self), microphone=(self)');
+  next();
+});
 
 // Initialize Gemini Client
 const ai = new GoogleGenAI({
