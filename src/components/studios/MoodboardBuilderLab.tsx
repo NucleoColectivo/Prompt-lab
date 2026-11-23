@@ -24,9 +24,11 @@ import { GALLERY_VISUAL_ITEMS, type GalleryVisualItem } from '../../data/gallery
 import type { BuilderCategoryId } from '../../data/promptBuilderConfig';
 import type { PromptBuilderState } from '../PromptBuilder';
 import {
+  buildMoodboardBuilderPatch,
   deleteMoodboard,
   readMoodboards,
   saveMoodboard,
+  saveUnifiedProject,
   type MoodboardReferenceItem,
   type SavedMoodboard,
 } from '../../services/workspaceStore';
@@ -427,6 +429,48 @@ export const MoodboardBuilderLab: React.FC<MoodboardBuilderLabProps> = ({
     };
     const next = saveMoodboard(board);
     setSavedBoards(next);
+    // Sync non-destructively into Unified Creative Project store
+    const builderPatch = buildMoodboardBuilderPatch(board);
+    saveUnifiedProject({
+      id: `proj-${board.id}`,
+      title: board.title,
+      discipline: board.discipline,
+      category: discipline,
+      sourceModules: ['moodboard'],
+      initialData: {
+        concept: board.concept,
+        objective: `Dirección de arte · Paleta ${board.paletteName} · Estilos: ${board.styles.join(', ')}`,
+        notes: board.creativeSummary,
+      },
+      prompts: [
+        {
+          id: `pv-${Date.now()}`,
+          versionLabel: 'v1',
+          promptEs: generatedPrompts.es,
+          promptEn: generatedPrompts.en,
+          source: 'moodboard',
+          createdAt: now,
+          builderSnapshot: builderPatch,
+        },
+      ],
+      references: board.references.map((r) => ({
+        id: r.id,
+        title: r.title,
+        image: r.image,
+        role: r.role,
+        source: r.source === 'gallery' ? 'gallery' : 'upload',
+        note: r.note,
+      })),
+      palette: {
+        name: board.paletteName,
+        colors: [...board.colors],
+      },
+      results: '',
+      tools: ['Moodboard Builder', 'Constructor Modular'],
+      observations: board.keywords.length > 0 ? `Palabras clave: ${board.keywords.join(', ')}` : '',
+      createdAt: board.createdAt,
+      updatedAt: now,
+    });
     setSavedFeedback(true);
     setTimeout(() => setSavedFeedback(false), 2400);
   };
@@ -463,20 +507,23 @@ export const MoodboardBuilderLab: React.FC<MoodboardBuilderLabProps> = ({
   };
 
   const handleSendToBuilder = () => {
-    const lightingNote = references.find((r) => r.role === 'Iluminación')?.note;
-    const textureNote = references.find((r) => r.role === 'Textura')?.note;
-    const compositionNote = references.find((r) => r.role === 'Composición')?.note;
+    const patch = buildMoodboardBuilderPatch({
+      title: title.trim() || 'Dirección de arte',
+      concept: concept.trim(),
+      discipline: activeDisciplineLabel,
+      paletteName: activePalette.name,
+      colors,
+      styles: selectedStyles,
+      keywords,
+      references,
+    });
     onApplyToBuilder({
+      ...patch,
       mode: discipline === 'video' ? 'video' : 'photo',
       category: discipline,
-      subject: concept.trim() || title.trim(),
-      visualStyle: selectedStyles.join(', ') || 'Editorial Contemporáneo',
-      colorPalette: `${activePalette.name} (${colors.join(', ')})`,
-      lighting: lightingNote || 'Luz direccional natural controlada según moodboard',
-      composition: compositionNote || 'Composición editorial equilibrada con espacio negativo',
-      texture: textureNote || keywords.slice(0, 3).join(', ') || 'Textura orgánica y táctil',
-      atmosphere: keywords.join(', '),
-      customNotes: `Moodboard · ${title.trim() || 'Dirección de arte'}`,
+      lighting: patch.lighting || 'Luz direccional natural controlada según moodboard',
+      composition: patch.composition || 'Composición editorial equilibrada con espacio negativo',
+      texture: patch.texture || keywords.slice(0, 3).join(', ') || 'Textura orgánica y táctil',
     });
   };
 
@@ -1050,7 +1097,7 @@ export const MoodboardBuilderLab: React.FC<MoodboardBuilderLabProps> = ({
               <div className="grid grid-cols-3 gap-1.5 rounded-2xl overflow-hidden">
                 {references.slice(0, 6).map((ref) => (
                   <div key={ref.id} className="relative aspect-[4/3] bg-white/5 overflow-hidden">
-                    <img src={ref.image} alt={ref.title} className="w-full h-full object-cover" />
+                    <img src={ref.image} alt={ref.title} loading="lazy" decoding="async" className="w-full h-full object-cover" />
                     <span className="absolute bottom-1 left-1 px-1.5 py-0.5 rounded bg-black/75 font-mono text-[9px] uppercase text-white/90">
                       {ref.role}
                     </span>

@@ -1,6 +1,6 @@
 {
   "name": "Núcleo Colectivo — Visual & Motion Prompt Lab",
-  "description": "Laboratorio maestro interactivo de prompts para fotografía, cinematografía, video y dirección de arte con IA.",
+  "description": "Laboratorio interactivo de dirección de arte, fotografía, cine e IA generativa. 8 disciplinas, 10 laboratorios, 26 experiencias, 130 fichas técnicas, 12 tutoriales, 40 láminas y 48 apps IA.",
   "requestFramePermissions": ["camera", "microphone"],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

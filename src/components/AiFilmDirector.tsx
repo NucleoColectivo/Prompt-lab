@@ -16,11 +16,13 @@ import {
   Images,
   BookOpen,
   Braces,
+  Save,
 } from 'lucide-react';
 import type { StoryboardSceneItem } from './InteractiveCreativeLabs';
 import type { PromptBuilderState } from './PromptBuilder';
 import { VISUAL_LIBRARY_PATHS } from '../data/visualLibraryRegistry';
 import { SectionPhotoBanner } from './SectionPhotoBanner';
+import { saveUnifiedProject } from '../services/workspaceStore';
 
 export interface FilmProjectDossier {
   projectTitle: string;
@@ -316,6 +318,69 @@ export const AiFilmDirector: React.FC<AiFilmDirectorProps> = ({
   const [isGenerating, setIsGenerating] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
+  const [savedProjectNotice, setSavedProjectNotice] = useState(false);
+
+  const handleSaveDossierToUnifiedProject = () => {
+    const nowIso = new Date().toISOString();
+    saveUnifiedProject({
+      id: `proj-film-${dossier.projectTitle.toLowerCase().replace(/[^a-z0-9]+/gi, '-').slice(0, 32)}-${Date.now().toString().slice(-4)}`,
+      title: dossier.projectTitle,
+      discipline: 'Cine & Video Audiovisual',
+      category: 'video',
+      sourceModules: ['film-director'],
+      initialData: {
+        concept: dossier.concept.theme,
+        objective: dossier.concept.intention,
+        audience: dossier.concept.targetAudience,
+        format: `${format} · ${durationSeconds}s`,
+        notes: `${tone} · ${dossier.concept.keyMessage}`,
+      },
+      prompts: dossier.scenes.map((s) => ({
+        id: `pv-film-${s.sceneNumber}-${Date.now()}`,
+        versionLabel: `Escena ${String(s.sceneNumber).padStart(2, '0')}`,
+        promptEs: s.imageKeyframePrompt,
+        promptEn: s.videoMotionPrompt,
+        source: 'film-director',
+        createdAt: nowIso,
+        builderSnapshot: {
+          mode: 'video',
+          category: 'video',
+          subject: s.visualAction,
+          shotSize: s.shotSize,
+          cameraAngle: s.cameraAngle,
+          motion: s.cameraMovement,
+          duration: `${s.durationSec} segundos`,
+          camera: dossier.cinematography.cameraReference,
+          lens: dossier.cinematography.lensStrategy,
+          lighting: dossier.cinematography.lightingScheme,
+        },
+      })),
+      references: [],
+      palette: {
+        name: dossier.cinematography.colorDescription,
+        colors: dossier.cinematography.colorPaletteHex,
+      },
+      filmPlan: {
+        projectTitle: dossier.projectTitle,
+        logline: dossier.script.logline,
+        narrativeArc: dossier.script.narrativeArc,
+        cameraReference: dossier.cinematography.cameraReference,
+        lightingScheme: dossier.cinematography.lightingScheme,
+        colorPaletteHex: dossier.cinematography.colorPaletteHex,
+        scenesCount: dossier.scenes.length,
+        scenesSummary: dossier.scenes.map(
+          (s) => `Escena ${s.sceneNumber}: ${s.title} (${s.durationSec}s · ${s.shotSize} · ${s.cameraMovement})`
+        ),
+      },
+      results: dossier.editingPlan.exportSpecs,
+      tools: ['Planificador Audiovisual', 'Storyboard Creator', 'Constructor Modular'],
+      observations: `Sonido: ${dossier.soundDesign.musicDirection} | Montaje: ${dossier.editingPlan.rhythm}`,
+      createdAt: nowIso,
+      updatedAt: nowIso,
+    });
+    setSavedProjectNotice(true);
+    setTimeout(() => setSavedProjectNotice(false), 2600);
+  };
 
   const handleCopy = (text: string, key: string) => {
     navigator.clipboard.writeText(text);
@@ -540,6 +605,14 @@ export const AiFilmDirector: React.FC<AiFilmDirectorProps> = ({
               </h3>
             </div>
             <div className="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={handleSaveDossierToUnifiedProject}
+                className="px-3 py-1.5 text-xs font-semibold bg-[#326BFF] hover:bg-[#2358E6] text-white rounded flex items-center gap-1.5 cursor-pointer"
+              >
+                {savedProjectNotice ? <Check className="w-3.5 h-3.5" /> : <Save className="w-3.5 h-3.5" />}
+                <span>{savedProjectNotice ? 'Guardado en Mis Proyectos' : 'Guardar Proyecto'}</span>
+              </button>
               <button
                 type="button"
                 onClick={handleSendToStoryboardCreator}

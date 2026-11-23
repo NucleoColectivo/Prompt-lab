@@ -17,6 +17,7 @@ import {
   deleteJournalEntry,
   readCreativeJournal,
   saveJournalEntry,
+  saveUnifiedProject,
   type CreativeJournalEntry,
 } from '../services/workspaceStore';
 import type { PromptBuilderState } from './PromptBuilder';
@@ -167,6 +168,45 @@ export const CreativeJournalTab: React.FC<CreativeJournalTabProps> = ({
 
     const next = saveJournalEntry(entry);
     setEntries(next);
+
+    // Non-destructive sync into common UnifiedCreativeProject model
+    const discMeta = JOURNAL_DISCIPLINES.find((d) => d.label === entry.discipline);
+    saveUnifiedProject({
+      id: `proj-journal-${entry.id}`,
+      title: entry.projectName,
+      discipline: entry.discipline,
+      category: discMeta?.category || 'photo',
+      sourceModules: ['journal'],
+      initialData: {
+        concept: entry.objective || entry.projectName,
+        objective: entry.objective,
+        notes: `Registro de Bitácora · ${entry.date}`,
+      },
+      prompts: [
+        {
+          id: `pv-orig-${entry.id}`,
+          versionLabel: 'v1 (Original)',
+          promptEs: entry.originalPrompt,
+          source: 'journal',
+          createdAt: entry.updatedAt,
+        },
+        ...entry.variations.map((v, idx) => ({
+          id: `pv-var-${entry.id}-${idx + 1}`,
+          versionLabel: `v${idx + 2} (Variación)`,
+          promptEs: v,
+          source: 'journal' as const,
+          createdAt: entry.updatedAt,
+        })),
+      ],
+      references: [],
+      results: entry.results,
+      tools: entry.tools,
+      observations: entry.observations,
+      learnings: entry.learnings,
+      createdAt: entry.date ? `${entry.date}T00:00:00.000Z` : entry.updatedAt,
+      updatedAt: entry.updatedAt,
+    });
+
     setEditingId(null);
     setDraft(emptyDraft());
     setIsFormOpen(false);

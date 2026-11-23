@@ -30,6 +30,11 @@ import {
 } from 'lucide-react';
 import { RECIPES } from '../data/promptData';
 import {
+  appendPromptVersionToProject,
+  readUnifiedProjects,
+  saveUnifiedProject,
+} from '../services/workspaceStore';
+import {
   BUILDER_ANGLES,
   BUILDER_APERTURES,
   BUILDER_ASPECT_RATIOS,
@@ -581,6 +586,7 @@ export const PromptBuilder: React.FC<PromptBuilderProps> = ({
       hour: '2-digit',
       minute: '2-digit',
     });
+    const snapshot: PromptBuilderState = { ...builderState, category: activeCategory.id };
     setSavedPrompts((prev) => [
       {
         id: `fp-${Date.now()}`,
@@ -590,10 +596,53 @@ export const PromptBuilder: React.FC<PromptBuilderProps> = ({
         mode: activeCategory.baseMode,
         category: activeCategory.id,
         promptText: currentPrompt,
-        state: { ...builderState, category: activeCategory.id },
+        state: snapshot,
       },
       ...prev.slice(0, 23),
     ]);
+
+    // Non-destructive sync into UnifiedCreativeProject (versioned by activeProject)
+    const existingUnified = readUnifiedProjects().find(
+      (p) => p.title.toLowerCase() === activeProject.toLowerCase()
+    );
+    if (existingUnified) {
+      appendPromptVersionToProject(existingUnified.id, {
+        promptEs: currentPrompt,
+        source: 'builder',
+        builderSnapshot: snapshot,
+      });
+    } else {
+      const nowIso = new Date().toISOString();
+      saveUnifiedProject({
+        id: `proj-builder-${Date.now()}`,
+        title: activeProject,
+        discipline: activeCategory.label,
+        category: activeCategory.id,
+        sourceModules: ['builder'],
+        initialData: {
+          concept: builderState.subject.trim() || title,
+          objective: `Prompt modular (${platformTarget} · ${outputMode})`,
+          format: builderState.aspectRatio,
+          notes: builderState.customNotes || undefined,
+        },
+        prompts: [
+          {
+            id: `pv-${Date.now()}`,
+            versionLabel: 'v1',
+            promptEs: currentPrompt,
+            source: 'builder',
+            createdAt: nowIso,
+            builderSnapshot: snapshot,
+          },
+        ],
+        references: [],
+        results: '',
+        tools: ['Constructor Modular', platformTarget],
+        observations: builderState.customNotes || '',
+        createdAt: nowIso,
+        updatedAt: nowIso,
+      });
+    }
   };
 
   const handleAddProject = () => {

@@ -47,6 +47,8 @@ import {
   STORAGE_KEYS,
   writeGalleryFavorites,
 } from './services/workspaceStore';
+import { LAB_HASH_BY_SUB, resolveRouteFromHash } from './utils/hashRouting';
+import { buildCombinedBuilderPatch } from './utils/galleryResearchEngine';
 
 // Code-split heavy workspace sections & modals to reduce initial JS payload
 const PromptFundamentals = lazy(() =>
@@ -179,114 +181,6 @@ function SectionLoadingFallback() {
       </p>
     </div>
   );
-}
-
-function resolveRouteFromHash(hashValue: string): {
-  section: AppSectionId;
-  labSub?: LabSubSection;
-  resourceSub?: ResourceSubSection;
-  academySub?: 'tools' | 'challenges' | 'glossary';
-} {
-  const clean = hashValue.replace(/^#/, '').toLowerCase();
-  switch (clean) {
-    case 'galeria':
-      return { section: 'galeria' };
-    case 'favoritos':
-    case 'mis-proyectos':
-    case 'proyectos':
-    case 'bitacora':
-      return { section: 'favoritos' };
-    case 'fundamentos':
-      return { section: 'fundamentos' };
-    case 'biblioteca':
-    case 'video-lab':
-      return { section: 'biblioteca' };
-    case 'mi-primera-imagen':
-    case 'principiante':
-      return { section: 'laboratorios', labSub: 'principiante' };
-    case 'dibujo-a-imagen':
-    case 'dibujo':
-      return { section: 'laboratorios', labSub: 'dibujo' };
-    case 'restauracion':
-      return { section: 'laboratorios', labSub: 'restauracion' };
-    case 'producto-lab':
-    case 'producto':
-      return { section: 'laboratorios', labSub: 'producto' };
-    case 'web-lab':
-    case 'web':
-      return { section: 'laboratorios', labSub: 'web' };
-    case 'interactivo':
-    case 'videoarte':
-    case 'tracking':
-    case 'sensores':
-      return { section: 'laboratorios', labSub: 'interactivo' };
-    case 'moodboard':
-    case 'tablero':
-      return { section: 'laboratorios', labSub: 'moodboard' };
-    case 'iluminacion':
-    case 'simulador-luz':
-    case 'simulador-iluminacion':
-      return { section: 'laboratorios', labSub: 'iluminacion' };
-    case 'laboratorios':
-      return { section: 'laboratorios', labSub: 'labs' };
-    case 'json-lab':
-      return { section: 'laboratorios', labSub: 'json' };
-    case 'experiencias':
-    case 'explorar':
-    case 'nuevos-laboratorios':
-    case 'retos-express':
-    case 'desafios-creativos':
-    case 'experimentos':
-    case 'experimentos-abiertos':
-      return { section: 'experiencias' };
-    case 'film-director':
-      return { section: 'film-director' };
-    case 'builder':
-    case 'crear':
-      return { section: 'builder' };
-    case 'retos':
-      return { section: 'academia', academySub: 'challenges' };
-    case 'glosario':
-      return { section: 'academia', academySub: 'glossary' };
-    case 'herramientas-academia':
-    case 'academia':
-      return { section: 'academia', academySub: 'tools' };
-    case 'etica-ia':
-    case 'etica':
-      return { section: 'etica-ia' };
-    case 'movies-ia':
-    case 'documentales':
-    case 'peliculas':
-    case 'cine-ia':
-      return { section: 'movies-ia' };
-    case 'recetas':
-    case 'recursos':
-      return { section: 'recursos', resourceSub: 'recetas' };
-    case 'diccionario':
-      return { section: 'recursos', resourceSub: 'diccionario' };
-    case 'plantillas':
-      return { section: 'recursos', resourceSub: 'plantillas' };
-    case 'tutoriales':
-    case 'tutoriales-ia':
-    case 'tutoriales-paso-a-paso':
-      return { section: 'recursos', resourceSub: 'tutoriales' };
-    case 'ejercicios':
-    case 'ejercicios-recursos':
-      return { section: 'recursos', resourceSub: 'ejercicios' };
-    case 'errores':
-    case 'diagnostico':
-    case 'negativos':
-      return { section: 'recursos', resourceSub: 'errores' };
-    case 'guias':
-    case 'ratios':
-    case 'paletas':
-      return { section: 'recursos', resourceSub: 'guias' };
-    case 'inicio':
-    case 'home':
-    case '':
-    default:
-      return { section: 'home' };
-  }
 }
 
 export default function App() {
@@ -447,19 +341,7 @@ export default function App() {
         ? (subTab as LabSubSection)
         : 'labs';
       setActiveLabSub(nextSub);
-      const hashByLab: Record<LabSubSection, string> = {
-        principiante: 'mi-primera-imagen',
-        dibujo: 'dibujo-a-imagen',
-        restauracion: 'restauracion',
-        producto: 'producto-lab',
-        web: 'web-lab',
-        interactivo: 'interactivo',
-        moodboard: 'moodboard',
-        iluminacion: 'iluminacion',
-        labs: 'laboratorios',
-        json: 'json-lab',
-      };
-      hashTarget = hashByLab[nextSub];
+      hashTarget = LAB_HASH_BY_SUB[nextSub];
     } else if (section === 'recursos') {
       const validResources: ResourceSubSection[] = [
         'recetas',
@@ -502,39 +384,10 @@ export default function App() {
   const scrollToDictionary = () => navigateToSection('biblioteca');
 
   const handleApplyGalleryItemToBuilder = (item: GalleryVisualItem) => {
-    const isVideo = item.mediaType === 'video' || item.collection === 'Motion y Video';
-    const mappedCategory = isVideo
-      ? 'video'
-      : item.collection === 'Producto'
-      ? 'branding'
-      : item.collection === 'Arte Digital'
-      ? 'experimental'
-      : item.collection === 'Paisaje'
-      ? 'architecture'
-      : 'photo';
-
+    const fullPatch = buildCombinedBuilderPatch(item, 'es', null, null, null, null);
     setBuilderState((prev) => ({
       ...prev,
-      mode: isVideo ? 'video' : 'photo',
-      category: mappedCategory,
-      subject: item.promptEs,
-      setting: item.description,
-      composition: item.specs.composition,
-      camera: item.specs.camera,
-      lens: item.specs.lens,
-      aperture: item.specs.aperture,
-      lighting: item.specs.lighting,
-      colorPalette: item.specs.color,
-      atmosphere: item.specs.atmosphere,
-      texture: item.specs.texture,
-      materials: item.specs.texture,
-      visualStyle: item.style,
-      aspectRatio: item.aspectRatio,
-      negativeAvoid: item.negativePrompt
-        .split(',')
-        .map((s) => s.trim())
-        .filter(Boolean),
-      customNotes: `Galería · ${item.code} (${item.title})`,
+      ...fullPatch,
     }));
     navigateToSection('builder');
   };
@@ -1096,6 +949,7 @@ export default function App() {
                       setBuilderState((prev) => ({ ...prev, ...patch }));
                       navigateToSection('builder');
                     }}
+                    onOpenProjects={() => navigateToSection('favoritos')}
                   />
                 </div>
               )}
@@ -1181,6 +1035,7 @@ export default function App() {
               onOpenJsonLab={() => navigateToSection('laboratorios', 'json')}
               onOpenInteractiveLabs={() => navigateToSection('laboratorios', 'labs')}
               onOpenMoodboard={() => navigateToSection('laboratorios', 'moodboard')}
+              onOpenLightingLab={() => navigateToSection('laboratorios', 'iluminacion')}
             />
           )}
 

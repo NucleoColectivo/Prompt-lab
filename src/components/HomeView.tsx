@@ -459,7 +459,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
                 Sala de exhibición · Prompts reutilizables
               </p>
               <h2 className="text-2xl sm:text-3xl font-extrabold font-display-sans text-[#F4F2ED] text-balance">
-                Galería Visual en 8 colecciones curadas
+                Galería Visual en {PLATFORM_METRICS.galleryCollections} colecciones curadas
               </h2>
               <p className="text-sm text-[#C8C5BD]">
                 Cada lámina incluye prompt completo en español e inglés, óptica, iluminación y la herramienta «Recrear esta imagen» para adaptarla a tu proyecto.
@@ -546,7 +546,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-[#101014]/85 via-[#101014]/20 to-transparent pointer-events-none" />
                     <div className="absolute bottom-3 left-4 right-4 flex items-center justify-between text-xs font-mono-code text-[#E5D7FF]">
-                      <span>6 simuladores · 20 charlas críticas</span>
+                      <span>{PLATFORM_METRICS.ethicsSimulators} simuladores · {PLATFORM_METRICS.ethicsTalks} charlas críticas</span>
                     </div>
                   </div>
                   <div className="p-6 space-y-3">
@@ -558,7 +558,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
                       Sesgos, dilemas morales y alfabetización visual
                     </h3>
                     <p className="text-sm text-[#4A4A55] dark:text-[#B4B2AC] leading-relaxed">
-                      Experimenta cómo los prompts reproducen estereotipos, pon a prueba tu ojo en el detector de imágenes sintéticas, explora dilemas éticos y consulta 20 charlas críticas seleccionadas.
+                      Experimenta cómo los prompts reproducen estereotipos, pon a prueba tu ojo en el detector de imágenes sintéticas, explora dilemas éticos y consulta {PLATFORM_METRICS.ethicsTalks} charlas críticas seleccionadas.
                     </p>
                   </div>
                 </div>
@@ -590,7 +590,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-[#101014]/85 via-[#101014]/20 to-transparent pointer-events-none" />
                     <div className="absolute bottom-3 left-4 right-4 flex items-center justify-between text-xs font-mono-code text-[#CFE0FF]">
-                      <span>31 documentales y debates · 20 películas esenciales</span>
+                      <span>{PLATFORM_METRICS.documentaries} documentales y debates · {PLATFORM_METRICS.fictionMovies} películas esenciales</span>
                     </div>
                   </div>
                   <div className="p-6 space-y-3">
@@ -602,7 +602,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
                       Filmoteca curada sobre IA, sociedad y futuro
                     </h3>
                     <p className="text-sm text-[#4A4A55] dark:text-[#B4B2AC] leading-relaxed">
-                      Explora documentales completos, series de investigación, debates y 20 películas clave de ciencia ficción con preguntas críticas y fichas listas para cineforos y talleres.
+                      Explora documentales completos, series de investigación, debates y {PLATFORM_METRICS.fictionMovies} películas clave de ciencia ficción con preguntas críticas y fichas listas para cineforos y talleres.
                     </p>
                   </div>
                 </div>
@@ -765,7 +765,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
                 className="inline-flex items-center gap-1.5 font-semibold hover:text-[#7545D6] dark:hover:text-[#F8C300] transition-colors cursor-pointer"
               >
                 <PlayCircle className="w-4 h-4 text-[#7545D6] dark:text-[#C4A5FF]" />
-                <span>12 Tutoriales en video</span>
+                <span>{PLATFORM_METRICS.tutorials} Tutoriales en video</span>
               </button>
               <button
                 type="button"

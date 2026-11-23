@@ -1,0 +1,214 @@
+{
+  "entities": {
+    "WorkshopPost": {
+      "title": "WorkshopPost",
+      "description": "Public workshop blog publication created by an authenticated attendee. Contains zero raw email PII.",
+      "type": "object",
+      "properties": {
+        "authorUid": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "Firebase Auth UID of the post author (immutable after creation)."
+        },
+        "authorName": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 80,
+          "description": "Public display name chosen by the workshop attendee."
+        },
+        "title": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 140,
+          "description": "Title of the published workshop project."
+        },
+        "description": {
+          "type": "string",
+          "maxLength": 2000,
+          "description": "Optional process notes, concept, or reflection."
+        },
+        "promptUsed": {
+          "type": "string",
+          "maxLength": 1500,
+          "description": "Optional AI prompt shared by the attendee."
+        },
+        "category": {
+          "type": "string",
+          "maxLength": 40,
+          "enum": [
+            "Imagen IA",
+            "Fotografía y Luz",
+            "Video y Cine",
+            "Documento / PDF",
+            "Proyecto Web",
+            "Diseño y Arte",
+            "Experimento"
+          ],
+          "description": "Curatorial workshop category."
+        },
+        "contentType": {
+          "type": "string",
+          "maxLength": 16,
+          "enum": ["image", "pdf", "video", "link"],
+          "description": "Primary media format of the publication."
+        },
+        "mediaDataUrl": {
+          "type": "string",
+          "minLength": 25,
+          "maxLength": 380000,
+          "description": "Optional client-compressed JPEG/PNG/WebP data URL preview (<= 380 KB so Firestore document remains well under 1 MB)."
+        },
+        "uploadedFileUrl": {
+          "type": "string",
+          "minLength": 20,
+          "maxLength": 260,
+          "pattern": "^/workshop-uploads/[a-zA-Z0-9_\\-]+\\.(pdf|mp4|webm|mov)$",
+          "description": "Optional server-hosted binary upload path for direct PDF or MP4/WebM/MOV files uploaded by a verified attendee."
+        },
+        "externalUrl": {
+          "type": "string",
+          "minLength": 8,
+          "maxLength": 1000,
+          "pattern": "^https?://.*",
+          "description": "Optional external HTTP/HTTPS link (Web project, YouTube/Vimeo video, Google Drive PDF/video, Canva, etc.)."
+        },
+        "fileName": {
+          "type": "string",
+          "maxLength": 180,
+          "description": "Original filename for uploaded preview images."
+        },
+        "mimeType": {
+          "type": "string",
+          "maxLength": 80,
+          "description": "MIME type of the compressed preview image."
+        },
+        "fileSizeBytes": {
+          "type": "number",
+          "description": "Byte size of the stored image preview."
+        },
+        "status": {
+          "type": "string",
+          "maxLength": 16,
+          "enum": ["published", "archived"],
+          "description": "Publication lifecycle status. 'archived' is a terminal state for non-admin authors."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp set via request.time on creation (immutable)."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp set via request.time on creation and updates."
+        }
+      },
+      "required": [
+        "authorUid",
+        "authorName",
+        "title",
+        "category",
+        "contentType",
+        "status",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "WorkshopContact": {
+      "title": "WorkshopContact",
+      "description": "Private attendee contact record isolated from public workshop_posts to enforce PII protection. Readable only by the owner or verified workshop admin.",
+      "type": "object",
+      "properties": {
+        "postId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "Matching WorkshopPost document ID."
+        },
+        "authorUid": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "Firebase Auth UID of the attendee."
+        },
+        "authorName": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 80,
+          "description": "Attendee display name."
+        },
+        "authorEmail": {
+          "type": "string",
+          "format": "email",
+          "minLength": 5,
+          "maxLength": 120,
+          "pattern": "^[^\\s@]+@[^\\s@]+\\.[^\\s@]{2,}$",
+          "description": "Private attendee email address (PII)."
+        },
+        "postTitle": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 140,
+          "description": "Title of the linked workshop publication."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp set via request.time on creation."
+        }
+      },
+      "required": [
+        "postId",
+        "authorUid",
+        "authorName",
+        "authorEmail",
+        "postTitle",
+        "createdAt"
+      ]
+    },
+    "AdminMember": {
+      "title": "AdminMember",
+      "description": "Trusted administrator registry document managed only by the bootstrapped workshop admin.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "Firebase Auth UID of the admin user."
+        },
+        "role": {
+          "type": "string",
+          "maxLength": 16,
+          "enum": ["admin"],
+          "description": "Fixed admin role."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when admin access was granted."
+        }
+      },
+      "required": ["uid", "role", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/workshop_posts/{postId}": {
+      "schema": { "$ref": "#/entities/WorkshopPost" },
+      "description": "Publicly browsable workshop blog entries without email PII."
+    },
+    "/workshop_contacts/{postId}": {
+      "schema": { "$ref": "#/entities/WorkshopContact" },
+      "description": "Private attendee email and contact records paired atomically with workshop_posts."
+    },
+    "/admins/{userId}": {
+      "schema": { "$ref": "#/entities/AdminMember" },
+      "description": "Trusted admin role registry."
+    }
+  }
+}

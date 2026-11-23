@@ -104,13 +104,13 @@ const MOBILE_AXIS_GROUPS: {
       {
         section: 'etica-ia',
         label: 'Ética IA · Sesgos, Dilemas y Videoteca',
-        subtitle: 'Laboratorio de sesgos, detector de imágenes IA y 20 charlas críticas',
+        subtitle: `${PLATFORM_METRICS.ethicsSimulators} simuladores, detector de imágenes IA y ${PLATFORM_METRICS.ethicsTalks} charlas críticas`,
         href: '#etica-ia',
       },
       {
         section: 'movies-ia',
         label: 'Cine y Documentales IA · Cine Club',
-        subtitle: '31 documentales y debates + 20 películas esenciales sobre IA',
+        subtitle: `${PLATFORM_METRICS.documentaries} documentales y debates + ${PLATFORM_METRICS.fictionMovies} películas esenciales sobre IA`,
         href: '#movies-ia',
       },
     ],
@@ -121,15 +121,15 @@ const MOBILE_AXIS_GROUPS: {
     items: [
       {
         section: 'biblioteca',
-        label: 'Biblioteca Visual (26 Módulos)',
-        subtitle: '130 fichas técnicas con óptica, luz, narrativa y estilo',
+        label: `Biblioteca Visual (${PLATFORM_METRICS.modules} Módulos)`,
+        subtitle: `${PLATFORM_METRICS.fichas} fichas técnicas con óptica, luz, narrativa y estilo`,
         href: '#biblioteca',
       },
       {
         section: 'recursos',
         subTab: 'recetas',
         label: 'Recursos, Recetas y Guías',
-        subtitle: 'Recetas maestras, diccionario, plantillas, ejercicios y negativos',
+        subtitle: `${PLATFORM_METRICS.recipes} recetas maestras, diccionario, plantillas, ejercicios y negativos`,
         href: '#recetas',
       },
       {
@@ -146,14 +146,14 @@ const MOBILE_AXIS_GROUPS: {
     items: [
       {
         section: 'experiencias',
-        label: 'Experiencias Guiadas y Retos (26)',
-        subtitle: 'Laboratorios prácticos A–F, Retos Express y Reto Aleatorio',
+        label: `Experiencias Guiadas y Retos (${PLATFORM_METRICS.experiences})`,
+        subtitle: `${PLATFORM_METRICS.experienceDisciplines} disciplinas A–F, ${PLATFORM_METRICS.expressChallenges} Retos Express y Reto Aleatorio`,
         href: '#experiencias',
       },
       {
         section: 'recursos',
         subTab: 'tutoriales',
-        label: 'Tutoriales Paso a Paso (12 videos)',
+        label: `Tutoriales Paso a Paso (${PLATFORM_METRICS.tutorials} videos)`,
         subtitle: 'Guías prácticas de Gemini, AI Studio, Midjourney, Runway y ChatGPT',
         href: '#tutoriales',
       },

@@ -1,0 +1,288 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // -------------------------------------------------------------------------
+    // Global Safety Net (Default-Deny Catch-All)
+    // -------------------------------------------------------------------------
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // -------------------------------------------------------------------------
+    // Hardened Global Primitives
+    // -------------------------------------------------------------------------
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isVerifiedUser() {
+      return isSignedIn() && request.auth.token.email_verified == true;
+    }
+
+    function isOwner(uid) {
+      return isSignedIn() && request.auth.uid == uid;
+    }
+
+    function isBootstrappedAdmin() {
+      return isVerifiedUser() && request.auth.token.email == 'nucleo.colectivo.art@gmail.com';
+    }
+
+    function isAdmin() {
+      return isBootstrappedAdmin()
+        || (isVerifiedUser() && exists(/databases/$(database)/documents/admins/$(request.auth.uid)));
+    }
+
+    // -------------------------------------------------------------------------
+    // Validation Blueprints (Anti-Update-Gap)
+    // -------------------------------------------------------------------------
+    function isValidCategory(cat) {
+      return cat is string && cat.size() >= 3 && cat.size() <= 40 && cat in [
+        'Imagen IA',
+        'Fotografía y Luz',
+        'Video y Cine',
+        'Documento / PDF',
+        'Proyecto Web',
+        'Diseño y Arte',
+        'Experimento'
+      ];
+    }
+
+    function isValidContentType(ct) {
+      return ct is string && ct.size() >= 3 && ct.size() <= 16 && ct in [
+        'image',
+        'pdf',
+        'video',
+        'link'
+      ];
+    }
+
+    function isValidPostStatus(st) {
+      return st is string && st.size() >= 8 && st.size() <= 16 && st in [
+        'published',
+        'archived'
+      ];
+    }
+
+    function isValidMediaDataUrl(val) {
+      return val is string
+        && val.size() >= 25
+        && val.size() <= 380000
+        && (
+          val[0:22] == 'data:image/png;base64,'
+          || val[0:23] == 'data:image/jpeg;base64,'
+          || val[0:23] == 'data:image/webp;base64,'
+        );
+    }
+
+    function isValidUploadedFileUrl(val) {
+      return val is string
+        && val.size() >= 20
+        && val.size() <= 260
+        && val.matches('^/workshop-uploads/[a-zA-Z0-9_\\-]+\\.(pdf|mp4|webm|mov)$');
+    }
+
+    function isValidExternalUrl(val) {
+      return val is string
+        && val.size() >= 8
+        && val.size() <= 1000
+        && val.matches('^https?://.*');
+    }
+
+    function isValidWorkshopPost(data) {
+      return data.keys().hasAll([
+          'authorUid',
+          'authorName',
+          'title',
+          'category',
+          'contentType',
+          'status',
+          'createdAt',
+          'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'authorUid',
+          'authorName',
+          'title',
+          'description',
+          'promptUsed',
+          'category',
+          'contentType',
+          'mediaDataUrl',
+          'uploadedFileUrl',
+          'externalUrl',
+          'fileName',
+          'mimeType',
+          'fileSizeBytes',
+          'status',
+          'createdAt',
+          'updatedAt'
+        ])
+        && isValidId(data.authorUid)
+        && data.authorName is string && data.authorName.size() >= 2 && data.authorName.size() <= 80
+        && data.title is string && data.title.size() >= 3 && data.title.size() <= 140
+        && isValidCategory(data.category)
+        && isValidContentType(data.contentType)
+        && isValidPostStatus(data.status)
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp
+        && (!('description' in data) || (data.description is string && data.description.size() <= 2000))
+        && (!('promptUsed' in data) || (data.promptUsed is string && data.promptUsed.size() <= 1500))
+        && (!('mediaDataUrl' in data) || isValidMediaDataUrl(data.mediaDataUrl))
+        && (!('uploadedFileUrl' in data) || isValidUploadedFileUrl(data.uploadedFileUrl))
+        && (!('externalUrl' in data) || isValidExternalUrl(data.externalUrl))
+        && (!('fileName' in data) || (data.fileName is string && data.fileName.size() <= 180))
+        && (!('mimeType' in data) || (data.mimeType is string && data.mimeType.size() <= 80))
+        && (!('fileSizeBytes' in data) || (data.fileSizeBytes is number && data.fileSizeBytes >= 0 && data.fileSizeBytes <= 50000000));
+    }
+
+    function isValidWorkshopContact(data, postId) {
+      return data.keys().hasAll([
+          'postId',
+          'authorUid',
+          'authorName',
+          'authorEmail',
+          'postTitle',
+          'createdAt'
+        ])
+        && data.keys().hasOnly([
+          'postId',
+          'authorUid',
+          'authorName',
+          'authorEmail',
+          'postTitle',
+          'createdAt'
+        ])
+        && isValidId(data.postId)
+        && data.postId == postId
+        && isValidId(data.authorUid)
+        && data.authorUid == request.auth.uid
+        && data.authorName is string && data.authorName.size() >= 2 && data.authorName.size() <= 80
+        && data.authorEmail is string && data.authorEmail.size() >= 5 && data.authorEmail.size() <= 120
+        && data.authorEmail.matches('^[^\\s@]+@[^\\s@]+\\.[^\\s@]{2,}$')
+        && data.postTitle is string && data.postTitle.size() >= 3 && data.postTitle.size() <= 140
+        && data.createdAt is timestamp;
+    }
+
+    function isValidAdminMember(data, userId) {
+      return data.keys().hasAll(['uid', 'role', 'createdAt'])
+        && data.keys().hasOnly(['uid', 'role', 'createdAt'])
+        && isValidId(data.uid)
+        && data.uid == userId
+        && data.role is string && data.role.size() == 5 && data.role == 'admin'
+        && data.createdAt is timestamp;
+    }
+
+    // -------------------------------------------------------------------------
+    // Collection 1: /workshop_posts/{postId} (Public Blog — Zero Email PII)
+    // -------------------------------------------------------------------------
+    match /workshop_posts/{postId} {
+      allow get: if isValidId(postId)
+        && (
+          existing().status == 'published'
+          || (isSignedIn() && (isOwner(existing().authorUid) || isAdmin()))
+        );
+
+      allow list: if existing().status == 'published'
+        || (isSignedIn() && (existing().authorUid == request.auth.uid || isBootstrappedAdmin()));
+
+      allow create: if isVerifiedUser()
+        && isValidId(postId)
+        && isValidWorkshopPost(incoming())
+        && incoming().authorUid == request.auth.uid
+        && incoming().status == 'published'
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time
+        && existsAfter(/databases/$(database)/documents/workshop_contacts/$(postId));
+
+      allow update: if isVerifiedUser()
+        && isValidId(postId)
+        && isValidWorkshopPost(incoming())
+        && incoming().authorUid == existing().authorUid
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && (
+          // Action: Admin Moderation
+          (isAdmin()
+            && incoming().diff(existing()).affectedKeys().hasOnly([
+              'title', 'description', 'category', 'promptUsed', 'externalUrl', 'status', 'updatedAt'
+            ]))
+          ||
+          // Action: Owner Edit (blocked once status reaches terminal 'archived')
+          (isOwner(existing().authorUid)
+            && existing().status != 'archived'
+            && incoming().status == existing().status
+            && incoming().diff(existing()).affectedKeys().hasOnly([
+              'title', 'description', 'category', 'promptUsed', 'externalUrl', 'updatedAt'
+            ]))
+          ||
+          // Action: Owner Archive (one-way transition to terminal 'archived')
+          (isOwner(existing().authorUid)
+            && existing().status == 'published'
+            && incoming().status == 'archived'
+            && incoming().diff(existing()).affectedKeys().hasOnly(['status', 'updatedAt']))
+        );
+
+      allow delete: if isVerifiedUser()
+        && isValidId(postId)
+        && (isOwner(existing().authorUid) || isAdmin());
+    }
+
+    // -------------------------------------------------------------------------
+    // Collection 2: /workshop_contacts/{postId} (Private Attendee PII)
+    // -------------------------------------------------------------------------
+    match /workshop_contacts/{postId} {
+      allow get: if isSignedIn()
+        && isValidId(postId)
+        && (isOwner(existing().authorUid) || isAdmin());
+
+      allow list: if isSignedIn()
+        && (existing().authorUid == request.auth.uid || isBootstrappedAdmin());
+
+      allow create: if isVerifiedUser()
+        && isValidId(postId)
+        && isValidWorkshopContact(incoming(), postId)
+        && incoming().createdAt == request.time
+        && existsAfter(/databases/$(database)/documents/workshop_posts/$(postId));
+
+      allow update: if false;
+
+      allow delete: if isVerifiedUser()
+        && isValidId(postId)
+        && (isOwner(existing().authorUid) || isAdmin());
+    }
+
+    // -------------------------------------------------------------------------
+    // Collection 3: /admins/{userId} (Trusted Admin Registry)
+    // -------------------------------------------------------------------------
+    match /admins/{userId} {
+      allow get: if isVerifiedUser()
+        && isValidId(userId)
+        && (isOwner(userId) || isBootstrappedAdmin());
+
+      allow list: if false;
+
+      allow create: if isBootstrappedAdmin()
+        && isValidId(userId)
+        && isValidAdminMember(incoming(), userId)
+        && incoming().createdAt == request.time;
+
+      allow update: if false;
+
+      allow delete: if isBootstrappedAdmin()
+        && isValidId(userId);
+    }
+  }
+}

@@ -105,7 +105,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavigateSection }) => {
                   onClick={(e) => handleLink(e, 'galeria')}
                   className="hover:text-[#326BFF] dark:hover:text-[#F8C300] transition-colors font-semibold text-[#101014] dark:text-[#F4F2ED]"
                 >
-                  Galería Visual Experimental (8 Colecciones)
+                  Galería Visual Experimental ({PLATFORM_METRICS.galleryCollections} Colecciones · {PLATFORM_METRICS.galleryPlates} Láminas)
                 </a>
               </li>
               <li>
@@ -123,7 +123,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavigateSection }) => {
                   onClick={(e) => handleLink(e, 'biblioteca')}
                   className="hover:text-[#326BFF] dark:hover:text-[#F8C300] transition-colors"
                 >
-                  Biblioteca Visual y Técnica (Módulos 01–26)
+                  Biblioteca Visual y Técnica ({PLATFORM_METRICS.modules} Módulos · {PLATFORM_METRICS.fichas} Fichas)
                 </a>
               </li>
               <li>
@@ -240,7 +240,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavigateSection }) => {
                   onClick={(e) => handleLink(e, 'recursos', 'recetas')}
                   className="hover:text-[#326BFF] dark:hover:text-[#F8C300] transition-colors"
                 >
-                  Recetas Maestras &amp; Fórmulas Visuales (12)
+                  Recetas Maestras &amp; Fórmulas Visuales ({PLATFORM_METRICS.recipes})
                 </a>
               </li>
               <li>
@@ -249,7 +249,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavigateSection }) => {
                   onClick={(e) => handleLink(e, 'recursos', 'diccionario')}
                   className="hover:text-[#326BFF] dark:hover:text-[#F8C300] transition-colors"
                 >
-                  Diccionario de Comandos &amp; Paletas HEX
+                  Diccionario de Comandos ({PLATFORM_METRICS.commands}) &amp; Paletas HEX
                 </a>
               </li>
               <li>
@@ -258,7 +258,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavigateSection }) => {
                   onClick={(e) => handleLink(e, 'recursos', 'plantillas')}
                   className="hover:text-[#326BFF] dark:hover:text-[#F8C300] transition-colors"
                 >
-                  Plantillas Maestras Rellenables (6 Disciplinas)
+                  Plantillas Maestras Rellenables ({PLATFORM_METRICS.templateDisciplines} Disciplinas)
                 </a>
               </li>
               <li>
@@ -267,7 +267,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavigateSection }) => {
                   onClick={(e) => handleLink(e, 'recursos', 'tutoriales')}
                   className="hover:text-[#326BFF] dark:hover:text-[#F8C300] transition-colors font-semibold text-[#101014] dark:text-[#F4F2ED]"
                 >
-                  Tutoriales Paso a Paso en Video (12 Guías IA)
+                  Tutoriales Paso a Paso en Video ({PLATFORM_METRICS.tutorials} Guías IA)
                 </a>
               </li>
               <li>

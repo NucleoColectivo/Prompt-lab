@@ -3,21 +3,37 @@ import {
   Check,
   Compass,
   Copy,
+  Download,
+  Edit3,
+  FileText,
+  FolderOpen,
   Lightbulb,
   Maximize2,
   RotateCcw,
+  Save,
   Sliders,
   Sparkles,
   Sun,
+  Trash2,
   Wand2,
 } from 'lucide-react';
 import { VISUAL_LIBRARY_PATHS } from '../../data/visualLibraryRegistry';
 import { STUDIO_MEDIA_ASSETS } from '../../data/creativeStudiosData';
 import type { PromptBuilderState } from '../PromptBuilder';
 import { ThreePointLightingOverlay } from './ThreePointLightingOverlay';
+import {
+  buildLightingBuilderPatch,
+  deleteLightingSetup,
+  formatLightingSetupTxt,
+  readLightingSetups,
+  saveLightingSetup,
+  saveUnifiedProject,
+  type SavedLightingSetup,
+} from '../../services/workspaceStore';
 
 interface LightingSimulatorLabProps {
   onApplyToBuilder: (patch: Partial<PromptBuilderState>) => void;
+  onOpenProjects?: () => void;
 }
 
 type GlobalIntensity = 'low-key' | 'mid-key' | 'high-key';
@@ -300,6 +316,7 @@ function describeAngle(angle: number): { es: string; en: string } {
 
 export const LightingSimulatorLab: React.FC<LightingSimulatorLabProps> = ({
   onApplyToBuilder,
+  onOpenProjects,
 }) => {
   const [rig, setRig] = useState<LightingRigState>(LIGHTING_PRESETS[0].state);
   const [activePresetName, setActivePresetName] = useState<string | null>(LIGHTING_PRESETS[0].name);
@@ -308,6 +325,18 @@ export const LightingSimulatorLab: React.FC<LightingSimulatorLabProps> = ({
   const [subjectId, setSubjectId] = useState<(typeof SUBJECT_PRESETS)[number]['id']>('portrait');
   const [promptLang, setPromptLang] = useState<'es' | 'en'>('es');
   const [copied, setCopied] = useState(false);
+
+  // Saved setups CRUD state (nc_lighting_setups_v1)
+  const [savedSetups, setSavedSetups] = useState<SavedLightingSetup[]>(() => readLightingSetups());
+  const [setupTitle, setSetupTitle] = useState('');
+  const [setupNotes, setSetupNotes] = useState('');
+  const [editingSetupId, setEditingSetupId] = useState<string | null>(null);
+  const [savedNotice, setSavedNotice] = useState<string | null>(null);
+
+  const updateRig: React.Dispatch<React.SetStateAction<LightingRigState>> = (updater) => {
+    setActivePresetName(null);
+    setRig(updater);
+  };
 
   const handleSelectPreset = (preset: LightingPreset, shouldOpenOverlay = autoOpenOverlay) => {
     setRig(preset.state);
@@ -447,18 +476,148 @@ export const LightingSimulatorLab: React.FC<LightingSimulatorLabProps> = ({
     setTimeout(() => setCopied(false), 1800);
   };
 
+  const buildCurrentSetupSnapshot = (idOverride?: string): SavedLightingSetup => {
+    const now = new Date().toISOString();
+    const existing = idOverride ? savedSetups.find((s) => s.id === idOverride) : undefined;
+    const cleanTitle =
+      setupTitle.trim() ||
+      (activePresetName
+        ? `${activePresetName} · ${activeSubject.label}`
+        : `Esquema ${rig.kelvin}K (${contrastRatio}) · ${activeSubject.label}`);
+    return {
+      id: idOverride || `light-${Date.now()}`,
+      title: cleanTitle,
+      presetOrigin: activePresetName,
+      subjectId: activeSubject.id,
+      subjectLabel: activeSubject.label,
+      rig: { ...rig },
+      contrastRatio,
+      kelvinLabel: kelvinInfo.labelEs,
+      diffuserLabel: activeDiffuser.label,
+      promptEs: generatedPrompts.es,
+      promptEn: generatedPrompts.en,
+      notes: setupNotes.trim() || undefined,
+      createdAt: existing?.createdAt || now,
+      updatedAt: now,
+    };
+  };
+
   const handleApplyToBuilder = () => {
-    onApplyToBuilder({
-      lighting: generatedPrompts.en,
-      temperature: `${rig.kelvin}K · ${kelvinInfo.labelEs}`,
-      atmosphere:
-        rig.globalIntensity === 'low-key'
-          ? 'Atmósfera dramática en clave baja con volumen escultórico'
-          : rig.globalIntensity === 'high-key'
-          ? 'Atmósfera luminosa en clave alta y limpia'
-          : 'Atmósfera editorial equilibrada con modelado natural',
-      customNotes: `Simulador de Iluminación · ${rig.kelvin}K · Ratio ${contrastRatio}`,
+    const snapshot = buildCurrentSetupSnapshot(editingSetupId || undefined);
+    onApplyToBuilder(buildLightingBuilderPatch(snapshot, promptLang));
+  };
+
+  const handleSaveSetup = () => {
+    const setup = buildCurrentSetupSnapshot(editingSetupId || undefined);
+    const next = saveLightingSetup(setup);
+    setSavedSetups(next);
+    setEditingSetupId(setup.id);
+    setSetupTitle(setup.title);
+
+    // Non-destructive sync with common UnifiedCreativeProject model
+    saveUnifiedProject({
+      id: `proj-light-${setup.id}`,
+      title: setup.title,
+      discipline: 'Iluminación & Fotografía de Estudio',
+      category: 'photo',
+      sourceModules: ['lighting'],
+      initialData: {
+        concept: `Esquema de luz ${setup.presetOrigin || 'personalizado'} para ${setup.subjectLabel || 'estudio'}`,
+        objective: `Control de iluminación (${setup.contrastRatio} · ${setup.rig.kelvin}K · ${setup.diffuserLabel})`,
+        notes: setup.notes,
+      },
+      prompts: [
+        {
+          id: `pv-${Date.now()}`,
+          versionLabel: 'v1',
+          promptEs: setup.promptEs,
+          promptEn: setup.promptEn,
+          source: 'lighting',
+          createdAt: setup.updatedAt,
+          builderSnapshot: buildLightingBuilderPatch(setup, promptLang),
+        },
+      ],
+      references: [],
+      lightingSetup: setup,
+      results: '',
+      tools: ['Simulador de Iluminación', 'Constructor Modular'],
+      observations: setup.notes || `Key ${setup.rig.keyAngle}° (${setup.rig.keyIntensity}%) / Fill ${setup.rig.fillIntensity}%`,
+      createdAt: setup.createdAt,
+      updatedAt: setup.updatedAt,
     });
+
+    setSavedNotice(
+      editingSetupId
+        ? 'Configuración de iluminación actualizada y sincronizada en Mis Proyectos.'
+        : 'Configuración guardada en Iluminación y sincronizada en Mis Proyectos.'
+    );
+    setTimeout(() => setSavedNotice(null), 2600);
+  };
+
+  const handleLoadSavedSetup = (setup: SavedLightingSetup) => {
+    setRig({ ...setup.rig });
+    setActivePresetName(setup.presetOrigin || null);
+    if (
+      setup.subjectId === 'portrait' ||
+      setup.subjectId === 'product' ||
+      setup.subjectId === 'cinema'
+    ) {
+      setSubjectId(setup.subjectId);
+    }
+    setSetupTitle(setup.title);
+    setSetupNotes(setup.notes || '');
+    setEditingSetupId(setup.id);
+    setSavedNotice(`Cargado "${setup.title}" para edición.`);
+    setTimeout(() => setSavedNotice(null), 2200);
+  };
+
+  const handleDeleteSavedSetup = (id: string) => {
+    const next = deleteLightingSetup(id);
+    setSavedSetups(next);
+    if (editingSetupId === id) {
+      setEditingSetupId(null);
+      setSetupTitle('');
+      setSetupNotes('');
+    }
+  };
+
+  const downloadBlobFile = (filename: string, content: string, mime: string) => {
+    const blob = new Blob([content], { type: mime });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleExportSetupJson = (setup?: SavedLightingSetup) => {
+    const target = setup || buildCurrentSetupSnapshot(editingSetupId || undefined);
+    const slug = target.title.toLowerCase().replace(/[^a-z0-9]+/gi, '-');
+    downloadBlobFile(
+      `iluminacion-${slug || 'esquema'}.json`,
+      JSON.stringify(
+        {
+          platform: 'Núcleo Colectivo · Visual Prompt Lab 2.1',
+          type: 'lighting-setup',
+          exportedAt: new Date().toISOString(),
+          ...target,
+        },
+        null,
+        2
+      ),
+      'application/json'
+    );
+  };
+
+  const handleExportSetupTxt = (setup?: SavedLightingSetup) => {
+    const target = setup || buildCurrentSetupSnapshot(editingSetupId || undefined);
+    const slug = target.title.toLowerCase().replace(/[^a-z0-9]+/gi, '-');
+    downloadBlobFile(
+      `iluminacion-${slug || 'esquema'}.txt`,
+      formatLightingSetupTxt(target),
+      'text/plain;charset=utf-8'
+    );
   };
 
   return (
@@ -846,6 +1005,24 @@ export const LightingSimulatorLab: React.FC<LightingSimulatorLabProps> = ({
                   Aplicar al Constructor
                 </button>
               </div>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => handleExportSetupJson()}
+                  className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border border-white/15 bg-white/5 text-white/85 font-mono text-[11px] uppercase tracking-wider hover:border-[#F8C300] cursor-pointer"
+                >
+                  <Download className="w-3.5 h-3.5 text-[#F8C300]" />
+                  Exportar .JSON
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleExportSetupTxt()}
+                  className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border border-white/15 bg-white/5 text-white/85 font-mono text-[11px] uppercase tracking-wider hover:border-[#F8C300] cursor-pointer"
+                >
+                  <FileText className="w-3.5 h-3.5 text-[#8FB0FF]" />
+                  Exportar .TXT
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -875,7 +1052,7 @@ export const LightingSimulatorLab: React.FC<LightingSimulatorLabProps> = ({
                   max={135}
                   step={5}
                   value={rig.keyAngle}
-                  onChange={(e) => setRig((prev) => ({ ...prev, keyAngle: Number(e.target.value) }))}
+                  onChange={(e) => updateRig((prev) => ({ ...prev, keyAngle: Number(e.target.value) }))}
                   className="w-full accent-[#326BFF]"
                 />
                 <div className="flex justify-between font-mono text-[10px] text-black/45 dark:text-white/45 mt-1">
@@ -898,7 +1075,7 @@ export const LightingSimulatorLab: React.FC<LightingSimulatorLabProps> = ({
                     min={10}
                     max={100}
                     value={rig.keyIntensity}
-                    onChange={(e) => setRig((prev) => ({ ...prev, keyIntensity: Number(e.target.value) }))}
+                    onChange={(e) => updateRig((prev) => ({ ...prev, keyIntensity: Number(e.target.value) }))}
                     className="w-full accent-[#F8C300]"
                   />
                 </div>
@@ -914,7 +1091,7 @@ export const LightingSimulatorLab: React.FC<LightingSimulatorLabProps> = ({
                     min={0}
                     max={100}
                     value={rig.fillIntensity}
-                    onChange={(e) => setRig((prev) => ({ ...prev, fillIntensity: Number(e.target.value) }))}
+                    onChange={(e) => updateRig((prev) => ({ ...prev, fillIntensity: Number(e.target.value) }))}
                     className="w-full accent-[#326BFF]"
                   />
                 </div>
@@ -936,7 +1113,7 @@ export const LightingSimulatorLab: React.FC<LightingSimulatorLabProps> = ({
                   <input
                     type="checkbox"
                     checked={rig.rimEnabled}
-                    onChange={(e) => setRig((prev) => ({ ...prev, rimEnabled: e.target.checked }))}
+                    onChange={(e) => updateRig((prev) => ({ ...prev, rimEnabled: e.target.checked }))}
                     className="w-4 h-4 accent-[#326BFF]"
                   />
                   03. Contraluz (Rim / separación del fondo)
@@ -951,7 +1128,7 @@ export const LightingSimulatorLab: React.FC<LightingSimulatorLabProps> = ({
                   min={10}
                   max={100}
                   value={rig.rimIntensity}
-                  onChange={(e) => setRig((prev) => ({ ...prev, rimIntensity: Number(e.target.value) }))}
+                  onChange={(e) => updateRig((prev) => ({ ...prev, rimIntensity: Number(e.target.value) }))}
                   className="w-full accent-[#F8C300]"
                 />
               )}
@@ -964,7 +1141,7 @@ export const LightingSimulatorLab: React.FC<LightingSimulatorLabProps> = ({
                   <input
                     type="checkbox"
                     checked={rig.sideEnabled}
-                    onChange={(e) => setRig((prev) => ({ ...prev, sideEnabled: e.target.checked }))}
+                    onChange={(e) => updateRig((prev) => ({ ...prev, sideEnabled: e.target.checked }))}
                     className="w-4 h-4 accent-[#326BFF]"
                   />
                   04. Luz lateral (volumen y textura rasante)
@@ -975,7 +1152,7 @@ export const LightingSimulatorLab: React.FC<LightingSimulatorLabProps> = ({
                       <button
                         key={dir}
                         type="button"
-                        onClick={() => setRig((prev) => ({ ...prev, sideDirection: dir }))}
+                        onClick={() => updateRig((prev) => ({ ...prev, sideDirection: dir }))}
                         className={`px-2 py-0.5 font-mono text-[10px] uppercase cursor-pointer ${
                           rig.sideDirection === dir
                             ? 'bg-[#101014] dark:bg-[#F8C300] text-white dark:text-[#101014] font-bold'
@@ -994,7 +1171,7 @@ export const LightingSimulatorLab: React.FC<LightingSimulatorLabProps> = ({
                   min={10}
                   max={100}
                   value={rig.sideIntensity}
-                  onChange={(e) => setRig((prev) => ({ ...prev, sideIntensity: Number(e.target.value) }))}
+                  onChange={(e) => updateRig((prev) => ({ ...prev, sideIntensity: Number(e.target.value) }))}
                   className="w-full accent-[#326BFF]"
                 />
               )}
@@ -1007,7 +1184,7 @@ export const LightingSimulatorLab: React.FC<LightingSimulatorLabProps> = ({
                   <input
                     type="checkbox"
                     checked={rig.topEnabled}
-                    onChange={(e) => setRig((prev) => ({ ...prev, topEnabled: e.target.checked }))}
+                    onChange={(e) => updateRig((prev) => ({ ...prev, topEnabled: e.target.checked }))}
                     className="w-4 h-4 accent-[#326BFF]"
                   />
                   05. Luz cenital (superior / atmósfera teatral)
@@ -1022,7 +1199,7 @@ export const LightingSimulatorLab: React.FC<LightingSimulatorLabProps> = ({
                   min={10}
                   max={100}
                   value={rig.topIntensity}
-                  onChange={(e) => setRig((prev) => ({ ...prev, topIntensity: Number(e.target.value) }))}
+                  onChange={(e) => updateRig((prev) => ({ ...prev, topIntensity: Number(e.target.value) }))}
                   className="w-full accent-[#7545D6]"
                 />
               )}
@@ -1055,7 +1232,7 @@ export const LightingSimulatorLab: React.FC<LightingSimulatorLabProps> = ({
                 max={8000}
                 step={100}
                 value={rig.kelvin}
-                onChange={(e) => setRig((prev) => ({ ...prev, kelvin: Number(e.target.value) }))}
+                onChange={(e) => updateRig((prev) => ({ ...prev, kelvin: Number(e.target.value) }))}
                 className="w-full accent-[#F8C300]"
               />
               <div
@@ -1083,7 +1260,7 @@ export const LightingSimulatorLab: React.FC<LightingSimulatorLabProps> = ({
                     <button
                       key={item.id}
                       type="button"
-                      onClick={() => setRig((prev) => ({ ...prev, globalIntensity: item.id }))}
+                      onClick={() => updateRig((prev) => ({ ...prev, globalIntensity: item.id }))}
                       className={`py-2 rounded-xl font-mono text-[11px] border transition-colors cursor-pointer ${
                         rig.globalIntensity === item.id
                           ? 'bg-[#101014] dark:bg-[#F8C300] text-white dark:text-[#101014] border-transparent font-bold'
@@ -1111,7 +1288,7 @@ export const LightingSimulatorLab: React.FC<LightingSimulatorLabProps> = ({
                     <button
                       key={item.id}
                       type="button"
-                      onClick={() => setRig((prev) => ({ ...prev, shadowQuality: item.id }))}
+                      onClick={() => updateRig((prev) => ({ ...prev, shadowQuality: item.id }))}
                       className={`py-2 rounded-xl font-mono text-[11px] border transition-colors cursor-pointer ${
                         rig.shadowQuality === item.id
                           ? 'bg-[#101014] dark:bg-[#F8C300] text-white dark:text-[#101014] border-transparent font-bold'
@@ -1137,7 +1314,7 @@ export const LightingSimulatorLab: React.FC<LightingSimulatorLabProps> = ({
                     <button
                       key={opt.id}
                       type="button"
-                      onClick={() => setRig((prev) => ({ ...prev, diffuser: opt.id }))}
+                      onClick={() => updateRig((prev) => ({ ...prev, diffuser: opt.id }))}
                       className={`text-left p-3 rounded-xl border transition-colors cursor-pointer ${
                         active
                           ? 'border-[#326BFF] bg-[#326BFF]/10 dark:bg-[#326BFF]/20'
@@ -1156,6 +1333,137 @@ export const LightingSimulatorLab: React.FC<LightingSimulatorLabProps> = ({
               </div>
             </div>
           </div>
+
+          {/* Guardar, Modificar, Recuperar y Exportar Esquemas de Iluminación */}
+          <div className="rounded-3xl bg-white dark:bg-[#16161C] border border-black/10 dark:border-white/10 p-6 space-y-4">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div className="font-mono text-xs uppercase tracking-[0.16em] font-bold text-[#101014] dark:text-[#F4F2ED] flex items-center gap-2">
+                <Save className="w-4 h-4 text-[#326BFF]" />
+                <span>Guardar y reutilizar esquemas ({savedSetups.length})</span>
+              </div>
+              {onOpenProjects && (
+                <button
+                  type="button"
+                  onClick={onOpenProjects}
+                  className="inline-flex items-center gap-1.5 text-[11px] font-mono text-[#326BFF] hover:underline cursor-pointer"
+                >
+                  <FolderOpen className="w-3.5 h-3.5" />
+                  Ver en Mis Proyectos
+                </button>
+              )}
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <input
+                type="text"
+                value={setupTitle}
+                onChange={(e) => setSetupTitle(e.target.value)}
+                placeholder="Nombre del esquema (ej. Retrato Rembrandt 4600K)"
+                className="px-3.5 py-2 rounded-xl bg-[#F4F2ED] dark:bg-[#0D0D12] border border-black/10 dark:border-white/15 text-xs text-[#101014] dark:text-[#F4F2ED]"
+              />
+              <input
+                type="text"
+                value={setupNotes}
+                onChange={(e) => setSetupNotes(e.target.value)}
+                placeholder="Nota técnica opcional (ej. Para bodegón cerámica)"
+                className="px-3.5 py-2 rounded-xl bg-[#F4F2ED] dark:bg-[#0D0D12] border border-black/10 dark:border-white/15 text-xs text-[#101014] dark:text-[#F4F2ED]"
+              />
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={handleSaveSetup}
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#101014] dark:bg-[#F8C300] text-white dark:text-[#101014] font-mono text-xs uppercase tracking-wider font-bold hover:brightness-110 cursor-pointer"
+              >
+                <Save className="w-3.5 h-3.5" />
+                {editingSetupId ? 'Actualizar esquema guardado' : 'Guardar en Mis Proyectos'}
+              </button>
+              {editingSetupId && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEditingSetupId(null);
+                    setSetupTitle('');
+                    setSetupNotes('');
+                  }}
+                  className="px-3 py-2 rounded-xl border border-black/15 dark:border-white/15 font-mono text-[11px] uppercase text-black/65 dark:text-white/65 cursor-pointer"
+                >
+                  Guardar como nuevo
+                </button>
+              )}
+            </div>
+
+            {savedNotice && (
+              <div className="px-3 py-2 rounded-xl bg-emerald-500/10 border border-emerald-500/25 text-xs font-medium text-emerald-700 dark:text-emerald-300">
+                {savedNotice}
+              </div>
+            )}
+
+            {savedSetups.length > 0 && (
+              <div className="space-y-2 pt-2 border-t border-black/10 dark:border-white/10">
+                {savedSetups.map((item) => (
+                  <div
+                    key={item.id}
+                    className={`p-3 rounded-2xl border flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 ${
+                      editingSetupId === item.id
+                        ? 'border-[#326BFF] bg-[#326BFF]/5'
+                        : 'border-black/10 dark:border-white/10 bg-[#F4F2ED]/60 dark:bg-white/[0.03]'
+                    }`}
+                  >
+                    <div className="min-w-0">
+                      <div className="text-xs font-bold text-[#101014] dark:text-[#F4F2ED] truncate">
+                        {item.title}
+                      </div>
+                      <div className="font-mono text-[10px] text-black/55 dark:text-white/55">
+                        Key {item.rig.keyAngle}° ({item.rig.keyIntensity}%) · Fill {item.rig.fillIntensity}% · {item.rig.kelvin}K · Ratio {item.contrastRatio}
+                      </div>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-1.5 shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => handleLoadSavedSetup(item)}
+                        className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-black/15 dark:border-white/15 bg-white dark:bg-[#16161C] text-[10px] font-mono uppercase hover:border-[#326BFF] cursor-pointer"
+                      >
+                        <Edit3 className="w-3 h-3" />
+                        Cargar
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => onApplyToBuilder(buildLightingBuilderPatch(item, promptLang))}
+                        className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-[#F8C300] text-[#101014] text-[10px] font-mono uppercase font-bold cursor-pointer"
+                      >
+                        <Wand2 className="w-3 h-3" />
+                        Constructor
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleExportSetupJson(item)}
+                        className="px-2 py-1.5 rounded-lg border border-black/15 dark:border-white/15 text-[10px] font-mono uppercase cursor-pointer"
+                      >
+                        .JSON
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleExportSetupTxt(item)}
+                        className="px-2 py-1.5 rounded-lg border border-black/15 dark:border-white/15 text-[10px] font-mono uppercase cursor-pointer"
+                      >
+                        .TXT
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteSavedSetup(item.id)}
+                        className="p-1.5 rounded-lg text-black/45 dark:text-white/45 hover:text-rose-600 cursor-pointer"
+                        aria-label={`Eliminar ${item.title}`}
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
@@ -1167,7 +1475,7 @@ export const LightingSimulatorLab: React.FC<LightingSimulatorLabProps> = ({
         activePresetName={activePresetName}
         onSelectPreset={(preset) => handleSelectPreset(preset, true)}
         rig={rig}
-        onChangeRig={setRig}
+        onChangeRig={updateRig}
         activeSubject={activeSubject}
         previewStyles={previewStyles}
         kelvinInfo={kelvinInfo}

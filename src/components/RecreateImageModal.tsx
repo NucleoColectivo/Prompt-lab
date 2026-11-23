@@ -12,7 +12,11 @@ import {
 import type { GalleryCollectionId, GalleryVisualItem } from '../data/galleryCollectionsData';
 import type { PromptBuilderState } from './PromptBuilder';
 import { ResilientImage } from './ResilientImage';
-import { saveRecreatedPromptToVault } from '../services/workspaceStore';
+import {
+  saveRecreatedPromptToVault,
+  saveUnifiedProject,
+} from '../services/workspaceStore';
+import { mapGalleryCollectionToCategory } from '../utils/galleryResearchEngine';
 
 interface RecreateImageModalProps {
   item: GalleryVisualItem | null;
@@ -229,38 +233,21 @@ export const RecreateImageModal: React.FC<RecreateImageModalProps> = ({
     setTimeout(() => setCopied(false), 1800);
   };
 
-  const handleSaveToProjects = () => {
-    const ok = saveRecreatedPromptToVault({
-      title: `Recreación: ${customSubject.trim().slice(0, 48) || item.title}`,
-      prompt: recreatedPrompt,
-      sourceCode: item.code,
-      platform: PLATFORMS.find((p) => p.id === platform)?.label || 'Universal',
-      project: `Galería · ${item.collection}`,
-    });
-    if (ok) {
-      setSavedNotice(true);
-      setTimeout(() => setSavedNotice(false), 2200);
-    }
-  };
-
-  const handleOpenInBuilder = () => {
+  const buildRecreationPatch = (): Partial<PromptBuilderState> => {
     const variation =
       selectedVariationIdx !== null ? item.variations[selectedVariationIdx] : null;
     const ctx = CONTEXT_OVERRIDES.find((c) => c.id === contextId);
-    const isVideo = platform === 'runway' || item.mediaType === 'video';
-    const categoryMap: Record<GalleryCollectionId, NonNullable<PromptBuilderState['category']>> = {
-      Retrato: 'photo',
-      Paisaje: 'architecture',
-      Producto: 'branding',
-      'Arte Digital': 'experimental',
-      Moda: 'photo',
-      Cine: 'photo',
-      'Macro y Naturaleza': 'photo',
-      'Motion y Video': 'video',
-    };
-    onSendToBuilder({
+    const isVideo =
+      platform === 'runway' ||
+      item.mediaType === 'video' ||
+      item.collection === 'Motion y Video';
+    const mappedCategory = isVideo
+      ? 'video'
+      : mapGalleryCollectionToCategory(item.collection, item.mediaType);
+
+    return {
       mode: isVideo ? 'video' : 'photo',
-      category: isVideo ? 'video' : categoryMap[item.collection] || 'photo',
+      category: mappedCategory,
       subject: customSubject.trim() || item.title,
       setting: ctx && ctx.id !== 'keep' ? ctx.es : item.description,
       composition: item.specs.composition,
@@ -269,17 +256,89 @@ export const RecreateImageModal: React.FC<RecreateImageModalProps> = ({
       aperture: item.specs.aperture,
       lighting: variation?.patch?.lighting || item.specs.lighting,
       colorPalette: variation?.patch?.colorPalette || item.specs.color,
-      atmosphere: item.specs.atmosphere,
+      atmosphere: ctx && ctx.id !== 'keep' ? ctx.label : item.specs.atmosphere,
       texture: item.specs.texture,
       materials: item.specs.texture,
       visualStyle: item.style,
       aspectRatio: variation?.patch?.aspectRatio || item.aspectRatio,
+      motion:
+        variation?.patch?.motion ||
+        (isVideo
+          ? 'Slow smooth dolly-in moving physically towards the subject'
+          : undefined),
+      fps: isVideo ? '24 fps' : undefined,
+      duration: isVideo ? '6 segundos' : undefined,
       negativeAvoid: item.negativePrompt
         .split(',')
         .map((s) => s.trim())
         .filter(Boolean),
-      customNotes: `Galería · Recreación de ${item.code} (${item.title})`,
+      customNotes: `Galería · Recreación de ${item.code} (${item.title}) · ${item.technique}`,
+    };
+  };
+
+  const handleSaveToProjects = () => {
+    const patch = buildRecreationPatch();
+    const isVideo = patch.mode === 'video';
+    const platformLabel = PLATFORMS.find((p) => p.id === platform)?.label || 'Universal';
+    const ok = saveRecreatedPromptToVault({
+      title: `Recreación: ${customSubject.trim().slice(0, 48) || item.title}`,
+      prompt: recreatedPrompt,
+      sourceCode: item.code,
+      platform: platformLabel,
+      project: `Galería · ${item.collection}`,
+      mode: isVideo ? 'video' : 'photo',
+      category: patch.category,
+      builderState: patch,
     });
+    if (ok) {
+      const now = new Date().toISOString();
+      saveUnifiedProject({
+        id: `proj-gal-${item.id}-${Date.now()}`,
+        title: `Recreación · ${customSubject.trim().slice(0, 42) || item.title}`,
+        discipline: item.collection,
+        category: patch.category,
+        sourceModules: ['gallery'],
+        initialData: {
+          concept: customSubject.trim() || item.title,
+          objective: `Recrear dirección de arte de ${item.code} (${item.style})`,
+          format: `${patch.aspectRatio || item.aspectRatio} · ${isVideo ? 'Video' : 'Imagen'}`,
+          notes: item.technicalExplanation,
+        },
+        prompts: [
+          {
+            id: `pv-${Date.now()}`,
+            versionLabel: 'v1',
+            promptEs: recreatedPrompt,
+            promptEn: lang === 'en' ? recreatedPrompt : item.promptEn,
+            source: 'gallery',
+            createdAt: now,
+            builderSnapshot: patch,
+          },
+        ],
+        references: [
+          {
+            id: item.id,
+            title: item.title,
+            image: item.image,
+            role: item.style,
+            source: 'gallery',
+            code: item.code,
+            note: `${item.specs.camera} · ${item.specs.lens} · ${item.specs.lighting}`,
+          },
+        ],
+        results: '',
+        tools: [platformLabel, item.toolReference],
+        observations: `Óptica: ${patch.lens} (${patch.aperture}) · Luz: ${patch.lighting} · Textura: ${patch.texture}`,
+        createdAt: now,
+        updatedAt: now,
+      });
+      setSavedNotice(true);
+      setTimeout(() => setSavedNotice(false), 2200);
+    }
+  };
+
+  const handleOpenInBuilder = () => {
+    onSendToBuilder(buildRecreationPatch());
     onClose();
   };
 
@@ -332,18 +391,34 @@ export const RecreateImageModal: React.FC<RecreateImageModalProps> = ({
               </div>
               <dl className="grid grid-cols-1 gap-2 text-[11px] border-t border-white/10 pt-3">
                 <div className="flex justify-between gap-3">
-                  <dt className="text-[#A09E97]">Estilo</dt>
-                  <dd className="text-right font-semibold text-[#F4F2ED]">{item.style}</dd>
+                  <dt className="text-[#A09E97]">Medio / Estilo</dt>
+                  <dd className="text-right font-semibold text-[#F4F2ED]">
+                    {item.mediaType === 'video' ? 'Video' : 'Imagen'} · {item.style}
+                  </dd>
                 </div>
                 <div className="flex justify-between gap-3">
-                  <dt className="text-[#A09E97]">Óptica</dt>
+                  <dt className="text-[#A09E97]">Cámara y Óptica</dt>
                   <dd className="text-right text-[#D8D5CD]">
-                    {item.specs.lens} · {item.specs.aperture}
+                    {item.specs.camera} · {item.specs.lens} · {item.specs.aperture}
                   </dd>
                 </div>
                 <div className="flex justify-between gap-3">
                   <dt className="text-[#A09E97]">Iluminación</dt>
                   <dd className="text-right text-[#D8D5CD]">{item.specs.lighting}</dd>
+                </div>
+                <div className="flex justify-between gap-3">
+                  <dt className="text-[#A09E97]">Composición</dt>
+                  <dd className="text-right text-[#D8D5CD]">{item.specs.composition}</dd>
+                </div>
+                <div className="flex justify-between gap-3">
+                  <dt className="text-[#A09E97]">Color / Textura</dt>
+                  <dd className="text-right text-[#D8D5CD]">
+                    {item.specs.color} · {item.specs.texture}
+                  </dd>
+                </div>
+                <div className="flex justify-between gap-3">
+                  <dt className="text-[#A09E97]">Atmósfera</dt>
+                  <dd className="text-right text-[#D8D5CD]">{item.specs.atmosphere}</dd>
                 </div>
                 <div className="flex justify-between gap-3">
                   <dt className="text-[#A09E97]">Herramienta ref.</dt>
