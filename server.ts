@@ -1,6 +1,7 @@
 import express, { Request, Response } from 'express';
 import { GoogleGenAI, Type } from '@google/genai';
 import dotenv from 'dotenv';
+import fs from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
@@ -369,6 +370,33 @@ Tono estético: "${tone}"`;
   }
 });
 
+const DEFAULT_OG_ORIGIN = 'https://ais-pre-tbldyjlea2vhfyyffftzu5-586043043701.us-east1.run.app';
+
+function resolvePublicOrigin(req: Request): string {
+  const rawHost = (req.headers['x-forwarded-host'] || req.headers.host || '')
+    .toString()
+    .split(',')[0]
+    .trim();
+  const isLocalHost = !rawHost || /^(localhost|127\.0\.0\.1|0\.0\.0\.0)(:\d+)?$/i.test(rawHost);
+  if (!isLocalHost) {
+    const rawProto = (req.headers['x-forwarded-proto'] || 'https')
+      .toString()
+      .split(',')[0]
+      .trim();
+    return `${rawProto || 'https'}://${rawHost}`;
+  }
+  if (process.env.APP_URL) {
+    return process.env.APP_URL.replace(/\/+$/, '');
+  }
+  return DEFAULT_OG_ORIGIN;
+}
+
+function injectAbsoluteOgMeta(html: string, req: Request): string {
+  const origin = resolvePublicOrigin(req);
+  if (origin === DEFAULT_OG_ORIGIN) return html;
+  return html.split(DEFAULT_OG_ORIGIN).join(origin);
+}
+
 // Setup Vite in Dev or serve static in Prod
 async function startServer() {
   if (process.env.NODE_ENV !== 'production') {
@@ -379,13 +407,29 @@ async function startServer() {
         allowedHosts: true,
         hmr: process.env.DISABLE_HMR !== 'true',
       },
-      appType: 'spa',
+      appType: 'custom',
     });
     app.use(vite.middlewares);
+
+    app.use('*', async (req, res, next) => {
+      try {
+        const templatePath = path.join(__dirname, 'index.html');
+        const rawTemplate = await fs.readFile(templatePath, 'utf-8');
+        const transformed = await vite.transformIndexHtml(req.originalUrl, rawTemplate);
+        const html = injectAbsoluteOgMeta(transformed, req);
+        res.status(200).set({ 'Content-Type': 'text/html; charset=utf-8' }).end(html);
+      } catch (err) {
+        vite.ssrFixStacktrace(err as Error);
+        next(err);
+      }
+    });
   } else {
-    app.use(express.static(path.join(__dirname, 'dist')));
-    app.get('*', (_req, res) => {
-      res.sendFile(path.join(__dirname, 'dist', 'index.html'));
+    const distDir = path.join(__dirname, 'dist');
+    app.use(express.static(distDir, { index: false }));
+    const prodTemplate = await fs.readFile(path.join(distDir, 'index.html'), 'utf-8');
+    app.get('*', (req, res) => {
+      const html = injectAbsoluteOgMeta(prodTemplate, req);
+      res.status(200).set({ 'Content-Type': 'text/html; charset=utf-8' }).send(html);
     });
   }
 

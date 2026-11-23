@@ -5,7 +5,7 @@
   "outputDirectory": "dist",
   "rewrites": [
     {
-      "source": "/((?!api/|assets/|images/|favicon\\.svg).*)",
+      "source": "/((?!api/|assets/|images/|og-whatsapp\\.jpg|favicon\\.svg|favicon-32x32\\.png|apple-touch-icon\\.png).*)",
       "destination": "/index.html"
     }
   ]
