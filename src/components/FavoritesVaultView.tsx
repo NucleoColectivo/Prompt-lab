@@ -18,12 +18,14 @@ import {
   Wand2,
 } from 'lucide-react';
 import { ResilientImage } from './ResilientImage';
+import { SectionPhotoBanner } from './SectionPhotoBanner';
 import {
   GALLERY_VISUAL_ITEMS,
   GalleryVisualItem,
 } from '../data/galleryCollectionsData';
 import {
   VISUAL_ASSET_REGISTRY,
+  VISUAL_LIBRARY_PATHS,
   VisualAssetRecord,
 } from '../data/visualLibraryRegistry';
 import {
@@ -328,62 +330,58 @@ export const FavoritesVaultView: React.FC<FavoritesVaultViewProps> = ({
   return (
     <section
       id="favoritos"
-      className="py-12 px-4 sm:px-6 max-w-7xl mx-auto space-y-8"
+      className="pb-14 bg-[#F4F2ED] dark:bg-[#101014] transition-colors"
     >
-      {/* Editorial Header */}
-      <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-4 border-b border-[#DEDAD0] dark:border-[#26262E] pb-6">
-        <div className="space-y-1.5">
-          <div className="text-xs font-mono-code uppercase tracking-wider text-[#7545D6] dark:text-[#F8C300] font-bold">
-            ESPACIO PERSONAL · BITÁCORA, MOODBOARDS Y COLECCIONES
-          </div>
-          <h1 className="text-3xl sm:text-4xl font-extrabold font-display-sans text-[#101014] dark:text-[#F4F2ED]">
-            Mis Proyectos y Bitácora ({totalCount})
-          </h1>
-          <p className="text-sm text-[#4A4A55] dark:text-[#B4B2AC] max-w-2xl">
-            Documenta procesos completos en tu Bitácora Creativa, gestiona tus Moodboards y consulta todo lo guardado desde la Galería Visual, la Biblioteca de 26 Módulos, el Constructor Modular y el Laboratorio JSON.
-          </p>
-        </div>
-
-        <div className="flex flex-wrap items-center gap-2">
-          <button
-            type="button"
-            onClick={handleExportVaultJson}
-            disabled={totalCount === 0 && storyboardScenes.length === 0}
-            className="px-3.5 py-2 text-xs font-mono-code font-semibold bg-white dark:bg-[#16161C] border border-[#DEDAD0] dark:border-[#26262E] hover:border-[#326BFF] disabled:opacity-50 rounded-lg inline-flex items-center gap-1.5 text-[#101014] dark:text-[#F4F2ED] cursor-pointer"
-          >
-            <Download className="w-3.5 h-3.5 text-[#326BFF]" />
-            <span>Exportar .JSON</span>
-          </button>
-          <button
-            type="button"
-            onClick={handleExportVaultTxt}
-            disabled={totalCount === 0 && storyboardScenes.length === 0}
-            className="px-3.5 py-2 text-xs font-mono-code font-semibold bg-white dark:bg-[#16161C] border border-[#DEDAD0] dark:border-[#26262E] hover:border-[#326BFF] disabled:opacity-50 rounded-lg inline-flex items-center gap-1.5 text-[#101014] dark:text-[#F4F2ED] cursor-pointer"
-          >
-            <FileText className="w-3.5 h-3.5 text-[#7545D6]" />
-            <span>Exportar .TXT</span>
-          </button>
-          {onOpenMoodboard && (
+      <SectionPhotoBanner
+        image={VISUAL_LIBRARY_PATHS.photoTerritory}
+        imageAlt="Mis Proyectos, Bitácora Creativa y Moodboards"
+        accentTint="emerald"
+        kicker="ESPACIO PERSONAL · BITÁCORA, MOODBOARDS Y COLECCIONES"
+        title={`Mis Proyectos y Bitácora (${totalCount})`}
+        subtitle="Documenta procesos completos en tu Bitácora Creativa, gestiona tus Moodboards y consulta todo lo guardado desde la Galería Visual, la Biblioteca de 26 Módulos, el Constructor Modular y el Laboratorio JSON."
+        actions={
+          <>
             <button
               type="button"
-              onClick={onOpenMoodboard}
-              className="px-3.5 py-2 text-xs font-mono-code font-semibold bg-[#101014] dark:bg-white/10 text-[#F4F2ED] rounded-lg inline-flex items-center gap-1.5 hover:opacity-90 cursor-pointer"
+              onClick={handleExportVaultJson}
+              disabled={totalCount === 0 && storyboardScenes.length === 0}
+              className="px-3.5 py-2 text-xs font-mono-code font-semibold bg-[#101014]/70 hover:bg-[#101014] border border-white/20 hover:border-[#F8C300] disabled:opacity-50 rounded-lg inline-flex items-center gap-1.5 text-[#F4F2ED] cursor-pointer whitespace-nowrap backdrop-blur-xs"
             >
-              <Palette className="w-3.5 h-3.5 text-[#F8C300]" />
-              <span>Nuevo Moodboard</span>
+              <Download className="w-3.5 h-3.5 text-[#93B4FF]" />
+              <span>Exportar .JSON</span>
             </button>
-          )}
-          <button
-            type="button"
-            onClick={() => onOpenGallery('Todas')}
-            className="px-4 py-2 text-xs font-bold bg-[#F8C300] hover:bg-[#e5b400] text-[#101014] rounded-lg inline-flex items-center gap-1.5 cursor-pointer"
-          >
-            <Images className="w-3.5 h-3.5" />
-            <span>Explorar Galería</span>
-          </button>
-        </div>
-      </div>
+            <button
+              type="button"
+              onClick={handleExportVaultTxt}
+              disabled={totalCount === 0 && storyboardScenes.length === 0}
+              className="px-3.5 py-2 text-xs font-mono-code font-semibold bg-[#101014]/70 hover:bg-[#101014] border border-white/20 hover:border-[#F8C300] disabled:opacity-50 rounded-lg inline-flex items-center gap-1.5 text-[#F4F2ED] cursor-pointer whitespace-nowrap backdrop-blur-xs"
+            >
+              <FileText className="w-3.5 h-3.5 text-[#C4A5FF]" />
+              <span>Exportar .TXT</span>
+            </button>
+            {onOpenMoodboard && (
+              <button
+                type="button"
+                onClick={onOpenMoodboard}
+                className="px-3.5 py-2 text-xs font-mono-code font-bold bg-[#7545D6] hover:bg-[#6134BF] text-white rounded-lg inline-flex items-center gap-1.5 transition-colors cursor-pointer whitespace-nowrap shadow-xs"
+              >
+                <Palette className="w-3.5 h-3.5 text-[#F8C300]" />
+                <span>Nuevo Moodboard</span>
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={() => onOpenGallery('Todas')}
+              className="px-4 py-2 text-xs font-bold bg-[#F8C300] hover:bg-[#e5b400] text-[#101014] rounded-lg inline-flex items-center gap-1.5 transition-colors cursor-pointer whitespace-nowrap shadow-xs"
+            >
+              <Images className="w-3.5 h-3.5" />
+              <span>Explorar Galería</span>
+            </button>
+          </>
+        }
+      />
 
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-8 space-y-8">
       {/* Summary Counts & Category Filter Tabs */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap gap-1.5">
@@ -1086,6 +1084,7 @@ export const FavoritesVaultView: React.FC<FavoritesVaultViewProps> = ({
             )}
         </div>
       )}
+      </div>
     </section>
   );
 };

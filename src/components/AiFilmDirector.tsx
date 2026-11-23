@@ -19,6 +19,8 @@ import {
 } from 'lucide-react';
 import type { StoryboardSceneItem } from './InteractiveCreativeLabs';
 import type { PromptBuilderState } from './PromptBuilder';
+import { VISUAL_LIBRARY_PATHS } from '../data/visualLibraryRegistry';
+import { SectionPhotoBanner } from './SectionPhotoBanner';
 
 export interface FilmProjectDossier {
   projectTitle: string;
@@ -379,31 +381,29 @@ export const AiFilmDirector: React.FC<AiFilmDirectorProps> = ({
   return (
     <section
       id="film-director"
-      className="py-16 border-b border-stone-200 dark:border-stone-800 bg-[#FAF8F5] dark:bg-stone-950 transition-colors scroll-mt-20"
+      className="pb-16 border-b border-stone-200 dark:border-stone-800 bg-[#FAF8F5] dark:bg-stone-950 transition-colors scroll-mt-20"
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 space-y-8">
-        {/* Section Header */}
-        <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-4">
-          <div>
-            <div className="flex items-center gap-2 text-xs font-mono-code uppercase tracking-wider text-amber-700 dark:text-amber-400 font-bold mb-1.5">
-              <Clapperboard className="w-4 h-4" />
-              <span>PLANIFICADOR AUDIOVISUAL · 8 ETAPAS DE PRODUCCIÓN</span>
-            </div>
-            <h2 className="text-3xl sm:text-4xl font-bold font-serif-title text-stone-900 dark:text-stone-100">
-              De una idea a un proyecto audiovisual completo
-            </h2>
-            <p className="text-sm text-stone-600 dark:text-stone-400 mt-1 max-w-2xl">
-              Describe lo que quieres filmar o crear. El planificador organiza el paquete completo en segundos: concepto, guion, storyboard por escenas, fotografía, prompts de imagen y video por toma, sonido y montaje.
-            </p>
-          </div>
-          <div className="flex flex-wrap items-center gap-2 shrink-0 text-xs font-mono-code">
+      <SectionPhotoBanner
+        image={VISUAL_LIBRARY_PATHS.videoStudio}
+        imageAlt="Planificador Audiovisual — Producción de cine y video en 8 etapas"
+        accentTint="obsidian"
+        kicker={
+          <>
+            <Clapperboard className="w-4 h-4 shrink-0" />
+            <span>PLANIFICADOR AUDIOVISUAL · 8 ETAPAS DE PRODUCCIÓN</span>
+          </>
+        }
+        title="De una idea a un proyecto audiovisual completo"
+        subtitle="Describe lo que quieres filmar o crear. El planificador organiza el paquete completo en segundos: concepto, guion, storyboard por escenas, fotografía, prompts de imagen y video por toma, sonido y montaje."
+        actions={
+          <>
             {onOpenGalleryCine && (
               <button
                 type="button"
                 onClick={onOpenGalleryCine}
-                className="px-3 py-1.5 rounded-lg bg-white dark:bg-stone-900 border border-stone-300 dark:border-stone-700 hover:border-amber-500 text-stone-800 dark:text-stone-200 inline-flex items-center gap-1.5"
+                className="px-3.5 py-2 rounded-lg bg-[#7545D6] hover:bg-[#6134BF] text-white text-xs font-mono-code font-bold inline-flex items-center gap-1.5 transition-colors cursor-pointer whitespace-nowrap shadow-xs"
               >
-                <Images className="w-3.5 h-3.5 text-[#7545D6] dark:text-[#F8C300]" />
+                <Images className="w-3.5 h-3.5" />
                 <span>Galería Cine</span>
               </button>
             )}
@@ -411,9 +411,9 @@ export const AiFilmDirector: React.FC<AiFilmDirectorProps> = ({
               <button
                 type="button"
                 onClick={onOpenVideoModule}
-                className="px-3 py-1.5 rounded-lg bg-white dark:bg-stone-900 border border-stone-300 dark:border-stone-700 hover:border-amber-500 text-stone-800 dark:text-stone-200 inline-flex items-center gap-1.5"
+                className="px-3.5 py-2 rounded-lg bg-[#326BFF] hover:bg-[#2358E6] text-white text-xs font-mono-code font-bold inline-flex items-center gap-1.5 transition-colors cursor-pointer whitespace-nowrap shadow-xs"
               >
-                <BookOpen className="w-3.5 h-3.5 text-[#326BFF]" />
+                <BookOpen className="w-3.5 h-3.5" />
                 <span>Módulo 06 Video</span>
               </button>
             )}
@@ -421,14 +421,17 @@ export const AiFilmDirector: React.FC<AiFilmDirectorProps> = ({
               <button
                 type="button"
                 onClick={onOpenJsonLab}
-                className="px-3 py-1.5 rounded-lg bg-white dark:bg-stone-900 border border-stone-300 dark:border-stone-700 hover:border-amber-500 text-stone-800 dark:text-stone-200 inline-flex items-center gap-1.5"
+                className="px-3.5 py-2 rounded-lg bg-[#101014]/70 hover:bg-[#101014] border border-white/20 text-[#F4F2ED] text-xs font-mono-code font-bold inline-flex items-center gap-1.5 transition-colors cursor-pointer whitespace-nowrap backdrop-blur-xs"
               >
-                <Braces className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+                <Braces className="w-3.5 h-3.5 text-[#F8C300]" />
                 <span>Lab JSON</span>
               </button>
             )}
-          </div>
-        </div>
+          </>
+        }
+      />
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-8 space-y-8">
 
         {/* Input Form */}
         <form

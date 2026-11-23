@@ -37,6 +37,12 @@ export interface PromptBeforeAfterCase {
   };
 }
 
+export interface ExerciseFreeTool {
+  name: string;
+  role: string;
+  url: string;
+}
+
 export interface PracticeDrill {
   id: string;
   code: string;
@@ -48,6 +54,7 @@ export interface PracticeDrill {
   steps: string[];
   starterPrompt: string;
   evaluationChecklist: string[];
+  freeTools: ExerciseFreeTool[];
   builderPatch: {
     mode: 'photo' | 'video';
     subject: string;
@@ -608,6 +615,11 @@ export const PRACTICE_DRILLS: PracticeDrill[] = [
       'El sujeto y el ángulo se mantuvieron estables en las 3 pruebas.',
       'Se distingue claramente la dirección y dureza de cada sombra.',
     ],
+    freeTools: [
+      { name: 'Gemini', role: 'Generar 3 variaciones de luz gratis', url: 'https://gemini.google.com/' },
+      { name: 'Leonardo.ai', role: '150 tokens diarios gratis', url: 'https://app.leonardo.ai/' },
+      { name: 'Qwen Chat', role: 'Imagen gratis sin límite inicial', url: 'https://chat.qwenlm.ai/' },
+    ],
     builderPatch: {
       mode: 'photo',
       subject: 'Raw terracotta sculpture bust on a matte charcoal pedestal with crisp clay texture',
@@ -634,6 +646,11 @@ export const PRACTICE_DRILLS: PracticeDrill[] = [
       'La versión 24mm explica claramente el espacio completo del taller.',
       'La versión 85mm comprime el fondo y dirige la mirada al gesto principal.',
     ],
+    freeTools: [
+      { name: 'Gemini', role: 'Fotorrealismo documental gratis', url: 'https://gemini.google.com/' },
+      { name: 'Leonardo.ai', role: 'Control óptico y encuadre', url: 'https://app.leonardo.ai/' },
+      { name: 'Google AI Studio', role: 'Comparar y depurar prompts', url: 'https://aistudio.google.com/' },
+    ],
     builderPatch: {
       mode: 'photo',
       subject: 'Artist pulling a screenprinting squeegee over vibrant ink inside a sunlit print studio',
@@ -649,7 +666,7 @@ export const PRACTICE_DRILLS: PracticeDrill[] = [
     level: 'Inicial',
     duration: '20 min',
     skill: 'Composición Editorial',
-    objective: 'Aprender a dirigir la composición dejando aire limpio para diseñar titulares reales en Figma, Illustrator o Canva.',
+    objective: 'Aprender a dirigir la composición dejando aire limpio para diseñar titulares reales en Figma, Illustrator, Canva o Photopea.',
     steps: [
       'Define un motivo central en el tercio inferior o lateral derecho.',
       'Indica explícitamente "generous uncluttered negative space in upper third for headline typography" y "/notext".',
@@ -659,6 +676,11 @@ export const PRACTICE_DRILLS: PracticeDrill[] = [
     evaluationChecklist: [
       'El tercio superior está despejado y ofrece alto contraste para texto.',
       'La imagen no contiene letras deformes ni marcas inventadas.',
+    ],
+    freeTools: [
+      { name: 'Ideogram', role: 'Cartel + tipografía precisa gratis', url: 'https://ideogram.ai/' },
+      { name: 'Canva', role: 'Maquetar titular y fechas gratis', url: 'https://www.canva.com/' },
+      { name: 'Photopea', role: 'Edición PSD gratis en navegador', url: 'https://www.photopea.com/' },
     ],
     builderPatch: {
       mode: 'photo',
@@ -686,6 +708,11 @@ export const PRACTICE_DRILLS: PracticeDrill[] = [
       'La chaqueta mostaza, el cabello y el medio pictórico coinciden en las 3 escenas.',
       'Cada plano cambia claramente de escala sin perder coherencia visual.',
     ],
+    freeTools: [
+      { name: 'Google Whisk', role: 'Remix de Sujeto + Escena + Estilo gratis', url: 'https://labs.google/fx/tools/whisk' },
+      { name: 'Google Flow', role: 'Continuidad de personaje en escenas', url: 'https://labs.google/fx/tools/flow' },
+      { name: 'DeepSeek', role: 'Redactar ancla de identidad coherente', url: 'https://chat.deepseek.com/' },
+    ],
     builderPatch: {
       mode: 'photo',
       subject: 'Young Andean botanist woman with short wavy dark hair wearing a mustard canvas field jacket and leather satchel walking across a misty cloud forest trail, gouache editorial illustration',
@@ -711,6 +738,11 @@ export const PRACTICE_DRILLS: PracticeDrill[] = [
     evaluationChecklist: [
       'Se percibe la porosidad real de la cerámica y la piedra.',
       'El objeto apoya con sombra de contacto física (no parece pegado).',
+    ],
+    freeTools: [
+      { name: 'Krea AI', role: 'Upscaler y control en vivo gratis', url: 'https://www.krea.ai/' },
+      { name: 'Microsoft Designer', role: 'Bodegón y borrado de fondo gratis', url: 'https://designer.microsoft.com/' },
+      { name: 'Canva', role: 'Armar pieza publicitaria final', url: 'https://www.canva.com/' },
     ],
     builderPatch: {
       mode: 'photo',
@@ -738,6 +770,11 @@ export const PRACTICE_DRILLS: PracticeDrill[] = [
       'Solo hay un movimiento de cámara claro de principio a fin.',
       'La escena describe física realista fácil de sostener durante varios segundos.',
     ],
+    freeTools: [
+      { name: 'Google Flow', role: 'Dirección de escena cinematográfica', url: 'https://labs.google/fx/tools/flow' },
+      { name: 'Hailuo AI', role: 'Créditos diarios gratis de video', url: 'https://hailuoai.video/' },
+      { name: 'CapCut / Clipchamp', role: 'Montaje y subtítulos 1080p gratis', url: 'https://clipchamp.com/' },
+    ],
     builderPatch: {
       mode: 'video',
       subject: 'Sheer linen curtains billowing gently in a quiet sunlit conservatory with drifting leaf shadows on a wooden table',
@@ -763,6 +800,11 @@ export const PRACTICE_DRILLS: PracticeDrill[] = [
     evaluationChecklist: [
       'La escena evita clichés turísticos y estéticas corporativas genéricas.',
       'El entorno y la luz corresponden a un espacio real y creíble.',
+    ],
+    freeTools: [
+      { name: 'DeepSeek', role: 'Auditar sesgos del prompt gratis', url: 'https://chat.deepseek.com/' },
+      { name: 'Kimi.ai', role: 'Contrastar bibliografía y contexto', url: 'https://kimi.ai/' },
+      { name: 'Gemini', role: 'Comparar versiones visuales gratis', url: 'https://gemini.google.com/' },
     ],
     builderPatch: {
       mode: 'photo',
@@ -790,11 +832,81 @@ export const PRACTICE_DRILLS: PracticeDrill[] = [
       'Se entiende cómo funciona físicamente la obra dentro del espacio.',
       'Incluye escala humana real y evita efectos gráficos imposibles.',
     ],
+    freeTools: [
+      { name: 'Blender', role: 'Bloqueo espacial 3D 100% gratis', url: 'https://www.blender.org/' },
+      { name: 'Google AI Studio', role: 'Estructurar memoria técnica gratis', url: 'https://aistudio.google.com/' },
+      { name: 'Leonardo.ai', role: 'Visualización museográfica gratis', url: 'https://app.leonardo.ai/' },
+    ],
     builderPatch: {
       mode: 'photo',
       subject: 'Interactive light installation with suspended translucent fabric sheets catching geometric white projections as two visitors walk through a dark concrete gallery',
       genre: '/fineart',
       lighting: 'Crisp volumetric projector beams in dark exhibition room',
+      aspectRatio: '16:9',
+    },
+  },
+  {
+    id: 'drill-09',
+    code: 'EJ-09',
+    title: 'Paisaje sonoro, música instrumental y Foley para video IA',
+    level: 'Inicial',
+    duration: '20 min',
+    skill: 'Audio, Música & FX',
+    objective: 'Dar cuerpo físico y emoción a un clip de video mudo combinando música instrumental, Foley puntual y ambiente real sin gastar dinero.',
+    steps: [
+      'Genera una cama musical instrumental minimalista (70–85 BPM, sin voces) en Suno o Udio usando emociones e instrumentos concretos.',
+      'Crea o descarga 2 efectos puntuales de Foley (lluvia, pasos, viento, cerámica) en Stable Audio, ElevenLabs SFX o Freesound.',
+      'Mezcla las 3 capas en Audacity o CapCut dejando la música a -18 dB para que el ambiente respire.',
+    ],
+    starterPrompt: '[MÚSICA — SUNO/UDIO]: Minimalist cinematic instrumental, warm felt piano, soft solo cello and subtle vinyl room tone, 72 BPM, contemplative Andean dawn mood, no vocals, clean dynamic build.  |  [FX — STABLE AUDIO / ELEVENLABS SFX]: Soft steady morning rain on clay roof tiles with distant courtyard birds, crisp stereo field recording, 15 seconds.',
+    evaluationChecklist: [
+      'La música acompaña la imagen sin tapar los efectos físicos ni saturar.',
+      'Existen al menos 2 capas sonoras diferenciadas (música + ambiente/Foley).',
+    ],
+    freeTools: [
+      { name: 'Suno', role: 'Música instrumental gratis diaria', url: 'https://suno.com/' },
+      { name: 'Stable Audio', role: 'Efectos FX y atmósferas gratis', url: 'https://stableaudio.com/' },
+      { name: 'Freesound', role: 'Foley y ambientes CC gratis', url: 'https://freesound.org/' },
+      { name: 'Audacity', role: 'Mezcla multipista 100% gratis', url: 'https://www.audacityteam.org/' },
+    ],
+    builderPatch: {
+      mode: 'video',
+      subject: 'Quiet Andean stone courtyard during soft morning rain with subtle mist drifting over clay roof tiles',
+      genre: '/cinematicvideo',
+      lighting: 'Soft overcast misty dawn light',
+      aspectRatio: '16:9',
+    },
+  },
+  {
+    id: 'drill-10',
+    code: 'EJ-10',
+    title: 'Micro-podcast documental limpio con guion y voz IA',
+    level: 'Intermedio',
+    duration: '25 min',
+    skill: 'Voces & Podcast',
+    objective: 'Producir un episodio piloto de 2 minutos desde investigación hasta masterización profesional usando únicamente herramientas gratuitas.',
+    steps: [
+      'Sube 2 textos o notas a Kimi.ai, DeepSeek o NotebookLM para armar una escaleta de 3 bloques (apertura, hallazgo y cierre) o un Audio Overview.',
+      'Graba tu voz con el celular y pásala por Adobe Podcast (Enhance Speech), o genera una locución en español con ElevenLabs o TTSMaker.',
+      'Une voz + cortinilla musical en Audacity y nivela el volumen final automáticamente en Auphonic.',
+    ],
+    starterPrompt: '[GUION PODCAST — KIMI.AI / DEEPSEEK]: Redacta un guion conversacional de 2 minutos (aprox. 280 palabras) para un micro-podcast cultural sobre arte y tecnología en América Latina. Tono cercano y claro, sin tecnicismos vacíos. Incluye marcas explícitas de [PAUSA 1s], [CORTINILLA MUSICAL 4s] y [EFECTO AMBIENTE TALLER].',
+    evaluationChecklist: [
+      'La voz suena limpia, sin eco de habitación ni saltos bruscos de volumen.',
+      'La música baja suavemente cuando entra la locución (ducking limpio).',
+    ],
+    freeTools: [
+      { name: 'Adobe Podcast', role: 'Limpiar voz grabada gratis (1h/día)', url: 'https://podcast.adobe.com/' },
+      { name: 'ElevenLabs', role: 'Voz expresiva y aislador gratis', url: 'https://elevenlabs.io/' },
+      { name: 'TTSMaker', role: 'Voces en español 100% gratis', url: 'https://ttsmaker.com/' },
+      { name: 'NotebookLM', role: 'Podcast conversacional desde PDFs', url: 'https://notebooklm.google.com/' },
+      { name: 'Auphonic', role: 'Masterización podcast gratis (2h/mes)', url: 'https://auphonic.com/' },
+    ],
+    builderPatch: {
+      mode: 'photo',
+      subject: 'Warm editorial documentary portrait of two cultural podcast hosts recording with condenser microphones inside an intimate acoustic studio',
+      genre: '/documentary',
+      lighting: 'Warm amber practical desk lamps with soft window fill',
       aspectRatio: '16:9',
     },
   },

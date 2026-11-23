@@ -160,8 +160,8 @@ const MOBILE_AXIS_GROUPS: {
       {
         section: 'academia',
         subTab: 'tools',
-        label: 'Apps IA (31) y Glosario',
-        subtitle: 'Directorio práctico de herramientas y términos ES–EN',
+        label: 'Apps IA (48) y Glosario',
+        subtitle: 'Apps gratis de imagen, video, audio, música, podcast y glosario ES–EN',
         href: '#herramientas-academia',
       },
     ],

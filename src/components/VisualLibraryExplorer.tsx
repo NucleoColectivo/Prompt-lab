@@ -32,11 +32,14 @@ import { EXTENDED_MODULES_META, EXTENDED_LIBRARY_ENTRIES } from '../data/extende
 import {
   VISUAL_ASSET_REGISTRY,
   VISUAL_ASSETS_MAP,
+  VISUAL_LIBRARY_PATHS,
   VisualAssetCategory,
   VisualAssetRecord,
 } from '../data/visualLibraryRegistry';
+import ethicsCardSesgos from '../assets/images/ethics_card_sesgos_1795400896612.jpg';
 import { ResilientImage } from './ResilientImage';
 import { TechnicalDiagramSVG, VisualComparisonStrip } from './VisualDiagrams';
+import { SectionPhotoBanner } from './SectionPhotoBanner';
 
 export interface VisualLibraryExplorerProps {
   activeModule: ModuleId;
@@ -78,6 +81,183 @@ function getGalleryCollectionForModule(modId: ModuleId): string {
       return 'Motion y Video';
     default:
       return 'Todas';
+  }
+}
+
+function getModuleBannerVisual(
+  modId: ModuleId,
+  explorerMode: 'modules' | 'atlas'
+): { image: string; alt: string; position?: 'center' | 'top' | 'bottom' } {
+  if (explorerMode === 'atlas') {
+    return {
+      image: VISUAL_LIBRARY_PATHS.focalComparison,
+      alt: 'Atlas Visual — Comparación técnica de óptica, iluminación y encuadres',
+      position: 'center',
+    };
+  }
+  switch (modId) {
+    case 'mod-01':
+      return {
+        image: VISUAL_LIBRARY_PATHS.photoFashion,
+        alt: 'Módulo 01 — Generación de Imágenes y Fotografía Editorial',
+        position: 'top',
+      };
+    case 'mod-02':
+      return {
+        image: VISUAL_LIBRARY_PATHS.camRangefinder,
+        alt: 'Módulo 02 — Óptica, Cámaras y Distancias Focales',
+        position: 'center',
+      };
+    case 'mod-03':
+      return {
+        image: VISUAL_LIBRARY_PATHS.lightRembrandt,
+        alt: 'Módulo 03 — Iluminación de Estudio y Esquemas de Luz',
+        position: 'top',
+      };
+    case 'mod-04':
+      return {
+        image: VISUAL_LIBRARY_PATHS.colorDuotone,
+        alt: 'Módulo 04 — Color, Emulsiones y Dirección de Arte',
+        position: 'center',
+      };
+    case 'mod-05':
+      return {
+        image: VISUAL_LIBRARY_PATHS.compCinematography,
+        alt: 'Módulo 05 — Composición, Planos y Lenguaje de Cámara',
+        position: 'center',
+      };
+    case 'mod-06':
+      return {
+        image: VISUAL_LIBRARY_PATHS.videoStudio,
+        alt: 'Módulo 06 — Video Lab y Dirección Cinematográfica',
+        position: 'center',
+      };
+    case 'mod-07':
+      return {
+        image: VISUAL_LIBRARY_PATHS.colorJsonTransfer,
+        alt: 'Módulo 07 — Transferencia de Estilo y Prompts JSON',
+        position: 'center',
+      };
+    case 'mod-08':
+      return {
+        image: VISUAL_LIBRARY_PATHS.photoNeoNoir,
+        alt: 'Módulo 08 — Narrativa Visual y Storytelling',
+        position: 'top',
+      };
+    case 'mod-09':
+      return {
+        image: VISUAL_LIBRARY_PATHS.storySheet,
+        alt: 'Módulo 09 — Storyboard y Secuencia Visual',
+        position: 'center',
+      };
+    case 'mod-10':
+      return {
+        image: VISUAL_LIBRARY_PATHS.storyCharacterSheet,
+        alt: 'Módulo 10 — Diseño y Consistencia de Personajes',
+        position: 'top',
+      };
+    case 'mod-11':
+      return {
+        image: VISUAL_LIBRARY_PATHS.storyWorldbuildingCity,
+        alt: 'Módulo 11 — Worldbuilding y Construcción de Mundos',
+        position: 'center',
+      };
+    case 'mod-12':
+      return {
+        image: VISUAL_LIBRARY_PATHS.storySoundFoley,
+        alt: 'Módulo 12 — Diseño Sonoro, Voz y Música IA',
+        position: 'center',
+      };
+    case 'mod-13':
+      return {
+        image: VISUAL_LIBRARY_PATHS.adBillboard,
+        alt: 'Módulo 13 — Diseño Gráfico, Tipografía y Cartel',
+        position: 'center',
+      };
+    case 'mod-14':
+      return {
+        image: VISUAL_LIBRARY_PATHS.adLuxury,
+        alt: 'Módulo 14 — Branding, Identidad y Dirección Publicitaria',
+        position: 'center',
+      };
+    case 'mod-15':
+      return {
+        image: VISUAL_LIBRARY_PATHS.anim3dSculpture,
+        alt: 'Módulo 15 — Arte 3D, Escultura Digital y Materiales PBR',
+        position: 'center',
+      };
+    case 'mod-16':
+      return {
+        image: VISUAL_LIBRARY_PATHS.photoArchitecture,
+        alt: 'Módulo 16 — Arquitectura, Espacio y Fotogrametría',
+        position: 'center',
+      };
+    case 'mod-17':
+      return {
+        image: VISUAL_LIBRARY_PATHS.vfxFluidSmoke,
+        alt: 'Módulo 17 — VFX, Simulaciones y Efectos Visuales',
+        position: 'center',
+      };
+    case 'mod-18':
+      return {
+        image: VISUAL_LIBRARY_PATHS.animStopMotion,
+        alt: 'Módulo 18 — Animación, Stop Motion y Motion Design',
+        position: 'center',
+      };
+    case 'mod-19':
+      return {
+        image: VISUAL_LIBRARY_PATHS.animGenerativeParticles,
+        alt: 'Módulo 19 — Arte Generativo y Sistemas Algorítmicos',
+        position: 'center',
+      };
+    case 'mod-20':
+      return {
+        image: VISUAL_LIBRARY_PATHS.vfxProjectionMapping,
+        alt: 'Módulo 20 — Instalaciones Interactivas y Mapping',
+        position: 'center',
+      };
+    case 'mod-21':
+      return {
+        image: VISUAL_LIBRARY_PATHS.artBotanical,
+        alt: 'Módulo 21 — Ilustración Científica y Botánica',
+        position: 'center',
+      };
+    case 'mod-22':
+      return {
+        image: VISUAL_LIBRARY_PATHS.artHybridOrganism,
+        alt: 'Módulo 22 — Bioarte y Especulación Visual',
+        position: 'center',
+      };
+    case 'mod-23':
+      return {
+        image: VISUAL_LIBRARY_PATHS.photoTerritory,
+        alt: 'Módulo 23 — Memoria, Territorio y Archivo Visual',
+        position: 'center',
+      };
+    case 'mod-24':
+      return {
+        image: VISUAL_LIBRARY_PATHS.photoDocumentaryStreet,
+        alt: 'Módulo 24 — Documental Comunitario y Participativo',
+        position: 'center',
+      };
+    case 'mod-25':
+      return {
+        image: VISUAL_LIBRARY_PATHS.compExtremeWide,
+        alt: 'Módulo 25 — Accesibilidad Visual y Lenguaje Claro',
+        position: 'center',
+      };
+    case 'mod-26':
+      return {
+        image: ethicsCardSesgos,
+        alt: 'Módulo 26 — Ética, Procedencia y Derechos de Autor IA',
+        position: 'center',
+      };
+    default:
+      return {
+        image: VISUAL_LIBRARY_PATHS.photoFashion,
+        alt: 'Biblioteca Visual & Técnica',
+        position: 'center',
+      };
   }
 }
 
@@ -221,53 +401,75 @@ export const VisualLibraryExplorer: React.FC<VisualLibraryExplorerProps> = ({
     }
   };
 
+  const bannerVisual = useMemo(
+    () => getModuleBannerVisual(activeModule, explorerMode),
+    [activeModule, explorerMode]
+  );
+
   return (
     <section
       id="biblioteca"
-      className="py-16 border-b border-stone-200 dark:border-stone-800 bg-[#FAF8F5] dark:bg-stone-950 transition-colors"
+      className="pb-16 border-b border-stone-200 dark:border-stone-800 bg-[#FAF8F5] dark:bg-stone-950 transition-colors"
     >
       {/* Hidden/semantic anchor for #video-lab navigation link */}
       <div id="video-lab" className="scroll-mt-24" />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 space-y-8">
-        {/* Section Header + Breadcrumbs */}
-        <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-4">
-          <div>
-            {/* Breadcrumbs */}
-            <nav
-              aria-label="Ruta de navegación"
-              className="flex flex-wrap items-center gap-1.5 text-[11px] font-mono-code uppercase tracking-wider text-stone-500 dark:text-stone-400 mb-2"
-            >
-              <span>Inicio</span>
-              <ChevronRight className="w-3 h-3" />
-              <span className="text-amber-700 dark:text-amber-400 font-semibold">
-                Módulo {activeModuleMeta.number} · {activeModuleMeta.title}
-              </span>
-              {selectedSubcategory !== 'Todas' && !searchQuery && (
-                <>
-                  <ChevronRight className="w-3 h-3" />
-                  <span className="text-stone-700 dark:text-stone-300">{selectedSubcategory}</span>
-                </>
-              )}
-            </nav>
-
-            <h2 className="text-3xl sm:text-4xl font-bold font-serif-title text-stone-900 dark:text-stone-100">
-              Biblioteca Visual & Técnica
-            </h2>
-            <p className="text-sm text-stone-600 dark:text-stone-400 mt-1.5 max-w-2xl">
-              {activeModuleMeta.description}
-            </p>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-2">
-            <div className="inline-flex rounded border border-stone-300 dark:border-stone-700 overflow-hidden text-xs font-semibold">
+      {/* Full-bleed Photographic Hero Banner — Dynamically switches photo per active module / Atlas */}
+      <SectionPhotoBanner
+        image={bannerVisual.image}
+        imageAlt={bannerVisual.alt}
+        imagePosition={bannerVisual.position}
+        accentTint="navy"
+        kicker={
+          <nav
+            aria-label="Ruta de navegación"
+            className="flex flex-wrap items-center gap-1.5"
+          >
+            <span className="text-[#C7CCE0]">Inicio</span>
+            <ChevronRight className="w-3 h-3 text-white/40" />
+            <span className="text-[#F8C300] font-bold">
+              {explorerMode === 'atlas'
+                ? `Atlas Visual · ${VISUAL_ASSET_REGISTRY.length} Referencias Curadas`
+                : `Módulo ${activeModuleMeta.number} · ${activeModuleMeta.title}`}
+            </span>
+            {explorerMode === 'modules' && selectedSubcategory !== 'Todas' && !searchQuery && (
+              <>
+                <ChevronRight className="w-3 h-3 text-white/40" />
+                <span className="text-[#93B4FF]">{selectedSubcategory}</span>
+              </>
+            )}
+          </nav>
+        }
+        topRight={
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md bg-white/10 border border-white/15 text-[11px] font-mono-code font-bold uppercase tracking-wider text-[#F4F2ED] backdrop-blur-xs">
+            <BookOpen className="w-3.5 h-3.5 text-[#F8C300]" />
+            <span>
+              {explorerMode === 'atlas'
+                ? 'Modo Atlas Visual'
+                : `Mód. ${activeModuleMeta.number} · ${activeModuleMeta.shortTitle}`}
+            </span>
+          </span>
+        }
+        title={
+          explorerMode === 'atlas'
+            ? 'Atlas Visual de Referencias Técnicas'
+            : `Biblioteca Visual · ${activeModuleMeta.shortTitle}`
+        }
+        subtitle={
+          explorerMode === 'atlas'
+            ? `Explora ${VISUAL_ASSET_REGISTRY.length} láminas técnicas de iluminación, óptica, planos, color, publicidad y cinematografía con explicación visual y prompt listo para copiar.`
+            : activeModuleMeta.description
+        }
+        actions={
+          <>
+            <div className="inline-flex rounded-lg border border-white/20 overflow-hidden bg-[#101014]/70 backdrop-blur-xs text-xs font-semibold">
               <button
                 type="button"
                 onClick={() => setExplorerMode('modules')}
-                className={`px-3 py-2 flex items-center gap-1.5 transition-colors ${
+                className={`px-3.5 py-2 flex items-center gap-1.5 transition-colors cursor-pointer whitespace-nowrap ${
                   explorerMode === 'modules'
-                    ? 'bg-stone-900 dark:bg-amber-400 text-white dark:text-stone-950'
-                    : 'bg-white dark:bg-stone-900 text-stone-700 dark:text-stone-300'
+                    ? 'bg-[#F8C300] text-[#101014] font-bold'
+                    : 'text-[#E4E6F0] hover:text-white'
                 }`}
               >
                 <Layers className="w-3.5 h-3.5" />
@@ -276,10 +478,10 @@ export const VisualLibraryExplorer: React.FC<VisualLibraryExplorerProps> = ({
               <button
                 type="button"
                 onClick={() => setExplorerMode('atlas')}
-                className={`px-3 py-2 flex items-center gap-1.5 transition-colors ${
+                className={`px-3.5 py-2 flex items-center gap-1.5 transition-colors cursor-pointer whitespace-nowrap ${
                   explorerMode === 'atlas'
-                    ? 'bg-stone-900 dark:bg-amber-400 text-white dark:text-stone-950'
-                    : 'bg-white dark:bg-stone-900 text-stone-700 dark:text-stone-300'
+                    ? 'bg-[#F8C300] text-[#101014] font-bold'
+                    : 'text-[#E4E6F0] hover:text-white'
                 }`}
               >
                 <Images className="w-3.5 h-3.5" />
@@ -290,13 +492,13 @@ export const VisualLibraryExplorer: React.FC<VisualLibraryExplorerProps> = ({
             <button
               type="button"
               onClick={() => setShowComparisons((prev) => !prev)}
-              className={`px-3.5 py-2 text-xs font-semibold uppercase tracking-wider rounded border transition-colors flex items-center gap-1.5 ${
+              className={`px-3.5 py-2 text-xs font-bold uppercase tracking-wider rounded-lg border transition-colors flex items-center gap-1.5 cursor-pointer whitespace-nowrap backdrop-blur-xs ${
                 showComparisons
-                  ? 'bg-amber-400 text-stone-950 border-amber-400'
-                  : 'bg-white dark:bg-stone-900 text-stone-800 dark:text-stone-200 border-stone-300 dark:border-stone-700 hover:border-amber-500'
+                  ? 'bg-[#F8C300] text-[#101014] border-[#F8C300]'
+                  : 'bg-[#101014]/70 text-[#F4F2ED] border-white/20 hover:border-[#F8C300]'
               }`}
             >
-              <ArrowLeftRight className="w-3.5 h-3.5" />
+              <ArrowLeftRight className={`w-3.5 h-3.5 ${showComparisons ? 'text-[#101014]' : 'text-[#F8C300]'}`} />
               <span>{showComparisons ? 'Ocultar Comparaciones' : 'Comparaciones'}</span>
             </button>
 
@@ -304,13 +506,13 @@ export const VisualLibraryExplorer: React.FC<VisualLibraryExplorerProps> = ({
               <button
                 type="button"
                 onClick={() => setOnlyFavorites((prev) => !prev)}
-                className={`px-3.5 py-2 text-xs font-semibold uppercase tracking-wider rounded border transition-colors flex items-center gap-1.5 ${
+                className={`px-3.5 py-2 text-xs font-bold uppercase tracking-wider rounded-lg border transition-colors flex items-center gap-1.5 cursor-pointer whitespace-nowrap backdrop-blur-xs ${
                   onlyFavorites
-                    ? 'bg-stone-900 dark:bg-amber-400 text-white dark:text-stone-950 border-stone-900 dark:border-amber-400'
-                    : 'bg-white dark:bg-stone-900 text-stone-700 dark:text-stone-300 border-stone-300 dark:border-stone-700'
+                    ? 'bg-[#F8C300] text-[#101014] border-[#F8C300]'
+                    : 'bg-[#101014]/70 text-[#F4F2ED] border-white/20 hover:border-[#F8C300]'
                 }`}
               >
-                <Star className={`w-3.5 h-3.5 ${onlyFavorites ? 'fill-current' : 'text-amber-500'}`} />
+                <Star className={`w-3.5 h-3.5 ${onlyFavorites ? 'fill-current' : 'text-[#F8C300]'}`} />
                 <span>Favoritos ({favorites.length})</span>
               </button>
             )}
@@ -319,9 +521,9 @@ export const VisualLibraryExplorer: React.FC<VisualLibraryExplorerProps> = ({
               <button
                 type="button"
                 onClick={() => onOpenGalleryCollection(getGalleryCollectionForModule(activeModule))}
-                className="px-3.5 py-2 text-xs font-semibold uppercase tracking-wider rounded border border-[#DEDAD0] dark:border-[#2C2C36] bg-white dark:bg-[#16161C] hover:border-[#F8C300] text-[#101014] dark:text-[#F4F2ED] transition-colors flex items-center gap-1.5"
+                className="px-3.5 py-2 text-xs font-bold uppercase tracking-wider rounded-lg bg-[#7545D6] hover:bg-[#6134BF] text-white transition-colors flex items-center gap-1.5 cursor-pointer whitespace-nowrap shadow-xs"
               >
-                <Images className="w-3.5 h-3.5 text-[#7545D6] dark:text-[#F8C300]" />
+                <Images className="w-3.5 h-3.5" />
                 <span>Ver en Galería</span>
               </button>
             )}
@@ -330,7 +532,7 @@ export const VisualLibraryExplorer: React.FC<VisualLibraryExplorerProps> = ({
               <button
                 type="button"
                 onClick={onOpenJsonLab}
-                className="px-3.5 py-2 text-xs font-semibold uppercase tracking-wider rounded bg-[#7545D6] hover:bg-[#6134bf] text-white transition-colors flex items-center gap-1.5"
+                className="px-3.5 py-2 text-xs font-bold uppercase tracking-wider rounded-lg bg-[#059669] hover:bg-[#047857] text-white transition-colors flex items-center gap-1.5 cursor-pointer whitespace-nowrap shadow-xs"
               >
                 <Braces className="w-3.5 h-3.5" />
                 <span>Abrir Lab JSON</span>
@@ -341,24 +543,45 @@ export const VisualLibraryExplorer: React.FC<VisualLibraryExplorerProps> = ({
               <button
                 type="button"
                 onClick={onOpenLabs}
-                className="px-3.5 py-2 text-xs font-semibold uppercase tracking-wider rounded border border-[#DEDAD0] dark:border-[#2C2C36] bg-white dark:bg-[#16161C] hover:border-[#326BFF] text-[#101014] dark:text-[#F4F2ED] transition-colors flex items-center gap-1.5"
+                className="px-3.5 py-2 text-xs font-bold uppercase tracking-wider rounded-lg bg-[#326BFF] hover:bg-[#2358E6] text-white transition-colors flex items-center gap-1.5 cursor-pointer whitespace-nowrap shadow-xs"
               >
-                <Sliders className="w-3.5 h-3.5 text-[#326BFF]" />
+                <Sliders className="w-3.5 h-3.5" />
                 <span>Practicar en Labs</span>
               </button>
             )}
-          </div>
-        </div>
+          </>
+        }
+      />
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-8 space-y-8">
 
         {/* 3 Thematic Pillars Switcher across all 26 Modules (modules mode) */}
         {explorerMode === 'modules' && (
-          <div className="space-y-3">
+          <div className="space-y-3.5">
             <div className="flex flex-wrap items-center gap-2">
               {(
                 [
-                  { id: 'imagen-cine', label: 'Bloque I · Imagen, Óptica, Luz, Color & Cine (Mód. 01–06)' },
-                  { id: 'narrativa-diseno', label: 'Bloque II · Storytelling, Storyboard, Personajes, Sonido & Diseño (Mód. 07–14)' },
-                  { id: 'especialidades-etica', label: 'Bloque III · 3D, Fotogrametría, Ciencia, Accesibilidad & Ética (Mód. 15–26)' },
+                  {
+                    id: 'imagen-cine',
+                    label: 'Bloque I · Imagen, Óptica, Luz, Color & Cine (Mód. 01–06)',
+                    activeCls: 'bg-[#F8C300] text-[#101014] border-[#D4A600] shadow-xs font-bold',
+                    idleCls: 'bg-white dark:bg-[#16161C] text-[#101014] dark:text-[#E5E3DC] border-[#DEDAD0] dark:border-[#26262E] hover:border-[#D4A600]',
+                    dot: 'bg-[#F8C300]',
+                  },
+                  {
+                    id: 'narrativa-diseno',
+                    label: 'Bloque II · Storytelling, Storyboard, Personajes, Sonido & Diseño (Mód. 07–14)',
+                    activeCls: 'bg-[#326BFF] text-white border-[#326BFF] shadow-xs font-bold',
+                    idleCls: 'bg-white dark:bg-[#16161C] text-[#101014] dark:text-[#E5E3DC] border-[#DEDAD0] dark:border-[#26262E] hover:border-[#326BFF]',
+                    dot: 'bg-[#326BFF]',
+                  },
+                  {
+                    id: 'especialidades-etica',
+                    label: 'Bloque III · 3D, Fotogrametría, Ciencia, Accesibilidad & Ética (Mód. 15–26)',
+                    activeCls: 'bg-[#7545D6] text-white border-[#7545D6] shadow-xs font-bold',
+                    idleCls: 'bg-white dark:bg-[#16161C] text-[#101014] dark:text-[#E5E3DC] border-[#DEDAD0] dark:border-[#26262E] hover:border-[#7545D6]',
+                    dot: 'bg-[#7545D6]',
+                  },
                 ] as const
               ).map((grp) => {
                 const isGrpActive = activeGroup === grp.id && !searchQuery;
@@ -372,13 +595,14 @@ export const VisualLibraryExplorer: React.FC<VisualLibraryExplorerProps> = ({
                       const firstInGrp = ALL_MODULES_META.find((m) => m.group === grp.id);
                       if (firstInGrp) onChangeModule(firstInGrp.id);
                     }}
-                    className={`px-3.5 py-2 text-xs font-semibold rounded-lg border transition-colors ${
-                      isGrpActive
-                        ? 'bg-amber-400 text-stone-950 border-amber-400 shadow-xs'
-                        : 'bg-white dark:bg-stone-900 text-stone-700 dark:text-stone-300 border-stone-200 dark:border-stone-800 hover:border-amber-400'
+                    className={`px-3.5 py-2 text-xs font-semibold rounded-lg border transition-colors inline-flex items-center gap-2 cursor-pointer ${
+                      isGrpActive ? grp.activeCls : grp.idleCls
                     }`}
                   >
-                    {grp.label}
+                    {!isGrpActive && (
+                      <span aria-hidden="true" className={`w-2 h-2 rounded-xs shrink-0 ${grp.dot}`} />
+                    )}
+                    <span>{grp.label}</span>
                   </button>
                 );
               })}
@@ -393,6 +617,24 @@ export const VisualLibraryExplorer: React.FC<VisualLibraryExplorerProps> = ({
               {groupModules.map((mod) => {
                 const isActive = mod.id === activeModule && !searchQuery;
                 const count = ALL_ENTRIES.filter((e) => e.moduleId === mod.id).length;
+                const activeMetaAccent =
+                  activeGroup === 'narrativa-diseno'
+                    ? 'text-[#93B4FF]'
+                    : activeGroup === 'especialidades-etica'
+                    ? 'text-[#C4A5FF]'
+                    : 'text-[#F8C300]';
+                const activeTopBar =
+                  activeGroup === 'narrativa-diseno'
+                    ? 'bg-[#326BFF]'
+                    : activeGroup === 'especialidades-etica'
+                    ? 'bg-[#7545D6]'
+                    : 'bg-[#F8C300]';
+                const idleHoverBorder =
+                  activeGroup === 'narrativa-diseno'
+                    ? 'hover:border-[#326BFF]'
+                    : activeGroup === 'especialidades-etica'
+                    ? 'hover:border-[#7545D6]'
+                    : 'hover:border-[#D4A600]';
                 return (
                   <button
                     key={mod.id}
@@ -403,17 +645,24 @@ export const VisualLibraryExplorer: React.FC<VisualLibraryExplorerProps> = ({
                       setSearchQuery('');
                       onChangeModule(mod.id);
                     }}
-                    className={`p-3 text-left rounded-lg border transition-all flex flex-col justify-between ${
+                    className={`text-left rounded-xl border overflow-hidden transition-all flex flex-col justify-between cursor-pointer ${
                       isActive
-                        ? 'bg-stone-900 dark:bg-amber-400 text-white dark:text-stone-950 border-stone-900 dark:border-amber-400 shadow-sm'
-                        : 'bg-white dark:bg-stone-900 text-stone-800 dark:text-stone-200 border-stone-200 dark:border-stone-800 hover:border-amber-400/70'
+                        ? 'bg-[#101014] text-[#F4F2ED] border-[#101014] dark:border-[#3A3A48] shadow-md'
+                        : `bg-white dark:bg-[#16161C] text-[#101014] dark:text-[#F4F2ED] border-[#DEDAD0] dark:border-[#26262E] ${idleHoverBorder}`
                     }`}
                   >
-                    <div className="flex items-center justify-between text-[10px] font-mono-code uppercase tracking-wider opacity-80 mb-1">
-                      <span>Módulo {mod.number}</span>
-                      <span>{count} fichas</span>
+                    <div className={`h-1 w-full ${isActive ? activeTopBar : 'bg-transparent'}`} />
+                    <div className="p-3 flex flex-col justify-between gap-1.5 flex-1">
+                      <div className="flex items-center justify-between gap-2 text-[10px] font-mono-code uppercase tracking-wider">
+                        <span className={`font-bold shrink-0 tabular-nums ${isActive ? activeMetaAccent : 'text-[#5B5B66] dark:text-[#A09E97]'}`}>
+                          Mód. {mod.number}
+                        </span>
+                        <span className={`shrink-0 tabular-nums ${isActive ? 'text-[#C8C5BD]' : 'text-[#76746E] dark:text-[#8E8C85]'}`}>
+                          {count} fichas
+                        </span>
+                      </div>
+                      <span className="text-xs sm:text-sm font-bold leading-snug">{mod.shortTitle}</span>
                     </div>
-                    <span className="text-xs sm:text-sm font-bold leading-snug">{mod.shortTitle}</span>
                   </button>
                 );
               })}
@@ -423,23 +672,23 @@ export const VisualLibraryExplorer: React.FC<VisualLibraryExplorerProps> = ({
 
         {/* Visual Comparison Strip (expandable or toggled) */}
         {showComparisons && (
-          <div className="p-6 rounded-xl bg-stone-100/70 dark:bg-stone-900/50 border border-stone-200 dark:border-stone-800">
+          <div className="p-6 rounded-xl bg-[#EAE6DC] dark:bg-[#16161E] border border-[#D4CFC2] dark:border-[#282834]">
             <VisualComparisonStrip />
           </div>
         )}
 
-        {/* Search & Filters Toolbar */}
-        <div className="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded-lg p-4 space-y-4 shadow-xs">
+        {/* Search & Filters Toolbar — Tinted Architectural Surface */}
+        <div className="bg-[#EAE6DC] dark:bg-[#16161E] border border-[#D4CFC2] dark:border-[#282834] rounded-xl p-4 space-y-4 shadow-xs">
           <div className="flex flex-col md:flex-row gap-3 items-stretch md:items-center justify-between">
             {/* Search Input */}
             <div className="relative flex-1">
-              <Search className="w-4 h-4 text-stone-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+              <Search className="w-4 h-4 text-[#5B5B66] absolute left-3.5 top-1/2 -translate-y-1/2" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Buscar en los 6 módulos: ej. '85mm', 'Rembrandt', 'dolly', 'botánica', 'chiaroscuro', 'f/1.8'..."
-                className="w-full pl-10 pr-9 py-2 text-sm bg-stone-50 dark:bg-stone-950 border border-stone-200 dark:border-stone-800 rounded text-stone-900 dark:text-stone-100 placeholder:text-stone-400 focus:outline-none focus:border-amber-500"
+                placeholder="Buscar en los 26 módulos: ej. '85mm', 'Rembrandt', 'dolly', 'botánica', 'chiaroscuro', 'f/1.8'..."
+                className="w-full pl-10 pr-9 py-2 text-sm bg-white dark:bg-[#101014] border border-[#D4CFC2] dark:border-[#2C2C36] rounded-lg text-[#101014] dark:text-[#F4F2ED] placeholder:text-[#76746E] focus:outline-none focus:border-[#326BFF]"
               />
               {searchQuery && (
                 <button
@@ -456,15 +705,15 @@ export const VisualLibraryExplorer: React.FC<VisualLibraryExplorerProps> = ({
             {/* Difficulty Filter (only in modules mode) */}
             {explorerMode === 'modules' && (
               <div className="flex items-center gap-2 shrink-0">
-                <SlidersHorizontal className="w-3.5 h-3.5 text-stone-500" />
-                <label htmlFor="difficulty-select" className="text-xs font-mono-code text-stone-500">
+                <SlidersHorizontal className="w-3.5 h-3.5 text-[#5B5B66]" />
+                <label htmlFor="difficulty-select" className="text-xs font-mono-code font-semibold text-[#4A4A55] dark:text-[#A09E97]">
                   Nivel:
                 </label>
                 <select
                   id="difficulty-select"
                   value={difficultyFilter}
                   onChange={(e) => setDifficultyFilter(e.target.value)}
-                  className="text-xs bg-stone-50 dark:bg-stone-950 border border-stone-200 dark:border-stone-800 rounded px-2.5 py-2 text-stone-800 dark:text-stone-200 focus:outline-none focus:border-amber-500"
+                  className="text-xs bg-white dark:bg-[#101014] border border-[#D4CFC2] dark:border-[#2C2C36] rounded-lg px-2.5 py-2 text-[#101014] dark:text-[#F4F2ED] focus:outline-none focus:border-[#326BFF]"
                 >
                   <option value="Todas">Todos los niveles</option>
                   <option value="Básico">Básico</option>
@@ -477,46 +726,58 @@ export const VisualLibraryExplorer: React.FC<VisualLibraryExplorerProps> = ({
 
           {/* Subcategory Tabs or Atlas Category Filter */}
           {explorerMode === 'modules' && !searchQuery && (
-            <div className="flex flex-wrap items-center gap-1.5 pt-2 border-t border-stone-100 dark:border-stone-800">
-              <button
-                type="button"
-                onClick={() => setSelectedSubcategory('Todas')}
-                className={`px-3 py-1.5 text-xs font-medium rounded transition-colors ${
-                  selectedSubcategory === 'Todas'
-                    ? 'bg-amber-400 text-stone-950 font-semibold'
-                    : 'bg-stone-100 dark:bg-stone-950 text-stone-600 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-200'
-                }`}
-              >
-                Todas ({ALL_ENTRIES.filter((e) => e.moduleId === activeModule).length})
-              </button>
-              {activeModuleMeta.subcategories.map((sub) => (
-                <button
-                  key={sub}
-                  type="button"
-                  onClick={() => setSelectedSubcategory(sub)}
-                  className={`px-3 py-1.5 text-xs font-medium rounded transition-colors ${
-                    selectedSubcategory === sub
-                      ? 'bg-amber-400 text-stone-950 font-semibold'
-                      : 'bg-stone-100 dark:bg-stone-950 text-stone-600 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-200'
-                  }`}
-                >
-                  {sub}
-                </button>
-              ))}
+            <div className="flex flex-wrap items-center gap-1.5 pt-2 border-t border-[#D6D1C5] dark:border-[#262632]">
+              {(() => {
+                const subActiveCls =
+                  activeGroup === 'narrativa-diseno'
+                    ? 'bg-[#326BFF] text-white font-bold shadow-xs'
+                    : activeGroup === 'especialidades-etica'
+                    ? 'bg-[#7545D6] text-white font-bold shadow-xs'
+                    : 'bg-[#F8C300] text-[#101014] font-bold shadow-xs';
+                return (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedSubcategory('Todas')}
+                      className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors cursor-pointer ${
+                        selectedSubcategory === 'Todas'
+                          ? subActiveCls
+                          : 'bg-white dark:bg-[#101014] text-[#4A4A55] dark:text-[#B4B2AC] border border-[#D8D3C8] dark:border-[#26262E] hover:text-[#101014] dark:hover:text-white'
+                      }`}
+                    >
+                      Todas ({ALL_ENTRIES.filter((e) => e.moduleId === activeModule).length})
+                    </button>
+                    {activeModuleMeta.subcategories.map((sub) => (
+                      <button
+                        key={sub}
+                        type="button"
+                        onClick={() => setSelectedSubcategory(sub)}
+                        className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors cursor-pointer ${
+                          selectedSubcategory === sub
+                            ? subActiveCls
+                            : 'bg-white dark:bg-[#101014] text-[#4A4A55] dark:text-[#B4B2AC] border border-[#D8D3C8] dark:border-[#26262E] hover:text-[#101014] dark:hover:text-white'
+                        }`}
+                      >
+                        {sub}
+                      </button>
+                    ))}
+                  </>
+                );
+              })()}
             </div>
           )}
 
           {explorerMode === 'atlas' && (
-            <div className="flex flex-wrap items-center gap-1.5 pt-2 border-t border-stone-100 dark:border-stone-800">
+            <div className="flex flex-wrap items-center gap-1.5 pt-2 border-t border-[#D6D1C5] dark:border-[#262632]">
               {atlasCategories.map((cat) => (
                 <button
                   key={cat}
                   type="button"
                   onClick={() => setAtlasCategory(cat)}
-                  className={`px-3 py-1.5 text-xs font-medium rounded transition-colors ${
+                  className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors cursor-pointer ${
                     atlasCategory === cat
-                      ? 'bg-amber-400 text-stone-950 font-semibold'
-                      : 'bg-stone-100 dark:bg-stone-950 text-stone-600 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-200'
+                      ? 'bg-[#326BFF] text-white font-bold shadow-xs'
+                      : 'bg-white dark:bg-[#101014] text-[#4A4A55] dark:text-[#B4B2AC] border border-[#D8D3C8] dark:border-[#26262E] hover:text-[#101014] dark:hover:text-white'
                   }`}
                 >
                   {cat}
@@ -528,10 +789,10 @@ export const VisualLibraryExplorer: React.FC<VisualLibraryExplorerProps> = ({
 
         {/* Pedagogical honesty callout for Module 02 & Module 04 */}
         {(activeModule === 'mod-02' || activeModule === 'mod-04') && !searchQuery && (
-          <div className="p-3.5 rounded-lg bg-amber-50/70 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/50 text-xs text-stone-700 dark:text-stone-300 flex items-start gap-2.5">
-            <Info className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+          <div className="p-3.5 rounded-xl bg-[#EEF3FF] dark:bg-[#141B2D] border border-[#C7D7FF] dark:border-[#25365C] text-xs text-[#25304A] dark:text-[#D0DCF8] flex items-start gap-2.5">
+            <Info className="w-4 h-4 text-[#326BFF] dark:text-[#8FB0FF] shrink-0 mt-0.5" />
             <p>
-              <strong className="font-semibold text-stone-900 dark:text-stone-100">
+              <strong className="font-semibold text-[#101014] dark:text-white">
                 Nota metodológica sobre marcas y emulsiones:
               </strong>{' '}
               Las menciones a fabricantes de cámaras (Sony, Canon, ARRI, Leica, Hasselblad) o películas fotográficas (Kodak Portra, CineStill, Ilford) funcionan como referencias de{' '}
@@ -540,53 +801,65 @@ export const VisualLibraryExplorer: React.FC<VisualLibraryExplorerProps> = ({
           </div>
         )}
 
-        {/* Situated Workshop Pedagogy inside Module 01 */}
+        {/* Situated Workshop Pedagogy inside Module 01 — Dark Obsidian Methodology Centerpiece */}
         {activeModule === 'mod-01' &&
           !searchQuery &&
           (selectedSubcategory === 'Todas' || selectedSubcategory === 'E. Talleres y creación situada') && (
-            <div className="rounded-xl border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 p-5 sm:p-6 space-y-5 shadow-xs">
+            <div className="rounded-2xl border border-[#262836] bg-[#13141C] text-[#F4F2ED] p-5 sm:p-6 space-y-5 shadow-md">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                 <div>
-                  <div className="flex items-center gap-1.5 text-xs font-mono-code uppercase tracking-wider text-amber-700 dark:text-amber-400 font-bold">
+                  <div className="flex items-center gap-1.5 text-xs font-mono-code uppercase tracking-wider text-[#F8C300] font-bold">
                     <Compass className="w-3.5 h-3.5" />
                     <span>Metodología Núcleo Colectivo · Ruta de Creación Situada</span>
                   </div>
-                  <h3 className="text-lg font-bold font-serif-title text-stone-900 dark:text-stone-100 mt-0.5">
+                  <h3 className="text-xl font-bold font-serif-title text-[#F4F2ED] mt-1">
                     5 pasos para talleres participativos con IA
                   </h3>
                 </div>
-                <span className="text-xs font-mono-code text-stone-500">
+                <span className="text-xs font-mono-code text-[#93B4FF] font-semibold">
                   Sentido cultural · Territorio · Revisión crítica
                 </span>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
-                {WORKSHOP_ROUTE.map((item) => (
-                  <div
-                    key={item.step}
-                    className="p-3.5 rounded-lg bg-[#FAF8F5] dark:bg-stone-950 border border-stone-200 dark:border-stone-800"
-                  >
-                    <div className="text-xs font-mono-code font-bold text-amber-700 dark:text-amber-400">
-                      {item.step} · {item.name}
+                {WORKSHOP_ROUTE.map((item, idx) => {
+                  const stepPalette = [
+                    { bar: 'bg-[#F8C300]', text: 'text-[#F8C300]' },
+                    { bar: 'bg-[#326BFF]', text: 'text-[#8FB0FF]' },
+                    { bar: 'bg-[#7545D6]', text: 'text-[#C4A5FF]' },
+                    { bar: 'bg-[#059669]', text: 'text-[#34D399]' },
+                    { bar: 'bg-[#E11D48]', text: 'text-[#FB7185]' },
+                  ][idx % 5];
+                  return (
+                    <div
+                      key={item.step}
+                      className="rounded-xl bg-[#1B1D29] border border-white/10 overflow-hidden flex flex-col"
+                    >
+                      <div className={`h-1 w-full ${stepPalette.bar}`} />
+                      <div className="p-3.5 flex-1">
+                        <div className={`text-xs font-mono-code font-bold tabular-nums ${stepPalette.text}`}>
+                          {item.step} · {item.name}
+                        </div>
+                        <p className="text-xs font-semibold text-[#F4F2ED] mt-1.5 leading-snug">
+                          {item.question}
+                        </p>
+                        <p className="text-[11px] text-[#B8BCCC] mt-1.5 leading-relaxed">
+                          {item.action}
+                        </p>
+                      </div>
                     </div>
-                    <p className="text-xs font-semibold text-stone-900 dark:text-stone-100 mt-1">
-                      {item.question}
-                    </p>
-                    <p className="text-[11px] text-stone-600 dark:text-stone-400 mt-1.5 leading-relaxed">
-                      {item.action}
-                    </p>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
 
-              <div className="pt-3 border-t border-stone-200 dark:border-stone-800">
-                <p className="text-xs font-mono-code uppercase tracking-wider text-stone-500 mb-2 font-semibold">
+              <div className="pt-3.5 border-t border-white/10">
+                <p className="text-xs font-mono-code uppercase tracking-wider text-[#C4A5FF] mb-2 font-bold">
                   Criterios curatoriales para revisar una imagen generada:
                 </p>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 text-xs text-stone-700 dark:text-stone-300">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 text-xs text-[#D8D5CD]">
                   {IMAGE_REVIEW_CRITERIA.map((crit) => (
                     <div key={crit} className="flex items-start gap-2">
-                      <span className="text-amber-600 font-bold">•</span>
+                      <span className="text-[#F8C300] font-bold">•</span>
                       <span>{crit}</span>
                     </div>
                   ))}

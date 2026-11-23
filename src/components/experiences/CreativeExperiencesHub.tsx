@@ -34,12 +34,47 @@ import {
 } from '../../data/creativeExperiencesData';
 import type { PromptBuilderState } from '../PromptBuilder';
 import { ResilientImage } from '../ResilientImage';
+import { SectionPhotoBanner } from '../SectionPhotoBanner';
+import { VISUAL_LIBRARY_PATHS } from '../../data/visualLibraryRegistry';
 import { LabCard } from './LabCard';
 import { GuidedExerciseModal } from './GuidedExerciseModal';
 import { RandomChallengeGenerator } from './RandomChallengeGenerator';
 import { ExperimentCardExporterModal } from './ExperimentCardExporterModal';
 
 type ExerciseTypeFilter = 'all' | 'labs' | 'express' | 'projects' | 'open';
+
+function getExperienceBannerVisual(typeFilter: ExerciseTypeFilter): {
+  image: string;
+  alt: string;
+} {
+  switch (typeFilter) {
+    case 'labs':
+      return {
+        image: VISUAL_LIBRARY_PATHS.videoStudio,
+        alt: 'Disciplinas Creativas — 26 laboratorios guiados paso a paso',
+      };
+    case 'express':
+      return {
+        image: VISUAL_LIBRARY_PATHS.adSplash,
+        alt: 'Retos Express — 10 ejercicios creativos de 15 minutos',
+      };
+    case 'projects':
+      return {
+        image: VISUAL_LIBRARY_PATHS.storyWorldbuildingCity,
+        alt: 'Desafíos Creativos — 8 proyectos completos multietapa',
+      };
+    case 'open':
+      return {
+        image: VISUAL_LIBRARY_PATHS.animGenerativeParticles,
+        alt: 'Experimentos Abiertos — 8 provocaciones artísticas y generativas',
+      };
+    default:
+      return {
+        image: VISUAL_LIBRARY_PATHS.vfxProjectionMapping,
+        alt: 'Experiencias, laboratorios y retos creativos con IA',
+      };
+  }
+}
 
 interface CreativeExperiencesHubProps {
   mode?: 'full' | 'home';
@@ -325,37 +360,34 @@ export const CreativeExperiencesHub: React.FC<CreativeExperiencesHubProps> = ({
   const showProjectsSection = typeFilter === 'all' || typeFilter === 'projects';
   const showOpenSection = typeFilter === 'all' || typeFilter === 'open';
 
+  const experienceBanner = useMemo(
+    () => getExperienceBannerVisual(typeFilter),
+    [typeFilter]
+  );
+
   return (
     <div className="bg-[#F4F2ED] dark:bg-[#101014] text-[#101014] dark:text-[#F4F2ED] transition-colors">
       {/* =====================================================================
-          ENCABEZADO + FILTROS + PROGRESO
+          ENCABEZADO FOTOGRÁFICO + FILTROS + PROGRESO
          ===================================================================== */}
       <section
         id="nuevos-laboratorios"
-        className="py-12 border-b border-[#DEDAD0] dark:border-[#26262E] bg-white dark:bg-[#16161C]"
+        className="pb-10 border-b border-[#DEDAD0] dark:border-[#26262E] bg-white dark:bg-[#16161C]"
       >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 space-y-6">
-          <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-4">
-            <div className="space-y-2 max-w-3xl">
-              <div className="text-xs font-mono-code uppercase tracking-wider text-[#7545D6] dark:text-[#F8C300] font-bold">
-                APRENDER HACIENDO · 26 LABORATORIOS · 10 RETOS EXPRESS · 8 DESAFÍOS · 8 EXPERIMENTOS
-              </div>
-              <h2 className="text-3xl sm:text-4xl font-extrabold font-display-sans text-[#101014] dark:text-[#F4F2ED] leading-tight text-balance">
-                Nuevos laboratorios, ejercicios y experiencias creativas
-              </h2>
-              <p className="text-sm sm:text-base text-[#4A4A55] dark:text-[#B4B2AC] leading-relaxed">
-                Explora 6 disciplinas visuales con ejercicios guiados paso a paso (8 etapas), retos rápidos de 15 minutos, proyectos completos, preguntas abiertas y galería comunitaria de experimentos.
-              </p>
-            </div>
-
-            <div className="flex flex-wrap items-center gap-3 shrink-0">
-              <div className="px-4 py-2.5 rounded-xl bg-[#F4F2ED] dark:bg-[#101014] border border-[#DEDAD0] dark:border-[#26262E] text-xs font-mono-code tabular-nums">
-                <span className="text-[#5B5B66] dark:text-[#A09E97]">Progreso: </span>
-                <strong className="text-[#101014] dark:text-[#F8C300]">
+        <SectionPhotoBanner
+          image={experienceBanner.image}
+          imageAlt={experienceBanner.alt}
+          accentTint="violet"
+          kicker="APRENDER HACIENDO · 26 LABORATORIOS · 10 RETOS EXPRESS · 8 DESAFÍOS · 8 EXPERIMENTOS"
+          topRight={
+            <div className="flex flex-wrap items-center gap-2.5">
+              <div className="px-3.5 py-2 rounded-lg bg-[#101014]/75 border border-white/15 text-xs font-mono-code tabular-nums text-[#D8D5CD] backdrop-blur-xs">
+                <span>Progreso: </span>
+                <strong className="text-[#F8C300]">
                   {completedLabs.length}/26
                 </strong>{' '}
                 labs ·{' '}
-                <strong className="text-[#101014] dark:text-[#F8C300]">
+                <strong className="text-[#F8C300]">
                   {completedExpress.length}/10
                 </strong>{' '}
                 express
@@ -365,40 +397,44 @@ export const CreativeExperiencesHub: React.FC<CreativeExperiencesHubProps> = ({
                 <button
                   type="button"
                   onClick={onNavigateToFullSection}
-                  className="px-4 py-2.5 min-h-[40px] rounded-lg bg-[#101014] dark:bg-[#F8C300] text-[#F4F2ED] dark:text-[#101014] text-xs font-bold uppercase tracking-wider inline-flex items-center gap-1.5 whitespace-nowrap"
+                  className="px-4 py-2 min-h-[38px] rounded-lg bg-[#F8C300] hover:bg-[#e5b400] text-[#101014] text-xs font-bold uppercase tracking-wider inline-flex items-center gap-1.5 whitespace-nowrap cursor-pointer shadow-xs"
                 >
                   <span>Abrir vista dedicada</span>
                   <ArrowRight className="w-3.5 h-3.5" />
                 </button>
               )}
             </div>
-          </div>
+          }
+          title="Nuevos laboratorios, ejercicios y experiencias creativas"
+          subtitle="Explora 6 disciplinas visuales con ejercicios guiados paso a paso (8 etapas), retos rápidos de 15 minutos, proyectos completos, preguntas abiertas y galería comunitaria de experimentos."
+          actions={
+            <>
+              {[
+                { id: 'all' as const, label: 'Todo el ecosistema', icon: <Sparkles className="w-3.5 h-3.5" /> },
+                { id: 'labs' as const, label: `Disciplinas (${filteredLabs.length})`, icon: <FlaskConical className="w-3.5 h-3.5" /> },
+                { id: 'express' as const, label: `Retos Express (${filteredExpress.length})`, icon: <Zap className="w-3.5 h-3.5" /> },
+                { id: 'projects' as const, label: `Desafíos (${filteredProjects.length})`, icon: <FolderKanban className="w-3.5 h-3.5" /> },
+                { id: 'open' as const, label: `Experimentos Abiertos (${filteredOpen.length})`, icon: <Compass className="w-3.5 h-3.5" /> },
+              ].map((tab) => (
+                <button
+                  key={tab.id}
+                  type="button"
+                  onClick={() => setTypeFilter(tab.id)}
+                  className={`px-3.5 py-2 min-h-[40px] rounded-lg text-xs font-semibold border transition-colors inline-flex items-center gap-1.5 whitespace-nowrap cursor-pointer backdrop-blur-xs ${
+                    typeFilter === tab.id
+                      ? 'bg-[#F8C300] text-[#101014] border-[#F8C300] font-bold shadow-xs'
+                      : 'bg-[#101014]/70 text-[#F4F2ED] border-white/20 hover:border-[#F8C300]'
+                  }`}
+                >
+                  {tab.icon}
+                  <span>{tab.label}</span>
+                </button>
+              ))}
+            </>
+          }
+        />
 
-          {/* Quick Jump Anchor Bar */}
-          <div className="flex flex-wrap items-center gap-2">
-            {[
-              { id: 'all' as const, label: 'Todo el ecosistema', icon: <Sparkles className="w-3.5 h-3.5" /> },
-              { id: 'labs' as const, label: `Disciplinas (${filteredLabs.length})`, icon: <FlaskConical className="w-3.5 h-3.5" /> },
-              { id: 'express' as const, label: `Retos Express (${filteredExpress.length})`, icon: <Zap className="w-3.5 h-3.5" /> },
-              { id: 'projects' as const, label: `Desafíos (${filteredProjects.length})`, icon: <FolderKanban className="w-3.5 h-3.5" /> },
-              { id: 'open' as const, label: `Experimentos Abiertos (${filteredOpen.length})`, icon: <Compass className="w-3.5 h-3.5" /> },
-            ].map((tab) => (
-              <button
-                key={tab.id}
-                type="button"
-                onClick={() => setTypeFilter(tab.id)}
-                className={`px-3.5 py-2 min-h-[40px] rounded-lg text-xs font-semibold border transition-colors inline-flex items-center gap-1.5 whitespace-nowrap ${
-                  typeFilter === tab.id
-                    ? 'bg-[#F8C300] text-[#101014] border-[#F8C300] font-bold'
-                    : 'bg-[#F4F2ED] dark:bg-[#101014] text-[#101014] dark:text-[#F4F2ED] border-[#DEDAD0] dark:border-[#26262E] hover:border-[#326BFF]'
-                }`}
-              >
-                {tab.icon}
-                <span>{tab.label}</span>
-              </button>
-            ))}
-          </div>
-
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-7 space-y-5">
           {/* Multi-Dimensional Filter & Search Bar */}
           <div className="p-4 rounded-xl bg-[#F4F2ED] dark:bg-[#101014] border border-[#DEDAD0] dark:border-[#26262E] grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3 items-center">
             <div className="lg:col-span-4 relative">

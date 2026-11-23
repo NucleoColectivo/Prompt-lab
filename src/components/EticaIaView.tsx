@@ -29,6 +29,8 @@ import {
   ZoomOut,
   ExternalLink,
 } from 'lucide-react';
+import ethicsCardSesgos from '../assets/images/ethics_card_sesgos_1795400896612.jpg';
+import { SectionPhotoBanner } from './SectionPhotoBanner';
 import {
   BIAS_LAB_PRESETS,
   ETICA_IA_HEADER,
@@ -341,26 +343,28 @@ export const EticaIaView: React.FC<EticaIaViewProps> = ({
     <div className="bg-[#F4F2ED] dark:bg-[#101014] text-[#101014] dark:text-[#F4F2ED] transition-colors">
       {/* 1. UMBRAL PROVOCADOR + ENCABEZADO DEL LABORATORIO */}
       <section className="border-b border-[#DEDAD0] dark:border-[#26262E] bg-white dark:bg-[#16161C]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10 sm:py-16 space-y-8">
-          <div className="p-6 sm:p-10 rounded-2xl bg-[#101014] text-[#F4F2ED] border border-[#2C2C36] space-y-6">
-            <div className="text-xs font-mono-code uppercase tracking-wider text-[#F8C300] font-bold flex items-center gap-2">
+        <SectionPhotoBanner
+          image={ethicsCardSesgos}
+          imageAlt="Laboratorio de ética, sesgos y pensamiento crítico en inteligencia artificial"
+          accentTint="violet"
+          kicker={
+            <>
               <AlertTriangle className="w-4 h-4 shrink-0" />
               <span>NÚCLEO COLECTIVO · ÉTICA Y PENSAMIENTO CRÍTICO EN IA</span>
-            </div>
-
-            <h1 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold font-display-sans tracking-tight leading-[1.05] text-[#F4F2ED] max-w-4xl text-balance">
-              {ETICA_IA_HEADER.provocation}
-            </h1>
-
-            <p className="text-xs sm:text-sm font-mono-code text-[#F8C300]/90 font-semibold">
+            </>
+          }
+          title={ETICA_IA_HEADER.provocation}
+          subtitle={
+            <span className="font-mono-code text-[#F8C300]/95 font-semibold">
               {ETICA_IA_HEADER.warning}
-            </p>
-
-            <div className="flex flex-wrap items-center gap-3 pt-1">
+            </span>
+          }
+          actions={
+            <>
               <button
                 type="button"
                 onClick={() => scrollToTarget('etica-simulaciones')}
-                className="px-5 py-3 min-h-[44px] text-xs sm:text-sm font-mono-code font-bold bg-[#F8C300] hover:bg-[#e5b400] text-[#101014] rounded-lg transition-colors inline-flex items-center gap-2"
+                className="px-5 py-3 min-h-[44px] text-xs sm:text-sm font-mono-code font-bold bg-[#F8C300] hover:bg-[#e5b400] text-[#101014] rounded-lg transition-colors inline-flex items-center gap-2 cursor-pointer whitespace-nowrap shadow-xs"
               >
                 <span>{ETICA_IA_HEADER.enterCta}</span>
                 <ArrowDown className="w-4 h-4" />
@@ -368,7 +372,7 @@ export const EticaIaView: React.FC<EticaIaViewProps> = ({
               <button
                 type="button"
                 onClick={() => scrollToTarget('videoteca')}
-                className="px-4 py-3 min-h-[44px] text-xs font-semibold uppercase tracking-wider bg-[#1D1D24] hover:bg-[#2A2A34] text-[#F4F2ED] border border-[#343440] rounded-lg transition-colors inline-flex items-center gap-2"
+                className="px-4 py-3 min-h-[44px] text-xs font-semibold uppercase tracking-wider bg-[#101014]/70 hover:bg-[#101014] text-[#F4F2ED] border border-white/20 rounded-lg transition-colors inline-flex items-center gap-2 cursor-pointer whitespace-nowrap backdrop-blur-xs"
               >
                 <Film className="w-4 h-4 text-[#F8C300]" />
                 <span>Explorar Videoteca ({ETHICS_VIDEOS.length})</span>
@@ -376,16 +380,18 @@ export const EticaIaView: React.FC<EticaIaViewProps> = ({
               <button
                 type="button"
                 onClick={() => onOpenLibraryModule('mod-26')}
-                className="px-4 py-3 min-h-[44px] text-xs font-semibold uppercase tracking-wider bg-transparent hover:bg-white/10 text-[#D8D5CD] border border-[#343440] rounded-lg transition-colors inline-flex items-center gap-2"
+                className="px-4 py-3 min-h-[44px] text-xs font-semibold uppercase tracking-wider bg-[#7545D6] hover:bg-[#6134BF] text-white rounded-lg transition-colors inline-flex items-center gap-2 cursor-pointer whitespace-nowrap shadow-xs"
               >
-                <ShieldCheck className="w-4 h-4 text-[#7545D6]" />
+                <ShieldCheck className="w-4 h-4 text-[#F8C300]" />
                 <span>Módulo 26 · Procedencia</span>
               </button>
-            </div>
-          </div>
+            </>
+          }
+        />
 
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-10">
           <div className="max-w-3xl space-y-2">
-            <h2 className="text-2xl sm:text-4xl font-extrabold font-display-sans text-[#101014] dark:text-[#F4F2ED]">
+            <h2 className="text-2xl sm:text-3xl font-extrabold font-display-sans text-[#101014] dark:text-[#F4F2ED]">
               {ETICA_IA_HEADER.title}
             </h2>
             <p className="text-sm sm:text-base font-mono-code text-[#4A4A55] dark:text-[#B4B2AC] leading-relaxed">

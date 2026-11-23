@@ -1,4 +1,5 @@
 import React, { Suspense, lazy, useState, useEffect, useCallback } from 'react';
+import { MotionConfig } from 'motion/react';
 import {
   Sliders,
   Braces,
@@ -23,13 +24,16 @@ import { SectionSubNav } from './components/SectionSubNav';
 import { Hero } from './components/Hero';
 import { HomeView } from './components/HomeView';
 import { Footer } from './components/Footer';
+import { SectionTransition } from './components/MotionPrimitives';
+import { SectionPhotoBanner } from './components/SectionPhotoBanner';
 import { WelcomeWizardModal } from './components/WelcomeWizardModal';
 import type { StoryboardSceneItem } from './components/InteractiveCreativeLabs';
 import type { PromptBuilderState } from './components/PromptBuilder';
 import { CommandItem, RECIPES } from './data/promptData';
 import type { LibraryEntry, ModuleId } from './data/modulesData';
 import type { JsonStyleProfile } from './data/videoAndJsonData';
-import type { VisualAssetRecord } from './data/visualLibraryRegistry';
+import { VISUAL_LIBRARY_PATHS, type VisualAssetRecord } from './data/visualLibraryRegistry';
+import { STUDIO_MEDIA_ASSETS } from './data/creativeStudiosData';
 import type { GalleryVisualItem } from './data/galleryCollectionsData';
 import {
   getPrimaryAxisForSection,
@@ -734,8 +738,17 @@ export default function App() {
       : `MASTER PROMPT — 12 MÓDULOS\n01. SUJETO: ${builderState.subject || 'A sculptural luxury object on dark mineral stone'}.\n02. COMPOSICIÓN: ${builderState.composition || 'Regla de tercios equilibrada'} · ${builderState.shotSize || 'Plano Medio (MS)'}.\n03. GÉNERO: ${builderState.genre}.\n04. CÁMARA: Shot on ${builderState.camera}.\n05. ÓPTICA: ${builderState.lens}, ${builderState.aperture}.\n06. ILUMINACIÓN: ${builderState.lighting}.\n07. COLOR: ${builderState.colorPalette}.\n08. FORMATO: Aspect ratio ${builderState.aspectRatio}.\n09. NEGATIVAS: ${builderState.negativeAvoid.join(', ')}.`;
 
   const currentAxis = getPrimaryAxisForSection(activeSection, activeResourceSub);
+  const viewTransitionKey =
+    activeSection === 'laboratorios'
+      ? `laboratorios-${activeLabSub}`
+      : activeSection === 'recursos'
+      ? `recursos-${activeResourceSub}`
+      : activeSection === 'academia'
+      ? `academia-${academyTab}`
+      : activeSection;
 
   return (
+    <MotionConfig reducedMotion="user">
     <div className="min-h-screen flex flex-col bg-[#F4F2ED] text-[#101014] dark:bg-[#101014] dark:text-[#F4F2ED] transition-colors">
       {/* Top Bar Navigation (6 Clean Axes) */}
       <Header
@@ -759,6 +772,7 @@ export default function App() {
 
       {/* Active Workspace Section View */}
       <main className="flex-1">
+        <SectionTransition transitionKey={viewTransitionKey}>
         {/* 0. HOME EDITORIAL (Eager loaded for instant FCP) */}
         {activeSection === 'home' && (
           <>
@@ -826,8 +840,92 @@ export default function App() {
           )}
 
           {/* 4. SECCIÓN LABORATORIOS (10 Estudios Especializados) */}
-          {activeSection === 'laboratorios' && (
+          {activeSection === 'laboratorios' && (() => {
+            const LAB_BANNERS: Record<
+              LabSubSection,
+              { image: string; position?: 'center' | 'top' | 'bottom'; title: string; subtitle: string; kicker: string }
+            > = {
+              moodboard: {
+                image: VISUAL_LIBRARY_PATHS.colorDuotone,
+                title: 'Moodboard Builder · Dirección de Arte',
+                subtitle: 'Construye tableros visuales curados con paleta HEX, referencias de estilo, atmósfera y exportación directa al Constructor.',
+                kicker: 'LABORATORIO 01 · DIRECCIÓN DE ARTE',
+              },
+              iluminacion: {
+                image: VISUAL_LIBRARY_PATHS.lightRembrandt,
+                position: 'top',
+                title: 'Simulador de Iluminación · 3 Puntos y 9 Parámetros',
+                subtitle: 'Experimenta en tiempo real con Rembrandt, Butterfly, Split y Rim Light, diagrama técnico interactivo e intensidades Key, Fill y Rim.',
+                kicker: 'LABORATORIO 02 · ILUMINACIÓN DE ESTUDIO',
+              },
+              principiante: {
+                image: VISUAL_LIBRARY_PATHS.artBotanical,
+                title: 'Mi Primera Imagen con IA',
+                subtitle: 'Laboratorio guiado paso a paso para crear tu primera imagen con intención visual clara sin tecnicismos innecesarios.',
+                kicker: 'LABORATORIO 03 · INICIACIÓN CREATIVA',
+              },
+              dibujo: {
+                image: STUDIO_MEDIA_ASSETS.drawingTo3dRender,
+                title: 'De Boceto o Dibujo a Imagen Final',
+                subtitle: 'Traduce trazos a mano, ilustraciones o bocetos arquitectónicos en renders fotográficos, editoriales o 3D.',
+                kicker: 'LABORATORIO 04 · BOCETO A RENDER',
+              },
+              restauracion: {
+                image: STUDIO_MEDIA_ASSETS.restorationBeforeAfter,
+                title: 'Restauración Fotográfica y Archivo',
+                subtitle: 'Recupera memoria visual, repara texturas y preserva fidelidad histórica con prompts éticos de restauración.',
+                kicker: 'LABORATORIO 05 · MEMORIA Y RESTAURACIÓN',
+              },
+              producto: {
+                image: VISUAL_LIBRARY_PATHS.adLuxury,
+                title: 'Estudio de Fotografía de Producto',
+                subtitle: 'Dirige campañas publicitarias, splash shots, empaques de lujo e iluminación comercial de alto impacto.',
+                kicker: 'LABORATORIO 06 · PUBLICIDAD Y PRODUCTO',
+              },
+              web: {
+                image: STUDIO_MEDIA_ASSETS.webDesignShowcase,
+                title: 'Diseño Web e Interfaces con IA',
+                subtitle: 'Arquitectura de información, sistemas de diseño y prompts estructurados para sitios web y aplicaciones contemporáneas.',
+                kicker: 'LABORATORIO 07 · DISEÑO WEB Y UI/UX',
+              },
+              interactivo: {
+                image: VISUAL_LIBRARY_PATHS.vfxProjectionMapping,
+                title: 'Laboratorio Interactivo & Videoarte',
+                subtitle: 'Experimentación en vivo con cámara, micrófono, tracking visual y sistemas generativos en tiempo real.',
+                kicker: 'LABORATORIO 08 · PROGRAMACIÓN CREATIVA',
+              },
+              labs: {
+                image: VISUAL_LIBRARY_PATHS.camRigStudio,
+                title: '5 Simuladores Visuales y Storyboard',
+                subtitle: 'Combina focales, encuadres, movimientos de cámara, paletas cromáticas y secuencias de storyboard interactivo.',
+                kicker: 'LABORATORIO 09 · SIMULADORES VISUALES',
+              },
+              json: {
+                image: VISUAL_LIBRARY_PATHS.colorJsonTransfer,
+                title: 'Laboratorio JSON Visual y Transferencia de Estilo',
+                subtitle: 'Estructura estilos fotográficos, paletas y cámaras en esquemas JSON reutilizables para máxima consistencia.',
+                kicker: 'LABORATORIO 10 · CONSISTENCIA JSON',
+              },
+            };
+            const currentLabBanner = LAB_BANNERS[activeLabSub] || LAB_BANNERS.moodboard;
+            return (
             <div>
+              <SectionPhotoBanner
+                image={currentLabBanner.image}
+                imageAlt={currentLabBanner.title}
+                imagePosition={currentLabBanner.position}
+                accentTint="navy"
+                compact
+                kicker={currentLabBanner.kicker}
+                topRight={
+                  <span className="inline-flex items-center px-3 py-1 rounded-md bg-white/10 border border-white/15 text-[11px] font-mono-code font-bold uppercase tracking-wider text-[#F4F2ED] backdrop-blur-xs">
+                    10 Estudios Especializados
+                  </span>
+                }
+                title={currentLabBanner.title}
+                subtitle={currentLabBanner.subtitle}
+              />
+
               <div className="bg-white dark:bg-[#16161C] border-b border-[#DEDAD0] dark:border-[#26262E]">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 space-y-3">
                   <div className="flex items-center justify-between gap-2 text-xs font-mono-code uppercase tracking-wider text-[#4A4A55] dark:text-[#A09E97] font-bold">
@@ -1015,7 +1113,8 @@ export default function App() {
                 />
               )}
             </div>
-          )}
+            );
+          })()}
 
           {/* 4B. EXPERIENCIAS Y RETOS CREATIVOS */}
           {activeSection === 'experiencias' && (
@@ -1118,8 +1217,72 @@ export default function App() {
           )}
 
           {/* 9. RECURSOS PRÁCTICOS (7 Sub-pestañas) */}
-          {activeSection === 'recursos' && (
+          {activeSection === 'recursos' && (() => {
+            const RESOURCE_BANNERS: Record<
+              ResourceSubSection,
+              { image: string; title: string; subtitle: string; kicker: string }
+            > = {
+              recetas: {
+                image: VISUAL_LIBRARY_PATHS.adFloating,
+                title: 'Recetas Maestras y Fórmulas Visuales',
+                subtitle: 'Combinaciones probadas de cámara, óptica, luz y dirección de arte listas para cargar en el Constructor.',
+                kicker: 'RECURSOS PRÁCTICOS · 12 RECETAS MAESTRAS',
+              },
+              diccionario: {
+                image: VISUAL_LIBRARY_PATHS.colorKodakPortra,
+                title: 'Diccionario Visual de Comandos y Paletas',
+                subtitle: 'Vocabulario técnico de fotografía, cine, texturas y color listo para sumar con un clic a tus prompts.',
+                kicker: 'RECURSOS PRÁCTICOS · DICCIONARIO TÉCNICO',
+              },
+              plantillas: {
+                image: VISUAL_LIBRARY_PATHS.storySheet,
+                title: 'Plantillas Maestras Rellenables',
+                subtitle: 'Estructuras modulares para 6 disciplinas creativas diseñadas para talleres y producción rápida.',
+                kicker: 'RECURSOS PRÁCTICOS · 6 DISCIPLINAS',
+              },
+              tutoriales: {
+                image: VISUAL_LIBRARY_PATHS.camCinemaRig,
+                title: 'Tutoriales Paso a Paso en Video',
+                subtitle: '12 guías prácticas para dominar herramientas generativas de imagen, video, audio y dirección de arte.',
+                kicker: 'RECURSOS PRÁCTICOS · 12 GUÍAS IA',
+              },
+              ejercicios: {
+                image: VISUAL_LIBRARY_PATHS.lightComparison,
+                title: 'Ejercicios Prácticos y Antes / Después',
+                subtitle: 'Compara prompts genéricos frente a direcciones visuales precisas y entrena tu mirada en taller.',
+                kicker: 'RECURSOS PRÁCTICOS · ENTRENAMIENTO',
+              },
+              errores: {
+                image: VISUAL_LIBRARY_PATHS.focalComparison,
+                title: 'Clínica de Errores y Negative Prompts',
+                subtitle: 'Diagnostica fallos frecuentes de composición, anatomía o iluminación y construye negativos precisos.',
+                kicker: 'RECURSOS PRÁCTICOS · DIAGNÓSTICO VISUAL',
+              },
+              guias: {
+                image: VISUAL_LIBRARY_PATHS.compLeadingLines,
+                title: 'Guías, Aspect Ratios y Paletas HEX',
+                subtitle: 'Referencias rápidas de proporciones cinematográficas, formatos editoriales y checklists de producción.',
+                kicker: 'RECURSOS PRÁCTICOS · CHULETAS DE TALLER',
+              },
+            };
+            const currentResBanner = RESOURCE_BANNERS[activeResourceSub] || RESOURCE_BANNERS.recetas;
+            return (
             <div>
+              <SectionPhotoBanner
+                image={currentResBanner.image}
+                imageAlt={currentResBanner.title}
+                accentTint="obsidian"
+                compact
+                kicker={currentResBanner.kicker}
+                topRight={
+                  <span className="inline-flex items-center px-3 py-1 rounded-md bg-white/10 border border-white/15 text-[11px] font-mono-code font-bold uppercase tracking-wider text-[#F4F2ED] backdrop-blur-xs">
+                    Archivo & Recursos (7)
+                  </span>
+                }
+                title={currentResBanner.title}
+                subtitle={currentResBanner.subtitle}
+              />
+
               <div className="bg-white dark:bg-[#16161C] border-b border-[#DEDAD0] dark:border-[#26262E]">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex flex-col xl:flex-row xl:items-center justify-between gap-3">
                   <div className="text-xs font-mono-code uppercase tracking-wider text-[#4A4A55] dark:text-[#A09E97] font-bold shrink-0">
@@ -1206,8 +1369,10 @@ export default function App() {
                 <ResourceGuidesView onSendToBuilder={handlePatchBuilderFromResources} />
               )}
             </div>
-          )}
+            );
+          })()}
         </Suspense>
+        </SectionTransition>
       </main>
 
       {/* Footer with Full Section Navigation */}
@@ -1275,5 +1440,6 @@ export default function App() {
         }}
       />
     </div>
+    </MotionConfig>
   );
 }

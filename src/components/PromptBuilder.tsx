@@ -50,6 +50,72 @@ import {
   BuilderCategoryId,
   BuilderPlatformTarget,
 } from '../data/promptBuilderConfig';
+import { VISUAL_LIBRARY_PATHS } from '../data/visualLibraryRegistry';
+import { STUDIO_MEDIA_ASSETS } from '../data/creativeStudiosData';
+import { SectionPhotoBanner } from './SectionPhotoBanner';
+
+function getBuilderBannerVisual(categoryId: BuilderCategoryId): {
+  image: string;
+  alt: string;
+  position?: 'center' | 'top' | 'bottom';
+} {
+  switch (categoryId) {
+    case 'photo':
+      return {
+        image: VISUAL_LIBRARY_PATHS.photoAnalogDocumentary,
+        alt: 'Constructor de Prompts — Fotografía y Retrato Editorial',
+        position: 'top',
+      };
+    case 'video':
+      return {
+        image: VISUAL_LIBRARY_PATHS.videoStudio,
+        alt: 'Constructor de Prompts — Video y Cinematografía IA',
+        position: 'center',
+      };
+    case 'graphic':
+      return {
+        image: VISUAL_LIBRARY_PATHS.colorDuotone,
+        alt: 'Constructor de Prompts — Diseño Gráfico y Dirección Editorial',
+        position: 'center',
+      };
+    case 'branding':
+      return {
+        image: VISUAL_LIBRARY_PATHS.adLuxury,
+        alt: 'Constructor de Prompts — Branding, Empaque y Producto',
+        position: 'center',
+      };
+    case 'illustration':
+      return {
+        image: VISUAL_LIBRARY_PATHS.artBotanical,
+        alt: 'Constructor de Prompts — Ilustración Artística y Científica',
+        position: 'center',
+      };
+    case 'architecture':
+      return {
+        image: VISUAL_LIBRARY_PATHS.photoArchitecture,
+        alt: 'Constructor de Prompts — Arquitectura, Interiorismo y Espacio',
+        position: 'center',
+      };
+    case 'web-ui':
+      return {
+        image: STUDIO_MEDIA_ASSETS.webDesignShowcase,
+        alt: 'Constructor de Prompts — Diseño Web e Interfaces UI/UX',
+        position: 'center',
+      };
+    case 'experimental':
+      return {
+        image: VISUAL_LIBRARY_PATHS.animGenerativeParticles,
+        alt: 'Constructor de Prompts — Arte Experimental, 3D y Generativo',
+        position: 'center',
+      };
+    default:
+      return {
+        image: VISUAL_LIBRARY_PATHS.photoAnalogDocumentary,
+        alt: 'Constructor Maestro de Prompts',
+        position: 'center',
+      };
+  }
+}
 
 export interface PromptBuilderState {
   mode: 'photo' | 'video';
@@ -743,60 +809,48 @@ export const PromptBuilder: React.FC<PromptBuilderProps> = ({
   };
 
   const showStep = (step: BuilderStepId) => viewMode === 'all' || activeStep === step;
+  const builderBanner = useMemo(
+    () => getBuilderBannerVisual(activeCategory.id),
+    [activeCategory.id]
+  );
 
   return (
     <section
       id="builder"
-      className="py-10 sm:py-14 border-b border-[#DEDAD0] dark:border-[#26262E] bg-[#F4F2ED] dark:bg-[#101014] transition-colors"
+      className="pb-12 sm:pb-14 border-b border-[#DEDAD0] dark:border-[#26262E] bg-[#F4F2ED] dark:bg-[#101014] transition-colors"
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 space-y-6">
-        {/* TOP HEADER + SINGLE-ROW CLEAN ACTION TOOLBAR */}
-        <div className="flex flex-col xl:flex-row xl:items-end justify-between gap-4">
-          <div>
-            <div className="flex items-center gap-2 text-xs uppercase tracking-widest text-[#7545D6] dark:text-[#F8C300] font-mono-code font-bold mb-1.5">
-              <span>ESTUDIO DE DIRECCIÓN DE PROMPTS</span>
-              <span aria-hidden="true" className="text-[#8E8C85]">·</span>
-              <span>8 CATEGORÍAS CREATIVAS</span>
-            </div>
-            <h2 className="text-3xl sm:text-4xl font-extrabold font-display-sans text-[#101014] dark:text-[#F4F2ED] tracking-tight">
-              Constructor Maestro de Prompts
-            </h2>
-            <p className="text-sm text-[#4A4A55] dark:text-[#A09E97] mt-1 max-w-2xl leading-relaxed">
-              Elige tu disciplina creativa, ajusta variables especializadas paso a paso y adapta la sintaxis final al ecosistema de IA que vas a usar.
-            </p>
-            {builderState.customNotes &&
-              /^(Galería|Moodboard|Simulador de Iluminación|Bitácora|Guardado)\s·/.test(
-                builderState.customNotes
-              ) && (
-                <div className="mt-3 inline-flex flex-wrap items-center gap-2.5 px-3.5 py-2 rounded-xl bg-[#326BFF]/10 dark:bg-[#326BFF]/20 border border-[#326BFF]/30 text-xs text-[#101014] dark:text-[#F4F2ED]">
-                  <span className="font-mono-code font-bold text-[#326BFF] dark:text-[#8FB0FF]">
-                    Referencia conectada:
-                  </span>
-                  <span className="font-medium">{builderState.customNotes}</span>
-                  <span className="text-black/50 dark:text-white/50 hidden sm:inline">
-                    — modifica sujeto, escenario, luz, óptica o formato abajo.
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => setBuilderState((prev) => ({ ...prev, customNotes: '' }))}
-                    className="ml-1 p-0.5 rounded hover:bg-black/10 dark:hover:bg-white/10 text-black/60 dark:text-white/70 cursor-pointer"
-                    aria-label="Ocultar aviso de referencia conectada"
-                  >
-                    <X className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-              )}
-          </div>
-
-          {/* Clean single-row toolbar (no orphan wrapped icon) */}
-          <div className="flex flex-wrap items-center gap-2 shrink-0">
+      {/* Full-bleed Photographic Hero Banner — Dynamically changes per creative category */}
+      <SectionPhotoBanner
+        image={builderBanner.image}
+        imageAlt={builderBanner.alt}
+        imagePosition={builderBanner.position}
+        accentTint="obsidian"
+        kicker={
+          <>
+            <span>ESTUDIO DE DIRECCIÓN DE PROMPTS</span>
+            <span aria-hidden="true" className="text-white/30">·</span>
+            <span className="text-[#93B4FF]">8 CATEGORÍAS CREATIVAS</span>
+            <span aria-hidden="true" className="text-white/30">·</span>
+            <span className="text-[#C4A5FF]">{activeCategory.label.toUpperCase()}</span>
+          </>
+        }
+        topRight={
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md bg-white/10 border border-white/15 text-[11px] font-mono-code font-bold uppercase tracking-wider text-[#F4F2ED] backdrop-blur-xs">
+            <Sparkles className="w-3.5 h-3.5 text-[#F8C300]" />
+            <span>{activeCategory.shortLabel}</span>
+          </span>
+        }
+        title="Constructor Maestro de Prompts"
+        subtitle="Elige tu disciplina creativa, ajusta variables especializadas paso a paso y adapta la sintaxis final al ecosistema de IA que vas a usar."
+        actions={
+          <>
             <select
               onChange={(e) => {
                 if (e.target.value) handleLoadRecipe(e.target.value);
               }}
               defaultValue=""
               aria-label="Cargar receta predefinida en el constructor"
-              className="min-h-[40px] max-w-[220px] text-xs bg-white dark:bg-[#16161C] border border-[#DEDAD0] dark:border-[#26262E] text-[#101014] dark:text-[#F4F2ED] px-3 py-2 rounded-lg focus:outline-none focus:border-[#326BFF] font-medium"
+              className="min-h-[40px] max-w-[230px] text-xs bg-[#101014]/75 backdrop-blur-xs border border-white/20 text-[#F4F2ED] px-3 py-2 rounded-lg focus:outline-none focus:border-[#F8C300] font-medium cursor-pointer"
             >
               <option value="" disabled>
                 Cargar Receta ({RECIPES.length})...
@@ -811,48 +865,75 @@ export const PromptBuilder: React.FC<PromptBuilderProps> = ({
             <button
               type="button"
               onClick={handleRandomCreativeMix}
-              className="min-h-[40px] px-3 py-2 text-xs font-semibold text-[#101014] dark:text-[#F4F2ED] bg-white dark:bg-[#16161C] hover:border-[#326BFF] border border-[#DEDAD0] dark:border-[#26262E] rounded-lg transition-colors inline-flex items-center gap-1.5 whitespace-nowrap"
+              className="min-h-[40px] px-3.5 py-2 text-xs font-bold text-white bg-[#326BFF] hover:bg-[#2358E6] rounded-lg transition-colors inline-flex items-center gap-1.5 whitespace-nowrap cursor-pointer shadow-xs"
               title="Combinar parámetros creativos aleatorios para esta categoría"
             >
-              <Shuffle className="w-3.5 h-3.5 text-[#326BFF] dark:text-[#F8C300]" />
+              <Shuffle className="w-3.5 h-3.5" />
               <span>Combinar</span>
             </button>
 
             <button
               type="button"
               onClick={onOpenExporter}
-              className="min-h-[40px] px-3 py-2 text-xs font-semibold uppercase tracking-wider text-[#101014] dark:text-[#F4F2ED] bg-white dark:bg-[#16161C] hover:border-[#326BFF] border border-[#DEDAD0] dark:border-[#26262E] rounded-lg transition-colors inline-flex items-center gap-1.5 whitespace-nowrap"
+              className="min-h-[40px] px-3.5 py-2 text-xs font-bold uppercase tracking-wider text-white bg-[#7545D6] hover:bg-[#6134BF] rounded-lg transition-colors inline-flex items-center gap-1.5 whitespace-nowrap cursor-pointer shadow-xs"
               title="Exportar ficha técnica para talleres en PDF o PNG"
             >
-              <FileDown className="w-3.5 h-3.5 text-[#7545D6] dark:text-[#F8C300]" />
+              <FileDown className="w-3.5 h-3.5" />
               <span>Ficha Taller</span>
             </button>
 
             <button
               type="button"
               onClick={handleReset}
-              className="min-h-[40px] px-3 py-2 text-xs font-semibold text-[#4A4A55] hover:text-[#101014] dark:text-[#A09E97] dark:hover:text-[#F4F2ED] bg-white dark:bg-[#16161C] border border-[#DEDAD0] dark:border-[#26262E] hover:border-[#326BFF] rounded-lg transition-colors inline-flex items-center gap-1.5 whitespace-nowrap"
+              className="min-h-[40px] px-3 py-2 text-xs font-semibold text-[#E4E2DB] hover:text-white bg-[#101014]/70 hover:bg-[#101014] border border-white/20 rounded-lg transition-colors inline-flex items-center gap-1.5 whitespace-nowrap cursor-pointer backdrop-blur-xs"
               title="Restablecer variables del constructor"
               aria-label="Restablecer variables del constructor"
             >
               <RotateCcw className="w-3.5 h-3.5" />
               <span className="hidden sm:inline">Limpiar</span>
             </button>
-          </div>
-        </div>
+          </>
+        }
+        extraContent={
+          builderState.customNotes &&
+          /^(Galería|Moodboard|Simulador de Iluminación|Bitácora|Guardado)\s·/.test(
+            builderState.customNotes
+          ) ? (
+            <div className="inline-flex flex-wrap items-center gap-2.5 px-3.5 py-2 rounded-xl bg-[#326BFF]/25 border border-[#326BFF]/60 text-xs text-[#F4F2ED] backdrop-blur-xs">
+              <span className="font-mono-code font-bold text-[#93B4FF]">
+                Referencia conectada:
+              </span>
+              <span className="font-medium">{builderState.customNotes}</span>
+              <span className="text-white/70 hidden sm:inline">
+                — modifica sujeto, escenario, luz, óptica o formato abajo.
+              </span>
+              <button
+                type="button"
+                onClick={() => setBuilderState((prev) => ({ ...prev, customNotes: '' }))}
+                className="ml-1 p-0.5 rounded hover:bg-white/15 text-white/80 cursor-pointer"
+                aria-label="Ocultar aviso de referencia conectada"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          ) : null
+        }
+      />
 
-        {/* 8 CREATIVE CATEGORIES SELECTOR */}
-        <div className="bg-white dark:bg-[#16161C] border border-[#DEDAD0] dark:border-[#26262E] rounded-2xl p-3 sm:p-4 space-y-3">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-7 space-y-6">
+
+        {/* 8 CREATIVE CATEGORIES SELECTOR — DISTINCT DISCIPLINE PALETTE */}
+        <div className="bg-[#EAE6DC] dark:bg-[#16161E] border border-[#D4CFC2] dark:border-[#282834] rounded-2xl p-3.5 sm:p-4 space-y-3">
           <div className="flex flex-wrap items-center justify-between gap-2 px-1">
-            <span className="text-[11px] font-mono-code uppercase tracking-wider font-bold text-[#5B5B66] dark:text-[#A09E97]">
+            <span className="text-[11px] font-mono-code uppercase tracking-wider font-bold text-[#3A3A46] dark:text-[#C5C3BC]">
               1. ELIGE TU CATEGORÍA CREATIVA
             </span>
             <button
               type="button"
               onClick={handleApplyCategorySample}
-              className="text-xs font-mono-code font-bold text-[#326BFF] dark:text-[#F8C300] hover:underline inline-flex items-center gap-1"
+              className="px-3 py-1.5 rounded-lg bg-[#326BFF] hover:bg-[#2358E6] text-white text-xs font-mono-code font-bold inline-flex items-center gap-1.5 transition-colors cursor-pointer whitespace-nowrap"
             >
-              <Sparkles className="w-3.5 h-3.5" />
+              <Sparkles className="w-3.5 h-3.5 text-[#F8C300]" />
               <span>Rellenar ejemplo de {activeCategory.shortLabel}</span>
             </button>
           </div>
@@ -860,23 +941,83 @@ export const PromptBuilder: React.FC<PromptBuilderProps> = ({
           <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-2">
             {BUILDER_CATEGORIES.map((cat) => {
               const isSelected = cat.id === activeCategory.id;
+              const disciplineStyles: Record<
+                string,
+                { active: string; activeIcon: string; idleIcon: string; idleIconBg: string; hoverBorder: string }
+              > = {
+                photo: {
+                  active: 'bg-[#F8C300] text-[#101014] border-[#D4A600] shadow-sm',
+                  activeIcon: 'text-[#101014]',
+                  idleIcon: 'text-[#B47B00] dark:text-[#F8C300]',
+                  idleIconBg: 'bg-[#F8C300]/18',
+                  hoverBorder: 'hover:border-[#D4A600]',
+                },
+                video: {
+                  active: 'bg-[#7545D6] text-white border-[#7545D6] shadow-sm',
+                  activeIcon: 'text-[#F8C300]',
+                  idleIcon: 'text-[#7545D6] dark:text-[#C4A5FF]',
+                  idleIconBg: 'bg-[#7545D6]/14',
+                  hoverBorder: 'hover:border-[#7545D6]',
+                },
+                graphic: {
+                  active: 'bg-[#326BFF] text-white border-[#326BFF] shadow-sm',
+                  activeIcon: 'text-white',
+                  idleIcon: 'text-[#326BFF] dark:text-[#8FB0FF]',
+                  idleIconBg: 'bg-[#326BFF]/14',
+                  hoverBorder: 'hover:border-[#326BFF]',
+                },
+                branding: {
+                  active: 'bg-[#059669] text-white border-[#059669] shadow-sm',
+                  activeIcon: 'text-white',
+                  idleIcon: 'text-[#059669] dark:text-[#34D399]',
+                  idleIconBg: 'bg-[#059669]/14',
+                  hoverBorder: 'hover:border-[#059669]',
+                },
+                illustration: {
+                  active: 'bg-[#E11D48] text-white border-[#E11D48] shadow-sm',
+                  activeIcon: 'text-white',
+                  idleIcon: 'text-[#E11D48] dark:text-[#FB7185]',
+                  idleIconBg: 'bg-[#E11D48]/14',
+                  hoverBorder: 'hover:border-[#E11D48]',
+                },
+                architecture: {
+                  active: 'bg-[#0D9488] text-white border-[#0D9488] shadow-sm',
+                  activeIcon: 'text-white',
+                  idleIcon: 'text-[#0D9488] dark:text-[#5EEAD4]',
+                  idleIconBg: 'bg-[#0D9488]/14',
+                  hoverBorder: 'hover:border-[#0D9488]',
+                },
+                'web-ui': {
+                  active: 'bg-[#4F46E5] text-white border-[#4F46E5] shadow-sm',
+                  activeIcon: 'text-white',
+                  idleIcon: 'text-[#4F46E5] dark:text-[#A5B4FC]',
+                  idleIconBg: 'bg-[#4F46E5]/14',
+                  hoverBorder: 'hover:border-[#4F46E5]',
+                },
+                experimental: {
+                  active: 'bg-[#EA580C] text-white border-[#EA580C] shadow-sm',
+                  activeIcon: 'text-white',
+                  idleIcon: 'text-[#EA580C] dark:text-[#FB923C]',
+                  idleIconBg: 'bg-[#EA580C]/14',
+                  hoverBorder: 'hover:border-[#EA580C]',
+                },
+              };
+              const st = disciplineStyles[cat.id] || disciplineStyles.photo;
               return (
                 <button
                   key={cat.id}
                   type="button"
                   onClick={() => handleSelectCategory(cat.id)}
-                  className={`min-h-[48px] px-2.5 py-2.5 rounded-xl border text-left transition-all flex flex-col items-start justify-center gap-1 ${
+                  className={`min-h-[54px] px-2.5 py-2.5 rounded-xl border text-left transition-all flex flex-col items-start justify-center gap-1.5 cursor-pointer ${
                     isSelected
-                      ? 'bg-[#F8C300] text-[#101014] border-[#F8C300] font-bold shadow-xs'
-                      : 'bg-[#F4F2ED] dark:bg-[#101014] text-[#101014] dark:text-[#F4F2ED] border-[#DEDAD0] dark:border-[#26262E] hover:border-[#326BFF]'
+                      ? `${st.active} font-bold`
+                      : `bg-white dark:bg-[#101014] text-[#101014] dark:text-[#F4F2ED] border-[#D8D3C8] dark:border-[#26262E] ${st.hoverBorder}`
                   }`}
                 >
                   <span
-                    className={
-                      isSelected
-                        ? 'text-[#101014]'
-                        : 'text-[#326BFF] dark:text-[#F8C300]'
-                    }
+                    className={`inline-flex items-center justify-center rounded-md ${
+                      isSelected ? st.activeIcon : `p-1 ${st.idleIconBg} ${st.idleIcon}`
+                    }`}
                   >
                     {CATEGORY_ICONS[cat.id]}
                   </span>
@@ -888,9 +1029,9 @@ export const PromptBuilder: React.FC<PromptBuilderProps> = ({
             })}
           </div>
 
-          <div className="px-1 pt-1 flex flex-wrap items-center justify-between gap-2 text-xs text-[#4A4A55] dark:text-[#A09E97]">
+          <div className="px-2 py-1.5 rounded-lg bg-white/75 dark:bg-[#101014]/70 border border-[#DBD6CA] dark:border-[#24242E] flex flex-wrap items-center justify-between gap-2 text-xs text-[#3C3C47] dark:text-[#C5C3BC]">
             <span>
-              <strong className="text-[#101014] dark:text-[#F4F2ED]">
+              <strong className="text-[#101014] dark:text-[#F8C300]">
                 {activeCategory.label}:
               </strong>{' '}
               {activeCategory.tagline}
@@ -901,16 +1042,16 @@ export const PromptBuilder: React.FC<PromptBuilderProps> = ({
         {/* MAIN SPLIT WORKSPACE */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-7 items-start">
           {/* LEFT WORKSPACE (7 COLS): STEPPED OR ALL-AT-ONCE CONTROLS */}
-          <div className="lg:col-span-7 bg-white dark:bg-[#16161C] border border-[#DEDAD0] dark:border-[#26262E] rounded-2xl overflow-hidden">
-            {/* Step Tabs Bar + Density Switcher */}
-            <div className="p-4 border-b border-[#DEDAD0] dark:border-[#26262E] bg-[#FAF9F6] dark:bg-[#131318] flex flex-wrap items-center justify-between gap-3">
+          <div className="lg:col-span-7 bg-white dark:bg-[#16161C] border border-[#D4CFC2] dark:border-[#26262E] rounded-2xl overflow-hidden shadow-xs">
+            {/* Step Tabs Bar + Density Switcher — Tinted Studio Header */}
+            <div className="p-4 border-b border-[#D5CDE8] dark:border-[#2A263C] bg-[#ECE8F6] dark:bg-[#181625] flex flex-wrap items-center justify-between gap-3">
               <div className="flex flex-wrap gap-1.5">
                 {(
                   [
-                    { id: 1 as BuilderStepId, label: '01. Concepto' },
-                    { id: 2 as BuilderStepId, label: '02. Técnica' },
-                    { id: 3 as BuilderStepId, label: '03. Luz y Color' },
-                    { id: 4 as BuilderStepId, label: '04. Formato' },
+                    { id: 1 as BuilderStepId, label: '01. Concepto', activeCls: 'bg-[#7545D6] text-white border-[#7545D6]' },
+                    { id: 2 as BuilderStepId, label: '02. Técnica', activeCls: 'bg-[#326BFF] text-white border-[#326BFF]' },
+                    { id: 3 as BuilderStepId, label: '03. Luz y Color', activeCls: 'bg-[#F8C300] text-[#101014] border-[#D4A600]' },
+                    { id: 4 as BuilderStepId, label: '04. Formato', activeCls: 'bg-[#059669] text-white border-[#059669]' },
                   ]
                 ).map((step) => {
                   const isCurrent = viewMode === 'stepped' && activeStep === step.id;
@@ -922,10 +1063,10 @@ export const PromptBuilder: React.FC<PromptBuilderProps> = ({
                         setViewMode('stepped');
                         setActiveStep(step.id);
                       }}
-                      className={`min-h-[38px] px-3 py-1.5 text-xs font-mono-code font-bold rounded-lg border transition-colors whitespace-nowrap ${
+                      className={`min-h-[38px] px-3 py-1.5 text-xs font-mono-code font-bold rounded-lg border transition-colors whitespace-nowrap cursor-pointer ${
                         isCurrent
-                          ? 'bg-[#101014] text-[#F4F2ED] border-[#101014] dark:bg-[#F8C300] dark:text-[#101014] dark:border-[#F8C300]'
-                          : 'bg-white dark:bg-[#16161C] text-[#4A4A55] dark:text-[#A09E97] border-[#DEDAD0] dark:border-[#26262E] hover:border-[#326BFF]'
+                          ? `${step.activeCls} shadow-xs`
+                          : 'bg-white dark:bg-[#11101A] text-[#3A364A] dark:text-[#C4BED6] border-[#D4CAE8] dark:border-[#2D2842] hover:border-[#7545D6]'
                       }`}
                     >
                       {step.label}
@@ -939,16 +1080,20 @@ export const PromptBuilder: React.FC<PromptBuilderProps> = ({
                 onClick={() =>
                   setViewMode((prev) => (prev === 'stepped' ? 'all' : 'stepped'))
                 }
-                className="min-h-[36px] px-3 py-1.5 text-[11px] font-mono-code font-semibold rounded-lg border border-[#DEDAD0] dark:border-[#26262E] bg-white dark:bg-[#16161C] text-[#101014] dark:text-[#F4F2ED] hover:border-[#326BFF] inline-flex items-center gap-1.5 whitespace-nowrap"
+                className={`min-h-[36px] px-3 py-1.5 text-[11px] font-mono-code font-bold rounded-lg border inline-flex items-center gap-1.5 whitespace-nowrap transition-colors cursor-pointer ${
+                  viewMode === 'all'
+                    ? 'bg-[#101014] text-[#F8C300] border-[#101014]'
+                    : 'bg-white dark:bg-[#11101A] text-[#5A2EB5] dark:text-[#C4A5FF] border-[#C9BCE8] dark:border-[#342E50] hover:bg-[#7545D6] hover:text-white'
+                }`}
               >
                 {viewMode === 'all' ? (
                   <>
-                    <ListChecks className="w-3.5 h-3.5 text-[#326BFF] dark:text-[#F8C300]" />
+                    <ListChecks className="w-3.5 h-3.5" />
                     <span>Por Pasos</span>
                   </>
                 ) : (
                   <>
-                    <Layers className="w-3.5 h-3.5 text-[#326BFF] dark:text-[#F8C300]" />
+                    <Layers className="w-3.5 h-3.5" />
                     <span>Ver Todo</span>
                   </>
                 )}
@@ -1804,34 +1949,34 @@ export const PromptBuilder: React.FC<PromptBuilderProps> = ({
             </div>
           </div>
 
-          {/* RIGHT WORKSPACE (5 COLS): LIVE STUDIO OUTPUT + TARGET PLATFORM FORMATTER */}
+          {/* RIGHT WORKSPACE (5 COLS): DARK CHARCOAL STUDIO OUTPUT CONSOLE */}
           <div className="lg:col-span-5 lg:sticky lg:top-20 space-y-4">
-            <div className="bg-white dark:bg-[#16161C] border border-[#DEDAD0] dark:border-[#26262E] rounded-2xl p-5 shadow-md space-y-4">
+            <div className="bg-[#101014] text-[#F4F2ED] border border-[#26262E] rounded-2xl p-5 shadow-xl space-y-4">
               {/* Top Title + Completeness Score */}
-              <div className="space-y-2 pb-3 border-b border-[#DEDAD0] dark:border-[#26262E]">
+              <div className="space-y-2 pb-3 border-b border-white/10">
                 <div className="flex items-center justify-between gap-2">
                   <div className="flex items-center gap-2">
-                    <Sliders className="w-4 h-4 text-[#7545D6] dark:text-[#F8C300]" />
-                    <span className="text-xs font-mono-code uppercase tracking-wider text-[#101014] dark:text-[#F4F2ED] font-bold">
+                    <Sliders className="w-4 h-4 text-[#F8C300]" />
+                    <span className="text-xs font-mono-code uppercase tracking-wider text-[#F4F2ED] font-bold">
                       Prompt Listo · {activeCategory.shortLabel}
                     </span>
                   </div>
-                  <span className="text-[11px] font-mono-code font-bold text-[#326BFF] dark:text-[#F8C300]">
+                  <span className="text-[11px] font-mono-code font-bold text-[#F8C300] tabular-nums">
                     Nivel {promptScore}%
                   </span>
                 </div>
-                <div className="w-full h-1.5 rounded bg-[#EAE6DC] dark:bg-[#26262E] overflow-hidden">
+                <div className="w-full h-1.5 rounded bg-white/10 overflow-hidden">
                   <div
-                    className="h-full bg-[#326BFF] dark:bg-[#F8C300] transition-all duration-300"
+                    className="h-full bg-gradient-to-r from-[#326BFF] via-[#7545D6] to-[#F8C300] transition-all duration-300"
                     style={{ width: `${promptScore}%` }}
                   />
                 </div>
-                <div className="flex items-center justify-between text-[11px] font-mono-code text-[#5B5B66] dark:text-[#8E8C85]">
-                  <span>
+                <div className="flex items-center justify-between text-[11px] font-mono-code text-[#A6A49D]">
+                  <span className="tabular-nums">
                     {currentPrompt.split(/\s+/).filter(Boolean).length} palabras ·{' '}
                     {currentPrompt.length} car.
                   </span>
-                  <span>
+                  <span className={builderState.subject.trim() ? 'text-[#34D399]' : 'text-[#A6A49D]'}>
                     {builderState.subject.trim()
                       ? 'Sujeto definido ✓'
                       : 'Escribe tu sujeto en Paso 01'}
@@ -1841,7 +1986,7 @@ export const PromptBuilder: React.FC<PromptBuilderProps> = ({
 
               {/* Target AI Platform Selector */}
               <div>
-                <div className="text-[10px] font-mono-code uppercase font-bold text-[#5B5B66] dark:text-[#8E8C85] mb-1.5">
+                <div className="text-[10px] font-mono-code uppercase font-bold text-[#93B4FF] mb-1.5">
                   FORMATO SEGÚN PLATAFORMA IA
                 </div>
                 <div className="flex flex-wrap gap-1.5">
@@ -1850,10 +1995,10 @@ export const PromptBuilder: React.FC<PromptBuilderProps> = ({
                       key={plat.id}
                       type="button"
                       onClick={() => setPlatformTarget(plat.id)}
-                      className={`min-h-[32px] px-2.5 py-1 text-[11px] font-mono-code rounded-lg border transition-colors whitespace-nowrap ${
+                      className={`min-h-[32px] px-2.5 py-1 text-[11px] font-mono-code rounded-lg border transition-colors whitespace-nowrap cursor-pointer ${
                         platformTarget === plat.id
-                          ? 'bg-[#101014] text-[#F8C300] border-[#101014] dark:bg-[#F8C300] dark:text-[#101014] dark:border-[#F8C300] font-bold'
-                          : 'bg-[#F4F2ED] dark:bg-[#101014] text-[#4A4A55] dark:text-[#A09E97] border-[#DEDAD0] dark:border-[#26262E] hover:border-[#326BFF]'
+                          ? 'bg-[#F8C300] text-[#101014] border-[#F8C300] font-bold'
+                          : 'bg-[#1A1A22] text-[#D2CFC7] border-white/10 hover:border-[#F8C300]/60 hover:text-white'
                       }`}
                     >
                       {plat.label}
@@ -1876,10 +2021,10 @@ export const PromptBuilder: React.FC<PromptBuilderProps> = ({
                       key={m.id}
                       type="button"
                       onClick={() => setOutputMode(m.id)}
-                      className={`min-h-[34px] py-1.5 px-2 text-[11px] font-mono-code uppercase rounded-lg border transition-colors truncate ${
+                      className={`min-h-[34px] py-1.5 px-2 text-[11px] font-mono-code uppercase rounded-lg border transition-colors truncate cursor-pointer ${
                         outputMode === m.id
                           ? 'bg-[#326BFF] text-white border-[#326BFF] font-bold'
-                          : 'bg-[#F4F2ED] dark:bg-[#101014] text-[#4A4A55] dark:text-[#A09E97] border-[#DEDAD0] dark:border-[#26262E]'
+                          : 'bg-[#1A1A22] text-[#C8C5BD] border-white/10 hover:border-[#326BFF]'
                       }`}
                     >
                       {m.label}
@@ -1890,20 +2035,20 @@ export const PromptBuilder: React.FC<PromptBuilderProps> = ({
 
               {/* Incompatibilities Alert */}
               {incompatibilities.length > 0 && (
-                <div className="p-3 rounded-lg bg-[#F8C300]/15 border border-[#F8C300]/70 space-y-2">
+                <div className="p-3 rounded-lg bg-[#F8C300]/15 border border-[#F8C300]/60 space-y-2">
                   {incompatibilities.map((w) => (
                     <div
                       key={w.msg}
-                      className="flex items-start justify-between gap-2 text-[11px] text-[#101014] dark:text-[#F4F2ED]"
+                      className="flex items-start justify-between gap-2 text-[11px] text-[#F4F2ED]"
                     >
                       <div className="flex items-start gap-1.5">
-                        <AlertTriangle className="w-3.5 h-3.5 text-[#B4523A] dark:text-[#F8C300] shrink-0 mt-0.5" />
+                        <AlertTriangle className="w-3.5 h-3.5 text-[#F8C300] shrink-0 mt-0.5" />
                         <span>{w.msg}</span>
                       </div>
                       <button
                         type="button"
                         onClick={w.applyFix}
-                        className="px-2 py-0.5 bg-[#F8C300] text-[#101014] font-bold rounded shrink-0"
+                        className="px-2 py-0.5 bg-[#F8C300] text-[#101014] font-bold rounded shrink-0 cursor-pointer"
                       >
                         {w.fixLabel}
                       </button>
@@ -1920,7 +2065,7 @@ export const PromptBuilder: React.FC<PromptBuilderProps> = ({
                     setViewMode('stepped');
                     setActiveStep(4);
                   }}
-                  className="px-2 py-1 rounded bg-[#F4F2ED] dark:bg-[#101014] border border-[#DEDAD0] dark:border-[#26262E] text-[#101014] dark:text-[#F4F2ED] hover:border-[#326BFF]"
+                  className="px-2 py-1 rounded bg-[#1B1B24] border border-white/12 text-[#E5E3DC] hover:border-[#F8C300] cursor-pointer"
                 >
                   AR {builderState.aspectRatio}
                 </button>
@@ -1930,7 +2075,7 @@ export const PromptBuilder: React.FC<PromptBuilderProps> = ({
                     setViewMode('stepped');
                     setActiveStep(2);
                   }}
-                  className="px-2 py-1 rounded bg-[#F4F2ED] dark:bg-[#101014] border border-[#DEDAD0] dark:border-[#26262E] text-[#101014] dark:text-[#F4F2ED] hover:border-[#326BFF] max-w-[140px] truncate"
+                  className="px-2 py-1 rounded bg-[#1B1B24] border border-white/12 text-[#E5E3DC] hover:border-[#326BFF] max-w-[140px] truncate cursor-pointer"
                 >
                   {builderState.lens}
                 </button>
@@ -1940,7 +2085,7 @@ export const PromptBuilder: React.FC<PromptBuilderProps> = ({
                     setViewMode('stepped');
                     setActiveStep(3);
                   }}
-                  className="px-2 py-1 rounded bg-[#F4F2ED] dark:bg-[#101014] border border-[#DEDAD0] dark:border-[#26262E] text-[#101014] dark:text-[#F4F2ED] hover:border-[#326BFF] max-w-[150px] truncate"
+                  className="px-2 py-1 rounded bg-[#1B1B24] border border-white/12 text-[#E5E3DC] hover:border-[#7545D6] max-w-[150px] truncate cursor-pointer"
                 >
                   {builderState.visualStyle}
                 </button>
@@ -1959,14 +2104,14 @@ export const PromptBuilder: React.FC<PromptBuilderProps> = ({
                           : '4:5',
                     }))
                   }
-                  className="px-2 py-1 rounded bg-[#326BFF]/10 text-[#326BFF] dark:text-[#F8C300] font-bold hover:underline"
+                  className="px-2 py-1 rounded bg-[#326BFF]/25 text-[#93B4FF] font-bold hover:bg-[#326BFF]/40 cursor-pointer transition-colors"
                 >
                   ↻ Rotar ratio
                 </button>
               </div>
 
               {/* Prompt Code Preview */}
-              <div className="relative bg-[#101014] rounded-xl p-4 border border-[#26262E] font-mono-code text-xs text-[#E5E3DC] leading-relaxed max-h-[340px] overflow-y-auto whitespace-pre-wrap select-all">
+              <div className="relative bg-[#09090D] rounded-xl p-4 border border-white/10 font-mono-code text-xs text-[#EBE8DF] leading-relaxed max-h-[340px] overflow-y-auto whitespace-pre-wrap select-all">
                 {currentPrompt}
               </div>
 
@@ -1976,7 +2121,7 @@ export const PromptBuilder: React.FC<PromptBuilderProps> = ({
                   <button
                     type="button"
                     onClick={handleCopy}
-                    className="flex-1 min-h-[42px] py-2.5 px-4 text-xs font-bold uppercase tracking-wider text-[#101014] bg-[#F8C300] hover:bg-[#e5b400] rounded-lg transition-colors flex items-center justify-center gap-2"
+                    className="flex-1 min-h-[42px] py-2.5 px-4 text-xs font-bold uppercase tracking-wider text-[#101014] bg-[#F8C300] hover:bg-[#e5b400] rounded-lg transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-xs"
                   >
                     {copied ? (
                       <>
@@ -1994,7 +2139,7 @@ export const PromptBuilder: React.FC<PromptBuilderProps> = ({
                   <button
                     type="button"
                     onClick={handleSaveFavoritePrompt}
-                    className="min-h-[42px] py-2.5 px-3.5 text-xs font-semibold text-[#101014] dark:text-[#F4F2ED] bg-[#F4F2ED] dark:bg-[#101014] hover:border-[#326BFF] border border-[#DEDAD0] dark:border-[#26262E] rounded-lg transition-colors inline-flex items-center gap-1.5 whitespace-nowrap"
+                    className="min-h-[42px] py-2.5 px-3.5 text-xs font-bold text-white bg-[#7545D6] hover:bg-[#6134BF] rounded-lg transition-colors inline-flex items-center gap-1.5 whitespace-nowrap cursor-pointer"
                     title="Guardar prompt en tu colección"
                   >
                     <Star className="w-3.5 h-3.5 text-[#F8C300]" />
@@ -2006,34 +2151,34 @@ export const PromptBuilder: React.FC<PromptBuilderProps> = ({
                   <button
                     type="button"
                     onClick={handleExportTxt}
-                    className="min-h-[36px] py-1.5 px-2 text-[11px] font-mono-code font-semibold text-[#101014] dark:text-[#F4F2ED] bg-[#F4F2ED] dark:bg-[#101014] hover:border-[#326BFF] border border-[#DEDAD0] dark:border-[#26262E] rounded-lg flex items-center justify-center gap-1"
+                    className="min-h-[36px] py-1.5 px-2 text-[11px] font-mono-code font-semibold text-[#E5E3DC] bg-[#1A1A24] hover:bg-[#232332] border border-white/12 hover:border-[#326BFF] rounded-lg flex items-center justify-center gap-1 cursor-pointer transition-colors"
                   >
-                    <Download className="w-3.5 h-3.5 text-[#326BFF] dark:text-[#F8C300]" />
+                    <Download className="w-3.5 h-3.5 text-[#8FB0FF]" />
                     <span>.TXT</span>
                   </button>
                   <button
                     type="button"
                     onClick={handleExportJson}
-                    className="min-h-[36px] py-1.5 px-2 text-[11px] font-mono-code font-semibold text-[#101014] dark:text-[#F4F2ED] bg-[#F4F2ED] dark:bg-[#101014] hover:border-[#326BFF] border border-[#DEDAD0] dark:border-[#26262E] rounded-lg flex items-center justify-center gap-1"
+                    className="min-h-[36px] py-1.5 px-2 text-[11px] font-mono-code font-semibold text-[#E5E3DC] bg-[#1A1A24] hover:bg-[#232332] border border-white/12 hover:border-[#34D399] rounded-lg flex items-center justify-center gap-1 cursor-pointer transition-colors"
                   >
-                    <Download className="w-3.5 h-3.5 text-[#326BFF] dark:text-[#F8C300]" />
+                    <Download className="w-3.5 h-3.5 text-[#34D399]" />
                     <span>.JSON</span>
                   </button>
                   <button
                     type="button"
                     onClick={onOpenExporter}
-                    className="min-h-[36px] py-1.5 px-2 text-[11px] font-mono-code font-semibold text-[#101014] dark:text-[#F4F2ED] bg-[#F4F2ED] dark:bg-[#101014] hover:border-[#326BFF] border border-[#DEDAD0] dark:border-[#26262E] rounded-lg flex items-center justify-center gap-1"
+                    className="min-h-[36px] py-1.5 px-2 text-[11px] font-mono-code font-semibold text-[#E5E3DC] bg-[#1A1A24] hover:bg-[#232332] border border-white/12 hover:border-[#C4A5FF] rounded-lg flex items-center justify-center gap-1 cursor-pointer transition-colors"
                   >
-                    <FileDown className="w-3.5 h-3.5 text-[#7545D6] dark:text-[#F8C300]" />
+                    <FileDown className="w-3.5 h-3.5 text-[#C4A5FF]" />
                     <span>PDF / PNG</span>
                   </button>
                 </div>
               </div>
 
               {/* Project Collections & Saved History */}
-              <div className="pt-3 border-t border-[#DEDAD0] dark:border-[#26262E] space-y-2">
+              <div className="pt-3 border-t border-white/10 space-y-2">
                 <div className="flex items-center justify-between gap-2">
-                  <span className="text-[11px] font-mono-code uppercase text-[#5B5B66] dark:text-[#A09E97] font-bold">
+                  <span className="text-[11px] font-mono-code uppercase text-[#C8C5BD] font-bold">
                     Colección (
                     {
                       savedPrompts.filter(
@@ -2046,7 +2191,7 @@ export const PromptBuilder: React.FC<PromptBuilderProps> = ({
                     value={activeProject}
                     onChange={(e) => setActiveProject(e.target.value)}
                     aria-label="Seleccionar colección o proyecto"
-                    className="text-[11px] bg-[#F4F2ED] dark:bg-[#101014] border border-[#DEDAD0] dark:border-[#26262E] rounded-lg px-2 py-1 text-[#101014] dark:text-[#F4F2ED]"
+                    className="text-[11px] bg-[#1A1A24] border border-white/15 rounded-lg px-2 py-1 text-[#F4F2ED]"
                   >
                     {projects.map((p) => (
                       <option key={p} value={p}>
@@ -2062,12 +2207,12 @@ export const PromptBuilder: React.FC<PromptBuilderProps> = ({
                     value={newProjectInput}
                     onChange={(e) => setNewProjectInput(e.target.value)}
                     placeholder="Nueva colección..."
-                    className="flex-1 text-[11px] bg-[#F4F2ED] dark:bg-[#101014] border border-[#DEDAD0] dark:border-[#26262E] rounded-lg px-2.5 py-1.5 text-[#101014] dark:text-[#F4F2ED]"
+                    className="flex-1 text-[11px] bg-[#1A1A24] border border-white/15 rounded-lg px-2.5 py-1.5 text-[#F4F2ED] placeholder:text-white/40 focus:outline-none focus:border-[#F8C300]"
                   />
                   <button
                     type="button"
                     onClick={handleAddProject}
-                    className="px-2.5 py-1.5 text-[11px] font-mono-code font-bold bg-[#101014] text-[#F4F2ED] dark:bg-[#26262E] hover:bg-[#F8C300] hover:text-[#101014] rounded-lg transition-colors"
+                    className="px-2.5 py-1.5 text-[11px] font-mono-code font-bold bg-[#326BFF] hover:bg-[#2358E6] text-white rounded-lg transition-colors cursor-pointer"
                   >
                     + Crear
                   </button>
@@ -2084,12 +2229,12 @@ export const PromptBuilder: React.FC<PromptBuilderProps> = ({
                       .map((sp) => (
                         <div
                           key={sp.id}
-                          className="flex items-center justify-between gap-2 text-xs px-2.5 py-1.5 rounded-lg bg-[#F4F2ED] dark:bg-[#101014] border border-[#DEDAD0] dark:border-[#26262E]"
+                          className="flex items-center justify-between gap-2 text-xs px-2.5 py-1.5 rounded-lg bg-[#1A1A24] border border-white/10"
                         >
                           <button
                             type="button"
                             onClick={() => setBuilderState(sp.state)}
-                            className="text-left truncate font-medium text-[#101014] dark:text-[#F4F2ED] hover:text-[#326BFF] dark:hover:text-[#F8C300] flex-1"
+                            className="text-left truncate font-medium text-[#F4F2ED] hover:text-[#F8C300] flex-1 cursor-pointer"
                           >
                             {sp.title}
                           </button>
@@ -2100,7 +2245,7 @@ export const PromptBuilder: React.FC<PromptBuilderProps> = ({
                                 prev.filter((item) => item.id !== sp.id)
                               )
                             }
-                            className="text-[10px] font-mono-code text-[#5B5B66] hover:text-[#B4523A]"
+                            className="text-[10px] font-mono-code text-[#A6A49D] hover:text-[#FB7185] cursor-pointer"
                           >
                             Quitar
                           </button>
@@ -2111,8 +2256,8 @@ export const PromptBuilder: React.FC<PromptBuilderProps> = ({
               </div>
 
               {/* Category-Specific External AI Apps Launchers */}
-              <div className="pt-3 border-t border-[#DEDAD0] dark:border-[#26262E] space-y-2">
-                <div className="text-[10px] font-mono-code uppercase text-[#5B5B66] dark:text-[#A09E97] font-bold">
+              <div className="pt-3 border-t border-white/10 space-y-2">
+                <div className="text-[10px] font-mono-code uppercase text-[#C4A5FF] font-bold">
                   COPIAR Y PRACTICAR EN APPS RECOMENDADAS ({activeCategory.shortLabel.toUpperCase()})
                 </div>
                 <div className="flex flex-wrap gap-1.5">
@@ -2123,10 +2268,10 @@ export const PromptBuilder: React.FC<PromptBuilderProps> = ({
                       target="_blank"
                       rel="noopener noreferrer"
                       onClick={handleCopy}
-                      className="px-2.5 py-1.5 text-[11px] font-mono-code font-semibold bg-[#F4F2ED] dark:bg-[#101014] border border-[#DEDAD0] dark:border-[#26262E] hover:border-[#326BFF] text-[#101014] dark:text-[#F4F2ED] rounded-lg inline-flex items-center gap-1 transition-colors"
+                      className="px-2.5 py-1.5 text-[11px] font-mono-code font-semibold bg-[#1A1A24] border border-white/12 hover:border-[#F8C300] hover:bg-[#242434] text-[#F4F2ED] rounded-lg inline-flex items-center gap-1 transition-colors"
                     >
                       <span>{app.name}</span>
-                      <ExternalLink className="w-3 h-3 text-[#326BFF] dark:text-[#F8C300]" />
+                      <ExternalLink className="w-3 h-3 text-[#F8C300]" />
                     </a>
                   ))}
                 </div>

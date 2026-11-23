@@ -15,7 +15,7 @@ export const PLATFORM_METRICS = {
   tutorials: 12,
   recipes: 12,
   commands: 47,
-  aiTools: 31,
+  aiTools: 48,
   ethicsSimulators: 6,
   ethicsTalks: 20,
   documentaries: 31,

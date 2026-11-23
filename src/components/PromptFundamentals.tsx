@@ -16,6 +16,7 @@ import {
 import { ModuleId } from '../data/modulesData';
 import { VISUAL_LIBRARY_PATHS } from '../data/visualLibraryRegistry';
 import { ResilientImage } from './ResilientImage';
+import { SectionPhotoBanner } from './SectionPhotoBanner';
 
 interface PromptFundamentalsProps {
   onJumpToSection: (sectionId: string, moduleId?: ModuleId) => void;
@@ -130,31 +131,35 @@ export const PromptFundamentals: React.FC<PromptFundamentalsProps> = ({
   return (
     <section
       id="fundamentos"
-      className="py-14 border-b border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900/40 transition-colors scroll-mt-20"
+      className="pb-14 border-b border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900/40 transition-colors scroll-mt-20"
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 space-y-10">
-        {/* Top Row: Section Header + Mapa de la Plataforma */}
+      <SectionPhotoBanner
+        image={VISUAL_LIBRARY_PATHS.focal50mm}
+        imageAlt="Módulo 00 — Fundamentos de Prompts e IA Visual"
+        accentTint="navy"
+        kicker={
+          <>
+            <span>MÓDULO 00</span>
+            <span aria-hidden="true" className="text-white/35">/</span>
+            <span className="text-[#93B4FF]">FUNDAMENTOS DE PROMPTS E IA VISUAL</span>
+          </>
+        }
+        topRight={
+          <span className="inline-flex items-center px-3 py-1 rounded-md bg-white/10 border border-white/15 text-[11px] font-mono-code font-semibold text-[#F4F2ED] backdrop-blur-xs">
+            Guía Núcleo Colectivo · {PLATFORM_METRICS.modules} Módulos + {PLATFORM_METRICS.labsCount} Laboratorios
+          </span>
+        }
+        title="¿Qué es un Prompt y cómo funciona esta guía?"
+        subtitle={
+          <>
+            Un <strong className="text-white">prompt</strong> es la instrucción escrita o visual con la que comunicamos nuestra intención creativa a una inteligencia artificial. No requiere programar ni memorizar código: requiere claridad visual.
+          </>
+        }
+      />
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-10 space-y-10">
+        {/* Top Row: Mapa de la Plataforma */}
         <div className="space-y-6">
-          <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-4">
-            <div>
-              <div className="flex items-center gap-2 text-xs font-mono-code uppercase tracking-wider text-amber-700 dark:text-amber-400 font-bold mb-1.5">
-                <span>MÓDULO 00</span>
-                <span aria-hidden="true" className="text-stone-400">/</span>
-                <span>FUNDAMENTOS DE PROMPTS E IA VISUAL</span>
-              </div>
-              <h2 className="text-3xl sm:text-4xl font-bold font-serif-title text-stone-900 dark:text-stone-100">
-                ¿Qué es un Prompt y cómo funciona esta guía?
-              </h2>
-              <p className="text-sm text-stone-600 dark:text-stone-400 mt-1.5 max-w-2xl leading-relaxed">
-                Un <strong>prompt</strong> es la instrucción escrita o visual con la que comunicamos nuestra intención creativa a una inteligencia artificial. No requiere programar ni memorizar código: requiere claridad visual.
-              </p>
-            </div>
-
-            <div className="text-xs font-mono-code text-stone-500 dark:text-stone-400 shrink-0">
-              Guía Núcleo Colectivo · {PLATFORM_METRICS.modules} Módulos + {PLATFORM_METRICS.labsCount} Laboratorios
-            </div>
-          </div>
-
           {/* 4-Stage Navigation Roadmap */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
             {ROUTE_STEPS.map((item) => (

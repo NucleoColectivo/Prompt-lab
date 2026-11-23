@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react';
+import { AnimatePresence, motion } from 'motion/react';
 import {
   ArrowRight,
   Sparkles,
@@ -25,6 +26,13 @@ import { PLATFORM_METRICS } from '../data/platformMetrics';
 import ethicsCardSesgos from '../assets/images/ethics_card_sesgos_1795400896612.jpg';
 import { ResilientImage } from './ResilientImage';
 import type { PromptBuilderState } from './PromptBuilder';
+import {
+  EDITORIAL_EASE,
+  RevealSection,
+  RevealText,
+  StaggerGroup,
+  StaggerItem,
+} from './MotionPrimitives';
 
 const HOME_RANDOM_CHALLENGES = [
   {
@@ -106,6 +114,11 @@ const THREE_PATHWAYS: {
   primaryCta: string;
   primaryTarget: { section: AppSectionId; subTab?: string };
   quickLinks: { label: string; section: AppSectionId; subTab?: string }[];
+  accentBadge: string;
+  accentTopBar: string;
+  accentBorderHover: string;
+  ctaClasses: string;
+  linkHover: string;
 }[] = [
   {
     number: '01',
@@ -122,6 +135,11 @@ const THREE_PATHWAYS: {
       { label: 'Simulador de Iluminación (9 parámetros)', section: 'laboratorios', subTab: 'iluminacion' },
       { label: `${PLATFORM_METRICS.labsCount} Laboratorios prácticos`, section: 'laboratorios', subTab: 'labs' },
     ],
+    accentBadge: 'bg-[#F8C300] text-[#101014]',
+    accentTopBar: 'bg-[#F8C300]',
+    accentBorderHover: 'hover:border-[#D4A600] dark:hover:border-[#F8C300]',
+    ctaClasses: 'bg-[#F8C300] hover:bg-[#E5B400] text-[#101014]',
+    linkHover: 'hover:text-[#B47B00] dark:hover:text-[#F8C300]',
   },
   {
     number: '02',
@@ -137,6 +155,11 @@ const THREE_PATHWAYS: {
       { label: 'Ética y Sesgos IA', section: 'etica-ia' },
       { label: 'Cine y Documentales IA', section: 'movies-ia' },
     ],
+    accentBadge: 'bg-[#326BFF] text-white',
+    accentTopBar: 'bg-[#326BFF]',
+    accentBorderHover: 'hover:border-[#326BFF] dark:hover:border-[#5D8BFF]',
+    ctaClasses: 'bg-[#326BFF] hover:bg-[#2358E6] text-white',
+    linkHover: 'hover:text-[#326BFF] dark:hover:text-[#8FB0FF]',
   },
   {
     number: '03',
@@ -152,6 +175,11 @@ const THREE_PATHWAYS: {
       { label: 'Recetas y Plantillas', section: 'recursos', subTab: 'recetas' },
       { label: 'Mis proyectos y Bitácora Creativa', section: 'favoritos' },
     ],
+    accentBadge: 'bg-[#7545D6] text-white',
+    accentTopBar: 'bg-[#7545D6]',
+    accentBorderHover: 'hover:border-[#7545D6] dark:hover:border-[#A782F5]',
+    ctaClasses: 'bg-[#7545D6] hover:bg-[#6134BF] text-white',
+    linkHover: 'hover:text-[#7545D6] dark:hover:text-[#C4A5FF]',
   },
 ];
 
@@ -219,6 +247,8 @@ const PRACTICAL_STUDIOS: {
   detail: string;
   image: string;
   icon: React.ReactNode;
+  iconBg: string;
+  hoverBorder: string;
   section: AppSectionId;
   subTab?: string;
 }[] = [
@@ -226,7 +256,9 @@ const PRACTICAL_STUDIOS: {
     title: 'Moodboard Builder',
     detail: 'Tableros de dirección de arte, paletas y prompt directo',
     image: VISUAL_LIBRARY_PATHS.colorDuotone,
-    icon: <Palette className="w-4 h-4 text-[#7545D6] dark:text-[#F8C300]" />,
+    icon: <Palette className="w-3.5 h-3.5 text-[#7545D6] dark:text-[#C4A5FF]" />,
+    iconBg: 'bg-[#7545D6]/12 dark:bg-[#7545D6]/25',
+    hoverBorder: 'hover:border-[#7545D6] dark:hover:border-[#A782F5]',
     section: 'laboratorios',
     subTab: 'moodboard',
   },
@@ -234,7 +266,9 @@ const PRACTICAL_STUDIOS: {
     title: 'Simulador de iluminación',
     detail: '9 parámetros de luz + diagrama cenital de estudio',
     image: VISUAL_LIBRARY_PATHS.lightRembrandt,
-    icon: <Sun className="w-4 h-4 text-[#F8C300]" />,
+    icon: <Sun className="w-3.5 h-3.5 text-[#B47B00] dark:text-[#F8C300]" />,
+    iconBg: 'bg-[#F8C300]/20 dark:bg-[#F8C300]/20',
+    hoverBorder: 'hover:border-[#D4A600] dark:hover:border-[#F8C300]',
     section: 'laboratorios',
     subTab: 'iluminacion',
   },
@@ -242,7 +276,9 @@ const PRACTICAL_STUDIOS: {
     title: 'Mi primera imagen',
     detail: '6 pasos guiados sin tecnicismos',
     image: STUDIO_MEDIA_ASSETS.botanicalArt,
-    icon: <Sparkles className="w-4 h-4 text-[#F8C300]" />,
+    icon: <Sparkles className="w-3.5 h-3.5 text-[#059669] dark:text-[#34D399]" />,
+    iconBg: 'bg-[#059669]/12 dark:bg-[#059669]/25',
+    hoverBorder: 'hover:border-[#059669] dark:hover:border-[#34D399]',
     section: 'laboratorios',
     subTab: 'principiante',
   },
@@ -250,7 +286,9 @@ const PRACTICAL_STUDIOS: {
     title: 'Dibujo a imagen',
     detail: 'Limpia tu boceto y llévalo a render o foto',
     image: STUDIO_MEDIA_ASSETS.drawingTo3dRender,
-    icon: <PencilRuler className="w-4 h-4 text-[#7545D6] dark:text-[#F8C300]" />,
+    icon: <PencilRuler className="w-3.5 h-3.5 text-[#E11D48] dark:text-[#FB7185]" />,
+    iconBg: 'bg-[#E11D48]/12 dark:bg-[#E11D48]/25',
+    hoverBorder: 'hover:border-[#E11D48] dark:hover:border-[#FB7185]',
     section: 'laboratorios',
     subTab: 'dibujo',
   },
@@ -258,7 +296,9 @@ const PRACTICAL_STUDIOS: {
     title: 'Restauración fotográfica',
     detail: 'Recupera archivo histórico preservando identidad',
     image: STUDIO_MEDIA_ASSETS.restorationBeforeAfter,
-    icon: <History className="w-4 h-4 text-[#326BFF] dark:text-[#F8C300]" />,
+    icon: <History className="w-3.5 h-3.5 text-[#326BFF] dark:text-[#8FB0FF]" />,
+    iconBg: 'bg-[#326BFF]/12 dark:bg-[#326BFF]/25',
+    hoverBorder: 'hover:border-[#326BFF] dark:hover:border-[#8FB0FF]',
     section: 'laboratorios',
     subTab: 'restauracion',
   },
@@ -266,7 +306,9 @@ const PRACTICAL_STUDIOS: {
     title: 'Producto y publicidad',
     detail: 'Bodegones, packshot y piezas comerciales',
     image: STUDIO_MEDIA_ASSETS.productCommerceStudio,
-    icon: <ShoppingBag className="w-4 h-4 text-[#F8C300]" />,
+    icon: <ShoppingBag className="w-3.5 h-3.5 text-[#EA580C] dark:text-[#FB923C]" />,
+    iconBg: 'bg-[#EA580C]/12 dark:bg-[#EA580C]/25',
+    hoverBorder: 'hover:border-[#EA580C] dark:hover:border-[#FB923C]',
     section: 'laboratorios',
     subTab: 'producto',
   },
@@ -274,7 +316,9 @@ const PRACTICAL_STUDIOS: {
     title: 'Diseño web con IA',
     detail: 'Arquitectura, prompts y especificación UI/UX',
     image: STUDIO_MEDIA_ASSETS.webDesignShowcase,
-    icon: <Globe className="w-4 h-4 text-[#326BFF] dark:text-[#F8C300]" />,
+    icon: <Globe className="w-3.5 h-3.5 text-[#0D9488] dark:text-[#5EEAD4]" />,
+    iconBg: 'bg-[#0D9488]/12 dark:bg-[#0D9488]/25',
+    hoverBorder: 'hover:border-[#0D9488] dark:hover:border-[#5EEAD4]',
     section: 'laboratorios',
     subTab: 'web',
   },
@@ -282,7 +326,9 @@ const PRACTICAL_STUDIOS: {
     title: 'Video y secuencias',
     detail: 'Planificador en 8 etapas + Storyboard',
     image: VISUAL_LIBRARY_PATHS.camCinemaRig,
-    icon: <Clapperboard className="w-4 h-4 text-[#7545D6] dark:text-[#F8C300]" />,
+    icon: <Clapperboard className="w-3.5 h-3.5 text-[#4F46E5] dark:text-[#A5B4FC]" />,
+    iconBg: 'bg-[#4F46E5]/12 dark:bg-[#4F46E5]/25',
+    hoverBorder: 'hover:border-[#4F46E5] dark:hover:border-[#A5B4FC]',
     section: 'film-director',
   },
 ];
@@ -312,7 +358,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
         className="py-16 sm:py-20 border-b border-[#DEDAD0] dark:border-[#26262E]"
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 space-y-10">
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+          <RevealText className="flex flex-col md:flex-row md:items-end justify-between gap-4">
             <div className="space-y-2 max-w-2xl">
               <p className="text-xs font-mono-code text-[#7545D6] dark:text-[#F8C300] font-semibold">
                 Por dónde empezar
@@ -326,91 +372,96 @@ export const HomeView: React.FC<HomeViewProps> = ({
               <button
                 type="button"
                 onClick={onOpenWelcomeWizard}
-                className="text-xs font-semibold text-[#326BFF] dark:text-[#F8C300] hover:underline inline-flex items-center gap-1.5 self-start md:self-auto whitespace-nowrap"
+                className="text-xs font-semibold text-[#326BFF] dark:text-[#F8C300] hover:underline inline-flex items-center gap-1.5 self-start md:self-auto whitespace-nowrap cursor-pointer"
               >
                 <Compass className="w-4 h-4" />
                 <span>Recorrido rápido (3 pasos)</span>
               </button>
             )}
-          </div>
+          </RevealText>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <StaggerGroup className="grid grid-cols-1 lg:grid-cols-3 gap-6" stagger={0.09}>
             {THREE_PATHWAYS.map((path) => (
-              <article
-                key={path.number}
-                className="bg-white dark:bg-[#16161C] border border-[#DEDAD0] dark:border-[#26262E] rounded-2xl overflow-hidden flex flex-col justify-between transition-colors hover:border-[#101014] dark:hover:border-[#F8C300]"
-              >
-                <div>
-                  <div className="relative overflow-hidden bg-[#101014]">
-                    <ResilientImage
-                      src={path.image}
-                      alt={path.imageAlt}
-                      aspectRatio="16:9"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#101014]/70 via-transparent to-transparent pointer-events-none" />
-                    <span className="absolute bottom-3 left-4 text-xs font-mono-code font-bold text-[#F8C300] tabular-nums">
-                      {path.number}. {path.title}
-                    </span>
-                  </div>
-
-                  <div className="p-6 space-y-3">
-                    <div className="text-xs text-[#5B5B66] dark:text-[#A09E97]">
-                      {path.subtitle}
+              <StaggerItem key={path.number} className="h-full">
+                <article
+                  className={`group h-full bg-white dark:bg-[#16161C] border border-[#DEDAD0] dark:border-[#26262E] rounded-2xl overflow-hidden flex flex-col justify-between nc-card-lift ${path.accentBorderHover}`}
+                >
+                  <div>
+                    <div className="relative overflow-hidden bg-[#101014]">
+                      <div className={`h-1.5 w-full ${path.accentTopBar}`} />
+                      <ResilientImage
+                        src={path.image}
+                        alt={path.imageAlt}
+                        aspectRatio="16:9"
+                        className="group-hover:scale-105 transition-transform duration-500"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-[#101014]/80 via-transparent to-transparent pointer-events-none" />
+                      <span
+                        className={`absolute bottom-3 left-4 px-2.5 py-1 rounded-md text-[11px] font-mono-code font-bold tabular-nums shadow-xs ${path.accentBadge}`}
+                      >
+                        {path.number} · {path.title}
+                      </span>
                     </div>
-                    <h3 className="text-2xl font-extrabold font-display-sans text-[#101014] dark:text-[#F4F2ED]">
-                      {path.title}
-                    </h3>
-                    <p className="text-sm text-[#4A4A55] dark:text-[#B4B2AC] leading-relaxed">
-                      {path.description}
-                    </p>
 
-                    <ul className="pt-3 border-t border-[#EAE7DF] dark:border-[#26262E] space-y-2">
-                      {path.quickLinks.map((link) => (
-                        <li key={link.label}>
-                          <button
-                            type="button"
-                            onClick={() => onNavigateSection(link.section, link.subTab)}
-                            className="w-full flex items-center justify-between text-xs font-semibold text-[#101014] dark:text-[#D8D5CD] hover:text-[#326BFF] dark:hover:text-[#F8C300] transition-colors py-1"
-                          >
-                            <span>{link.label}</span>
-                            <ArrowRight className="w-3.5 h-3.5 shrink-0" />
-                          </button>
-                        </li>
-                      ))}
-                    </ul>
+                    <div className="p-6 space-y-3">
+                      <div className="text-xs font-medium text-[#5B5B66] dark:text-[#A09E97]">
+                        {path.subtitle}
+                      </div>
+                      <h3 className="text-2xl font-extrabold font-display-sans text-[#101014] dark:text-[#F4F2ED]">
+                        {path.title}
+                      </h3>
+                      <p className="text-sm text-[#4A4A55] dark:text-[#B4B2AC] leading-relaxed">
+                        {path.description}
+                      </p>
+
+                      <ul className="pt-3 border-t border-[#EAE7DF] dark:border-[#26262E] space-y-2">
+                        {path.quickLinks.map((link) => (
+                          <li key={link.label}>
+                            <button
+                              type="button"
+                              onClick={() => onNavigateSection(link.section, link.subTab)}
+                              className={`group/link w-full flex items-center justify-between text-xs font-semibold text-[#101014] dark:text-[#D8D5CD] transition-colors py-1 cursor-pointer ${path.linkHover}`}
+                            >
+                              <span>{link.label}</span>
+                              <ArrowRight className="w-3.5 h-3.5 shrink-0 transition-transform duration-200 group-hover/link:translate-x-1" />
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
                   </div>
-                </div>
 
-                <div className="px-6 pb-6">
-                  <button
-                    type="button"
-                    onClick={() =>
-                      onNavigateSection(path.primaryTarget.section, path.primaryTarget.subTab)
-                    }
-                    className="w-full py-2.5 px-4 min-h-[42px] text-xs font-bold rounded-lg bg-[#101014] dark:bg-[#F8C300] text-[#F4F2ED] dark:text-[#101014] hover:opacity-90 transition-opacity inline-flex items-center justify-center gap-2"
-                  >
-                    <span>{path.primaryCta}</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-              </article>
+                  <div className="px-6 pb-6">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        onNavigateSection(path.primaryTarget.section, path.primaryTarget.subTab)
+                      }
+                      className={`group/cta w-full py-2.5 px-4 min-h-[42px] text-xs font-bold rounded-lg active:scale-[0.99] transition-all inline-flex items-center justify-center gap-2 cursor-pointer shadow-xs ${path.ctaClasses}`}
+                    >
+                      <span>{path.primaryCta}</span>
+                      <ArrowRight className="w-3.5 h-3.5 transition-transform duration-200 group-hover/cta:translate-x-0.5" />
+                    </button>
+                  </div>
+                </article>
+              </StaggerItem>
             ))}
-          </div>
+          </StaggerGroup>
         </div>
       </section>
 
-      {/* 2. GALERÍA VISUAL CURADA (8 COLECCIONES) */}
-      <section className="py-16 sm:py-20 border-b border-[#DEDAD0] dark:border-[#26262E] bg-white dark:bg-[#14141A]">
+      {/* 2. GALERÍA VISUAL CURADA (8 COLECCIONES) — DARK MUSEUM EXHIBITION BAND */}
+      <section className="py-16 sm:py-20 border-b border-[#24242E] bg-[#101014] text-[#F4F2ED]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 space-y-8">
-          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+          <RevealText className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
             <div className="space-y-2 max-w-2xl">
-              <p className="text-xs font-mono-code text-[#326BFF] dark:text-[#F8C300] font-semibold">
-                Inspiración y prompts reutilizables
+              <p className="text-xs font-mono-code text-[#F8C300] font-semibold uppercase tracking-wider">
+                Sala de exhibición · Prompts reutilizables
               </p>
-              <h2 className="text-2xl sm:text-3xl font-extrabold font-display-sans text-[#101014] dark:text-[#F4F2ED] text-balance">
+              <h2 className="text-2xl sm:text-3xl font-extrabold font-display-sans text-[#F4F2ED] text-balance">
                 Galería Visual en 8 colecciones curadas
               </h2>
-              <p className="text-sm text-[#4A4A55] dark:text-[#B4B2AC]">
+              <p className="text-sm text-[#C8C5BD]">
                 Cada lámina incluye prompt completo en español e inglés, óptica, iluminación y la herramienta «Recrear esta imagen» para adaptarla a tu proyecto.
               </p>
             </div>
@@ -421,156 +472,163 @@ export const HomeView: React.FC<HomeViewProps> = ({
                   ? onOpenGalleryCollection('Todas')
                   : onNavigateSection('galeria')
               }
-              className="px-4 py-2.5 min-h-[42px] text-xs font-bold bg-[#F8C300] hover:bg-[#e5b400] text-[#101014] rounded-lg transition-colors inline-flex items-center gap-2 self-start sm:self-auto whitespace-nowrap shrink-0"
+              className="group px-4 py-2.5 min-h-[42px] text-xs font-bold bg-[#F8C300] hover:bg-[#e5b400] hover:-translate-y-0.5 text-[#101014] rounded-lg transition-all duration-200 inline-flex items-center gap-2 self-start sm:self-auto whitespace-nowrap shrink-0 cursor-pointer shadow-sm"
             >
               <Images className="w-4 h-4" />
               <span>Abrir Galería ({PLATFORM_METRICS.galleryPlates} láminas)</span>
-              <ArrowRight className="w-3.5 h-3.5" />
+              <ArrowRight className="w-3.5 h-3.5 transition-transform duration-200 group-hover:translate-x-0.5" />
             </button>
-          </div>
+          </RevealText>
 
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <StaggerGroup className="grid grid-cols-2 lg:grid-cols-4 gap-4" stagger={0.05}>
             {CURATED_COLLECTIONS.map((col) => (
-              <button
-                key={col.id}
-                type="button"
-                onClick={() =>
-                  onOpenGalleryCollection
-                    ? onOpenGalleryCollection(col.id)
-                    : onNavigateSection('galeria')
-                }
-                className="group relative rounded-xl overflow-hidden text-left bg-[#101014] aspect-[4/3] focus-visible:outline-2 focus-visible:outline-[#F8C300]"
-              >
-                <ResilientImage
-                  src={col.image}
-                  alt={`Colección ${col.title} de Núcleo Colectivo`}
-                  aspectRatio="3:2"
-                  containerClassName="w-full h-full"
-                  className="group-hover:scale-105 transition-transform duration-500"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-[#101014]/90 via-[#101014]/25 to-transparent pointer-events-none" />
-                <div className="absolute bottom-3 left-3.5 right-3.5">
-                  <div className="text-[11px] font-mono-code text-[#F8C300] tabular-nums">
-                    {col.number} · {col.meta}
+              <StaggerItem key={col.id} lift>
+                <button
+                  type="button"
+                  onClick={() =>
+                    onOpenGalleryCollection
+                      ? onOpenGalleryCollection(col.id)
+                      : onNavigateSection('galeria')
+                  }
+                  className="group relative w-full rounded-xl overflow-hidden text-left bg-[#181820] border border-white/10 hover:border-[#F8C300] aspect-[4/3] focus-visible:outline-2 focus-visible:outline-[#F8C300] shadow-md hover:shadow-xl transition-all duration-300 cursor-pointer"
+                >
+                  <ResilientImage
+                    src={col.image}
+                    alt={`Colección ${col.title} de Núcleo Colectivo`}
+                    aspectRatio="3:2"
+                    containerClassName="w-full h-full"
+                    className="group-hover:scale-106 transition-transform duration-500"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#0A0A0E]/92 via-[#0A0A0E]/30 to-transparent pointer-events-none" />
+                  <div className="absolute bottom-3 left-3.5 right-3.5">
+                    <div className="text-[11px] font-mono-code text-[#F8C300] tabular-nums">
+                      {col.number} · {col.meta}
+                    </div>
+                    <div className="text-base font-bold text-[#F4F2ED] mt-0.5 flex items-center justify-between">
+                      <span>{col.title}</span>
+                      <ArrowRight className="w-3.5 h-3.5 opacity-75 group-hover:translate-x-1 group-hover:text-[#F8C300] group-hover:opacity-100 transition-all duration-200" />
+                    </div>
                   </div>
-                  <div className="text-base font-bold text-[#F4F2ED] mt-0.5 flex items-center justify-between">
-                    <span>{col.title}</span>
-                    <ArrowRight className="w-3.5 h-3.5 opacity-70 group-hover:translate-x-0.5 transition-transform" />
-                  </div>
-                </div>
-              </button>
+                </button>
+              </StaggerItem>
             ))}
-          </div>
+          </StaggerGroup>
         </div>
       </section>
 
-      {/* 2B. CULTURA CRÍTICA Y AUDIOVISUAL: ÉTICA IA + CINE Y DOCUMENTALES */}
-      <section className="py-16 sm:py-20 border-b border-[#DEDAD0] dark:border-[#26262E] bg-[#F4F2ED] dark:bg-[#101014]">
+      {/* 2B. CULTURA CRÍTICA Y AUDIOVISUAL: ÉTICA IA + CINE Y DOCUMENTALES — VIOLET STUDIO BAND */}
+      <section className="py-16 sm:py-20 border-b border-[#D5CDE8] dark:border-[#262338] bg-[#ECE8F6] dark:bg-[#151321]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 space-y-8">
-          <div className="space-y-2 max-w-2xl">
-            <p className="text-xs font-mono-code text-[#7545D6] dark:text-[#F8C300] font-semibold">
+          <RevealText className="space-y-2 max-w-2xl">
+            <p className="text-xs font-mono-code text-[#5E32BA] dark:text-[#C4A5FF] font-bold uppercase tracking-wider">
               Pensamiento crítico y cultura visual
             </p>
             <h2 className="text-2xl sm:text-3xl font-extrabold font-display-sans text-[#101014] dark:text-[#F4F2ED] text-balance">
               Ética de la IA y Cine Documental
             </h2>
-            <p className="text-sm text-[#4A4A55] dark:text-[#B4B2AC]">
+            <p className="text-sm text-[#433E54] dark:text-[#C2BDD4]">
               Más allá de las herramientas: laboratorios interactivos para cuestionar sesgos algorítmicos y una filmoteca curada sobre el impacto cultural de la inteligencia artificial.
             </p>
-          </div>
+          </RevealText>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <StaggerGroup className="grid grid-cols-1 lg:grid-cols-2 gap-6" stagger={0.1}>
             {/* Tarjeta Ética IA */}
-            <article className="group bg-white dark:bg-[#16161C] border border-[#DEDAD0] dark:border-[#26262E] hover:border-[#7545D6] dark:hover:border-[#F8C300] rounded-2xl overflow-hidden flex flex-col justify-between transition-colors">
-              <div>
-                <div className="relative overflow-hidden bg-[#101014]">
-                  <ResilientImage
-                    src={ethicsCardSesgos}
-                    alt="Laboratorio de Ética IA, sesgos visuales y dilemas algorítmicos"
-                    aspectRatio="16:9"
-                    className="group-hover:scale-103 transition-transform duration-500"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#101014]/80 via-[#101014]/20 to-transparent pointer-events-none" />
-                  <div className="absolute bottom-3 left-4 right-4 flex items-center justify-between text-xs font-mono-code text-[#F8C300]">
-                    <span>6 simuladores · 20 charlas críticas</span>
+            <StaggerItem className="h-full">
+              <article className="group h-full bg-white dark:bg-[#1B1829] border border-[#D4CAE9] dark:border-[#2F2A47] hover:border-[#7545D6] dark:hover:border-[#A782F5] rounded-2xl overflow-hidden flex flex-col justify-between nc-card-lift shadow-xs">
+                <div>
+                  <div className="relative overflow-hidden bg-[#101014]">
+                    <div className="h-1.5 w-full bg-[#7545D6]" />
+                    <ResilientImage
+                      src={ethicsCardSesgos}
+                      alt="Laboratorio de Ética IA, sesgos visuales y dilemas algorítmicos"
+                      aspectRatio="16:9"
+                      className="group-hover:scale-104 transition-transform duration-500"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#101014]/85 via-[#101014]/20 to-transparent pointer-events-none" />
+                    <div className="absolute bottom-3 left-4 right-4 flex items-center justify-between text-xs font-mono-code text-[#E5D7FF]">
+                      <span>6 simuladores · 20 charlas críticas</span>
+                    </div>
+                  </div>
+                  <div className="p-6 space-y-3">
+                    <div className="flex items-center gap-2 text-xs font-mono-code text-[#7545D6] dark:text-[#C4A5FF] font-bold">
+                      <Scale className="w-4 h-4" />
+                      <span>Ética IA · Laboratorio Crítico</span>
+                    </div>
+                    <h3 className="text-2xl font-extrabold font-display-sans text-[#101014] dark:text-[#F4F2ED]">
+                      Sesgos, dilemas morales y alfabetización visual
+                    </h3>
+                    <p className="text-sm text-[#4A4A55] dark:text-[#B4B2AC] leading-relaxed">
+                      Experimenta cómo los prompts reproducen estereotipos, pon a prueba tu ojo en el detector de imágenes sintéticas, explora dilemas éticos y consulta 20 charlas críticas seleccionadas.
+                    </p>
                   </div>
                 </div>
-                <div className="p-6 space-y-3">
-                  <div className="flex items-center gap-2 text-xs font-mono-code text-[#7545D6] dark:text-[#F8C300] font-semibold">
+                <div className="px-6 pb-6">
+                  <button
+                    type="button"
+                    onClick={() => onNavigateSection('etica-ia')}
+                    className="group/btn w-full py-3 px-4 min-h-[44px] text-xs font-bold bg-[#7545D6] hover:bg-[#6134BF] text-white rounded-lg transition-colors inline-flex items-center justify-center gap-2 cursor-pointer shadow-xs"
+                  >
                     <Scale className="w-4 h-4" />
-                    <span>Ética IA · Laboratorio Crítico</span>
-                  </div>
-                  <h3 className="text-2xl font-extrabold font-display-sans text-[#101014] dark:text-[#F4F2ED]">
-                    Sesgos, dilemas morales y alfabetización visual
-                  </h3>
-                  <p className="text-sm text-[#4A4A55] dark:text-[#B4B2AC] leading-relaxed">
-                    Experimenta cómo los prompts reproducen estereotipos, pon a prueba tu ojo en el detector de imágenes sintéticas, explora dilemas éticos y consulta 20 charlas críticas seleccionadas.
-                  </p>
+                    <span>Abrir Laboratorio de Ética IA</span>
+                    <ArrowRight className="w-3.5 h-3.5 transition-transform duration-200 group-hover/btn:translate-x-0.5" />
+                  </button>
                 </div>
-              </div>
-              <div className="px-6 pb-6">
-                <button
-                  type="button"
-                  onClick={() => onNavigateSection('etica-ia')}
-                  className="w-full py-3 px-4 min-h-[44px] text-xs font-bold bg-[#101014] dark:bg-[#F8C300] text-[#F4F2ED] dark:text-[#101014] hover:opacity-90 rounded-lg transition-opacity inline-flex items-center justify-center gap-2"
-                >
-                  <Scale className="w-4 h-4" />
-                  <span>Abrir Laboratorio de Ética IA</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </button>
-              </div>
-            </article>
+              </article>
+            </StaggerItem>
 
             {/* Tarjeta Cine y Documentales IA */}
-            <article className="group bg-white dark:bg-[#16161C] border border-[#DEDAD0] dark:border-[#26262E] hover:border-[#326BFF] dark:hover:border-[#F8C300] rounded-2xl overflow-hidden flex flex-col justify-between transition-colors">
-              <div>
-                <div className="relative overflow-hidden bg-[#101014]">
-                  <ResilientImage
-                    src={VISUAL_LIBRARY_PATHS.colorTealOrange}
-                    alt="Cine Club y Filmoteca de Documentales y Películas sobre Inteligencia Artificial"
-                    aspectRatio="16:9"
-                    className="group-hover:scale-103 transition-transform duration-500"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#101014]/80 via-[#101014]/20 to-transparent pointer-events-none" />
-                  <div className="absolute bottom-3 left-4 right-4 flex items-center justify-between text-xs font-mono-code text-[#F8C300]">
-                    <span>31 documentales y debates · 20 películas esenciales</span>
+            <StaggerItem className="h-full">
+              <article className="group h-full bg-white dark:bg-[#1B1829] border border-[#CAD7EE] dark:border-[#25334F] hover:border-[#326BFF] dark:hover:border-[#5D8BFF] rounded-2xl overflow-hidden flex flex-col justify-between nc-card-lift shadow-xs">
+                <div>
+                  <div className="relative overflow-hidden bg-[#101014]">
+                    <div className="h-1.5 w-full bg-[#326BFF]" />
+                    <ResilientImage
+                      src={VISUAL_LIBRARY_PATHS.colorTealOrange}
+                      alt="Cine Club y Filmoteca de Documentales y Películas sobre Inteligencia Artificial"
+                      aspectRatio="16:9"
+                      className="group-hover:scale-104 transition-transform duration-500"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#101014]/85 via-[#101014]/20 to-transparent pointer-events-none" />
+                    <div className="absolute bottom-3 left-4 right-4 flex items-center justify-between text-xs font-mono-code text-[#CFE0FF]">
+                      <span>31 documentales y debates · 20 películas esenciales</span>
+                    </div>
+                  </div>
+                  <div className="p-6 space-y-3">
+                    <div className="flex items-center gap-2 text-xs font-mono-code text-[#326BFF] dark:text-[#8FB0FF] font-bold">
+                      <Film className="w-4 h-4" />
+                      <span>Cine y Documentales IA · Cine Club</span>
+                    </div>
+                    <h3 className="text-2xl font-extrabold font-display-sans text-[#101014] dark:text-[#F4F2ED]">
+                      Filmoteca curada sobre IA, sociedad y futuro
+                    </h3>
+                    <p className="text-sm text-[#4A4A55] dark:text-[#B4B2AC] leading-relaxed">
+                      Explora documentales completos, series de investigación, debates y 20 películas clave de ciencia ficción con preguntas críticas y fichas listas para cineforos y talleres.
+                    </p>
                   </div>
                 </div>
-                <div className="p-6 space-y-3">
-                  <div className="flex items-center gap-2 text-xs font-mono-code text-[#326BFF] dark:text-[#F8C300] font-semibold">
+                <div className="px-6 pb-6">
+                  <button
+                    type="button"
+                    onClick={() => onNavigateSection('movies-ia')}
+                    className="group/btn w-full py-3 px-4 min-h-[44px] text-xs font-bold bg-[#326BFF] hover:bg-[#2358E6] text-white rounded-lg transition-colors inline-flex items-center justify-center gap-2 cursor-pointer shadow-xs"
+                  >
                     <Film className="w-4 h-4" />
-                    <span>Cine y Documentales IA · Cine Club</span>
-                  </div>
-                  <h3 className="text-2xl font-extrabold font-display-sans text-[#101014] dark:text-[#F4F2ED]">
-                    Filmoteca curada sobre IA, sociedad y futuro
-                  </h3>
-                  <p className="text-sm text-[#4A4A55] dark:text-[#B4B2AC] leading-relaxed">
-                    Explora documentales completos, series de investigación, debates y 20 películas clave de ciencia ficción con preguntas críticas y fichas listas para cineforos y talleres.
-                  </p>
+                    <span>Abrir Cine y Documentales IA</span>
+                    <ArrowRight className="w-3.5 h-3.5 transition-transform duration-200 group-hover/btn:translate-x-0.5" />
+                  </button>
                 </div>
-              </div>
-              <div className="px-6 pb-6">
-                <button
-                  type="button"
-                  onClick={() => onNavigateSection('movies-ia')}
-                  className="w-full py-3 px-4 min-h-[44px] text-xs font-bold bg-[#F8C300] hover:bg-[#e5b400] text-[#101014] rounded-lg transition-colors inline-flex items-center justify-center gap-2"
-                >
-                  <Film className="w-4 h-4" />
-                  <span>Abrir Cine y Documentales IA</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </button>
-              </div>
-            </article>
-          </div>
+              </article>
+            </StaggerItem>
+          </StaggerGroup>
         </div>
       </section>
 
       {/* 3. ACCESO DIRECTO A ESTUDIOS PRÁCTICOS */}
-      <section className="py-16 sm:py-20 border-b border-[#DEDAD0] dark:border-[#26262E]">
+      <section className="py-16 sm:py-20 border-b border-[#DEDAD0] dark:border-[#26262E] bg-[#F4F2ED] dark:bg-[#101014]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 space-y-8">
-          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+          <RevealText className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
             <div className="space-y-1.5">
-              <p className="text-xs font-mono-code text-[#7545D6] dark:text-[#F8C300] font-semibold">
+              <p className="text-xs font-mono-code text-[#326BFF] dark:text-[#F8C300] font-bold uppercase tracking-wider">
                 Laboratorios especializados
               </p>
               <h2 className="text-2xl sm:text-3xl font-extrabold font-display-sans text-[#101014] dark:text-[#F4F2ED]">
@@ -580,64 +638,78 @@ export const HomeView: React.FC<HomeViewProps> = ({
             <button
               type="button"
               onClick={() => onNavigateSection('experiencias')}
-              className="text-xs font-semibold text-[#101014] dark:text-[#F4F2ED] hover:text-[#326BFF] dark:hover:text-[#F8C300] inline-flex items-center gap-1.5 self-start sm:self-auto whitespace-nowrap"
+              className="group px-3.5 py-2 rounded-lg bg-[#101014] dark:bg-[#22222C] text-[#F4F2ED] hover:bg-[#326BFF] text-xs font-bold inline-flex items-center gap-1.5 self-start sm:self-auto whitespace-nowrap cursor-pointer transition-colors"
             >
               <span>Ver las {PLATFORM_METRICS.experiences} experiencias guiadas</span>
-              <ArrowRight className="w-3.5 h-3.5" />
+              <ArrowRight className="w-3.5 h-3.5 transition-transform duration-200 group-hover:translate-x-0.5" />
             </button>
-          </div>
+          </RevealText>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <StaggerGroup className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4" stagger={0.045}>
             {PRACTICAL_STUDIOS.map((studio) => (
-              <button
-                key={studio.title}
-                type="button"
-                onClick={() => onNavigateSection(studio.section, studio.subTab)}
-                className="group flex items-center gap-4 p-3.5 rounded-xl bg-white dark:bg-[#16161C] border border-[#DEDAD0] dark:border-[#26262E] hover:border-[#326BFF] dark:hover:border-[#F8C300] text-left transition-colors"
-              >
-                <div className="w-20 h-20 rounded-lg overflow-hidden shrink-0 bg-[#101014]">
-                  <ResilientImage
-                    src={studio.image}
-                    alt={studio.title}
-                    aspectRatio="1:1"
-                    containerClassName="w-full h-full"
-                    className="group-hover:scale-105 transition-transform duration-300"
-                  />
-                </div>
-                <div className="min-w-0 flex-1 space-y-1">
-                  <div className="flex items-center gap-1.5 text-sm font-bold text-[#101014] dark:text-[#F4F2ED]">
-                    {studio.icon}
-                    <span className="truncate">{studio.title}</span>
+              <StaggerItem key={studio.title} lift>
+                <button
+                  type="button"
+                  onClick={() => onNavigateSection(studio.section, studio.subTab)}
+                  className={`group w-full flex items-center gap-3.5 p-3.5 rounded-xl bg-white dark:bg-[#16161C] border border-[#DEDAD0] dark:border-[#26262E] text-left transition-all shadow-xs hover:shadow-md cursor-pointer ${studio.hoverBorder}`}
+                >
+                  <div className="w-18 h-18 rounded-lg overflow-hidden shrink-0 bg-[#101014]">
+                    <ResilientImage
+                      src={studio.image}
+                      alt={studio.title}
+                      aspectRatio="1:1"
+                      containerClassName="w-full h-full"
+                      className="group-hover:scale-106 transition-transform duration-300"
+                    />
                   </div>
-                  <p className="text-xs text-[#4A4A55] dark:text-[#B4B2AC] line-clamp-2 leading-snug">
-                    {studio.detail}
-                  </p>
-                </div>
-                <ArrowRight className="w-4 h-4 text-[#5B5B66] group-hover:text-[#326BFF] dark:group-hover:text-[#F8C300] shrink-0" />
-              </button>
+                  <div className="min-w-0 flex-1 space-y-1.5">
+                    <div className="flex items-center gap-2 text-sm font-bold text-[#101014] dark:text-[#F4F2ED]">
+                      <span className={`w-6 h-6 rounded-md inline-flex items-center justify-center shrink-0 ${studio.iconBg}`}>
+                        {studio.icon}
+                      </span>
+                      <span className="truncate">{studio.title}</span>
+                    </div>
+                    <p className="text-xs text-[#4A4A55] dark:text-[#B4B2AC] line-clamp-2 leading-snug">
+                      {studio.detail}
+                    </p>
+                  </div>
+                  <ArrowRight className="w-4 h-4 text-[#5B5B66] group-hover:text-[#101014] dark:group-hover:text-[#F8C300] group-hover:translate-x-0.5 transition-all duration-200 shrink-0" />
+                </button>
+              </StaggerItem>
             ))}
-          </div>
+          </StaggerGroup>
         </div>
       </section>
 
       {/* 4. RETO CREATIVO ALEATORIO + RECURSOS CLAVE */}
-      <section className="py-14 sm:py-16">
+      <section className="py-14 sm:py-16 bg-[#EAE5DA] dark:bg-[#14141B]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 space-y-8">
-          <div className="rounded-2xl bg-[#101014] text-[#F4F2ED] border border-[#26262E] p-6 sm:p-8 grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
-            <div className="lg:col-span-8 space-y-3">
-              <div className="flex flex-wrap items-center gap-2 text-xs font-mono-code text-[#F8C300]">
-                <span>Reto creativo aleatorio</span>
-                <span aria-hidden="true" className="text-[#787670]">·</span>
-                <span className="text-[#D8D5CD]">{activeChallenge.level}</span>
-                <span aria-hidden="true" className="text-[#787670]">·</span>
-                <span className="text-[#D8D5CD]">{activeChallenge.durationMinutes} min</span>
-              </div>
-              <h3 className="text-2xl font-extrabold font-display-sans text-[#F4F2ED]">
-                {activeChallenge.title}
-              </h3>
-              <p className="text-sm text-[#D8D5CD] leading-relaxed max-w-2xl">
-                {activeChallenge.brief}
-              </p>
+          <RevealSection className="rounded-2xl bg-[#101014] text-[#F4F2ED] border border-[#26262E] p-6 sm:p-8 grid grid-cols-1 lg:grid-cols-12 gap-6 items-center shadow-lg">
+            <div className="lg:col-span-8">
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={activeChallenge.id}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -8 }}
+                  transition={{ duration: 0.26, ease: EDITORIAL_EASE }}
+                  className="space-y-3"
+                >
+                  <div className="flex flex-wrap items-center gap-2 text-xs font-mono-code text-[#F8C300]">
+                    <span className="font-bold uppercase tracking-wider">Reto creativo aleatorio</span>
+                    <span aria-hidden="true" className="text-[#787670]">·</span>
+                    <span className="text-[#93B4FF] font-semibold">{activeChallenge.level}</span>
+                    <span aria-hidden="true" className="text-[#787670]">·</span>
+                    <span className="text-[#D8D5CD] tabular-nums">{activeChallenge.durationMinutes} min</span>
+                  </div>
+                  <h3 className="text-2xl font-extrabold font-display-sans text-[#F4F2ED]">
+                    {activeChallenge.title}
+                  </h3>
+                  <p className="text-sm text-[#D8D5CD] leading-relaxed max-w-2xl">
+                    {activeChallenge.brief}
+                  </p>
+                </motion.div>
+              </AnimatePresence>
             </div>
 
             <div className="lg:col-span-4 flex flex-col sm:flex-row lg:flex-col gap-2.5">
@@ -654,7 +726,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
                     onNavigateSection('builder');
                   }
                 }}
-                className="py-2.5 px-4 min-h-[42px] text-xs font-bold bg-[#F8C300] hover:bg-[#e5b400] text-[#101014] rounded-lg transition-colors inline-flex items-center justify-center gap-2"
+                className="py-2.5 px-4 min-h-[42px] text-xs font-bold bg-[#F8C300] hover:bg-[#e5b400] hover:-translate-y-0.5 active:scale-[0.98] text-[#101014] rounded-lg transition-all duration-200 inline-flex items-center justify-center gap-2 cursor-pointer"
               >
                 <Sparkles className="w-3.5 h-3.5" />
                 <span>Practicar en Constructor</span>
@@ -664,55 +736,58 @@ export const HomeView: React.FC<HomeViewProps> = ({
                 <button
                   type="button"
                   onClick={handleNextChallenge}
-                  className="py-2.5 px-3 min-h-[42px] text-xs font-semibold bg-white/10 hover:bg-white/15 text-[#F4F2ED] rounded-lg transition-colors inline-flex items-center justify-center gap-1.5"
+                  className="group py-2.5 px-3 min-h-[42px] text-xs font-bold bg-[#7545D6] hover:bg-[#6134BF] active:scale-[0.98] text-white rounded-lg transition-all inline-flex items-center justify-center gap-1.5 cursor-pointer"
                 >
-                  <Shuffle className="w-3.5 h-3.5 text-[#F8C300]" />
+                  <Shuffle className="w-3.5 h-3.5 text-[#F8C300] transition-transform duration-300 group-hover:rotate-180" />
                   <span>Otro reto</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => onNavigateSection('experiencias')}
-                  className="py-2.5 px-3 min-h-[42px] text-xs font-semibold border border-white/20 hover:border-[#F8C300] text-[#F4F2ED] rounded-lg transition-colors inline-flex items-center justify-center gap-1.5"
+                  className="group py-2.5 px-3 min-h-[42px] text-xs font-semibold bg-[#1E2230] hover:bg-[#326BFF] border border-white/15 hover:border-[#326BFF] text-[#F4F2ED] rounded-lg transition-colors inline-flex items-center justify-center gap-1.5 cursor-pointer"
                 >
                   <span>Más retos</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
+                  <ArrowRight className="w-3.5 h-3.5 transition-transform duration-200 group-hover:translate-x-0.5" />
                 </button>
               </div>
             </div>
-          </div>
+          </RevealSection>
 
           {/* Quiet Footer Utility Strip */}
-          <div className="flex flex-wrap items-center justify-between gap-4 pt-2 text-xs text-[#4A4A55] dark:text-[#B4B2AC]">
+          <RevealText
+            delay={0.08}
+            className="flex flex-wrap items-center justify-between gap-4 pt-2 text-xs text-[#3C3C47] dark:text-[#B4B2AC]"
+          >
             <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
               <button
                 type="button"
                 onClick={() => onNavigateSection('recursos', 'tutoriales')}
-                className="inline-flex items-center gap-1.5 font-semibold hover:text-[#326BFF] dark:hover:text-[#F8C300] transition-colors"
+                className="inline-flex items-center gap-1.5 font-semibold hover:text-[#7545D6] dark:hover:text-[#F8C300] transition-colors cursor-pointer"
               >
-                <PlayCircle className="w-4 h-4" />
+                <PlayCircle className="w-4 h-4 text-[#7545D6] dark:text-[#C4A5FF]" />
                 <span>12 Tutoriales en video</span>
               </button>
               <button
                 type="button"
                 onClick={() => onNavigateSection('academia', 'tools')}
-                className="inline-flex items-center gap-1.5 font-semibold hover:text-[#326BFF] dark:hover:text-[#F8C300] transition-colors"
+                className="inline-flex items-center gap-1.5 font-semibold hover:text-[#326BFF] dark:hover:text-[#F8C300] transition-colors cursor-pointer"
               >
-                <Wrench className="w-4 h-4" />
-                <span>Directorio de 31 Apps IA</span>
+                <Wrench className="w-4 h-4 text-[#326BFF] dark:text-[#8FB0FF]" />
+                <span>Directorio de {PLATFORM_METRICS.aiTools} Apps IA</span>
               </button>
               <button
                 type="button"
                 onClick={() => onNavigateSection('recursos', 'recetas')}
-                className="inline-flex items-center gap-1.5 font-semibold hover:text-[#326BFF] dark:hover:text-[#F8C300] transition-colors"
+                className="inline-flex items-center gap-1.5 font-semibold hover:text-[#B47B00] dark:hover:text-[#F8C300] transition-colors cursor-pointer"
               >
-                <BookOpen className="w-4 h-4" />
+                <BookOpen className="w-4 h-4 text-[#B47B00] dark:text-[#F8C300]" />
                 <span>Recetas, Plantillas y Guías</span>
               </button>
             </div>
             <span className="font-mono-code text-[11px] text-[#5B5B66] dark:text-[#A09E97]">
               Pulsa ⌘K / Ctrl+K para buscar en toda la plataforma
             </span>
-          </div>
+          </RevealText>
         </div>
       </section>
     </div>

@@ -21,9 +21,13 @@ import { FULL_CREATIVE_CHALLENGES } from '../data/creativeStudiosData';
 import type { ModuleId } from '../data/modulesData';
 import {
   FOUR_LIGHTS_CHALLENGE_SERIES,
+  VISUAL_LIBRARY_PATHS,
 } from '../data/visualLibraryRegistry';
 import { ResilientImage } from './ResilientImage';
 import { ToolBrandLogo } from './ToolBrandLogo';
+import { SectionPhotoBanner } from './SectionPhotoBanner';
+import { motion } from 'motion/react';
+import { EDITORIAL_EASE, VIEWPORT_CONFIG } from './MotionPrimitives';
 
 interface ToolsAndAcademyProps {
   onJumpToSection: (sectionId: string, moduleId?: ModuleId) => void;
@@ -69,17 +73,81 @@ const LEARNING_PATHS = [
   },
 ];
 
-const TOOL_AREAS: ('Todas' | AiToolEntry['area'])[] = [
-  'Todas',
-  'Asistentes & Investigación',
-  'Desarrollo & Apps',
-  'Imagen',
-  'Video',
-  'Edición',
-  'Audio',
-  '3D',
-  'Diseño',
+const TOOL_AREAS: { value: 'Todas' | AiToolEntry['area']; label: string }[] = [
+  { value: 'Todas', label: 'Todas' },
+  { value: 'Asistentes & Investigación', label: 'Asistentes & Guion' },
+  { value: 'Imagen', label: 'Imagen & Foto' },
+  { value: 'Video', label: 'Video & Cine' },
+  { value: 'Audio', label: 'Audio, Música, FX & Podcast' },
+  { value: 'Edición', label: 'Edición' },
+  { value: 'Diseño', label: 'Diseño & Cartel' },
+  { value: '3D', label: '3D & Interactivo' },
+  { value: 'Desarrollo & Apps', label: 'Desarrollo & Apps' },
 ];
+
+type ExerciseNeedId =
+  | 'todas'
+  | 'imagen'
+  | 'video'
+  | 'guion'
+  | 'voces-podcast'
+  | 'musica-fx'
+  | 'diseno-edicion';
+
+const EXERCISE_NEEDS: { id: ExerciseNeedId; label: string }[] = [
+  { id: 'todas', label: 'Cualquier ejercicio' },
+  { id: 'guion', label: 'Guion, Investigación & Prompts' },
+  { id: 'imagen', label: 'Fotografía, Imagen & Personajes' },
+  { id: 'video', label: 'Video & Cine Generativo' },
+  { id: 'voces-podcast', label: 'Voces, Podcast & Limpieza' },
+  { id: 'musica-fx', label: 'Música, FX & Foley' },
+  { id: 'diseno-edicion', label: 'Cartel, Diseño & Montaje' },
+];
+
+function isToolFreeFriendly(tool: AiToolEntry): boolean {
+  if (typeof tool.isFreeFriendly === 'boolean') return tool.isFreeFriendly;
+  const text = tool.accessType.toLowerCase();
+  return (
+    text.includes('gratuito') ||
+    text.includes('gratis') ||
+    text.includes('freemium') ||
+    text.includes('open')
+  );
+}
+
+function matchesExerciseNeed(tool: AiToolEntry, need: ExerciseNeedId): boolean {
+  if (need === 'todas') return true;
+  if (tool.exerciseNeeds?.includes(need)) return true;
+  if (need === 'guion') return tool.area === 'Asistentes & Investigación';
+  if (need === 'imagen')
+    return (
+      tool.area === 'Imagen' ||
+      tool.id === 'tool-gemini' ||
+      tool.id === 'tool-chatgpt'
+    );
+  if (need === 'video') return tool.area === 'Video';
+  if (need === 'voces-podcast')
+    return (
+      tool.id === 'tool-notebooklm' ||
+      tool.id === 'tool-elevenlabs' ||
+      tool.id === 'tool-adobe-podcast' ||
+      tool.id === 'tool-ttsmaker' ||
+      tool.id === 'tool-audacity' ||
+      tool.id === 'tool-auphonic'
+    );
+  if (need === 'musica-fx')
+    return (
+      tool.id === 'tool-suno-udio' ||
+      tool.id === 'tool-udio' ||
+      tool.id === 'tool-stable-audio' ||
+      tool.id === 'tool-elevenlabs' ||
+      tool.id === 'tool-freesound' ||
+      tool.id === 'tool-audacity'
+    );
+  if (need === 'diseno-edicion')
+    return tool.area === 'Diseño' || tool.area === 'Edición';
+  return false;
+}
 
 export const ToolsAndAcademy: React.FC<ToolsAndAcademyProps> = ({
   onJumpToSection,
@@ -87,6 +155,8 @@ export const ToolsAndAcademy: React.FC<ToolsAndAcademyProps> = ({
 }) => {
   const [activeTab, setActiveTab] = useState<'tools' | 'challenges' | 'glossary'>(defaultTab);
   const [areaFilter, setAreaFilter] = useState<'Todas' | AiToolEntry['area']>('Todas');
+  const [needFilter, setNeedFilter] = useState<ExerciseNeedId>('todas');
+  const [onlyFree, setOnlyFree] = useState(false);
   const [toolQuery, setToolQuery] = useState('');
   const [glossaryQuery, setGlossaryQuery] = useState('');
   const [copiedId, setCopiedId] = useState<string | null>(null);
@@ -122,19 +192,27 @@ export const ToolsAndAcademy: React.FC<ToolsAndAcademyProps> = ({
     setTimeout(() => setCopiedId(null), 1600);
   };
 
+  const freeToolsCount = useMemo(
+    () => AI_TOOLS_DIRECTORY.filter((t) => isToolFreeFriendly(t)).length,
+    []
+  );
+
   const filteredTools = useMemo(() => {
     const q = toolQuery.trim().toLowerCase();
     return AI_TOOLS_DIRECTORY.filter((t) => {
       const matchArea = areaFilter === 'Todas' || t.area === areaFilter;
+      const matchNeed = matchesExerciseNeed(t, needFilter);
+      const matchFree = !onlyFree || isToolFreeFriendly(t);
       const matchSearch =
         !q ||
         t.name.toLowerCase().includes(q) ||
         t.description.toLowerCase().includes(q) ||
         t.specialty.toLowerCase().includes(q) ||
+        t.accessType.toLowerCase().includes(q) ||
         t.capabilities.some((c) => c.toLowerCase().includes(q));
-      return matchArea && matchSearch;
+      return matchArea && matchNeed && matchFree && matchSearch;
     });
-  }, [areaFilter, toolQuery]);
+  }, [areaFilter, needFilter, onlyFree, toolQuery]);
 
   const filteredGlossary = useMemo(() => {
     const q = glossaryQuery.trim().toLowerCase();
@@ -163,59 +241,66 @@ export const ToolsAndAcademy: React.FC<ToolsAndAcademyProps> = ({
     URL.revokeObjectURL(url);
   };
 
+  const academyBannerImage =
+    activeTab === 'challenges'
+      ? VISUAL_LIBRARY_PATHS.lightComparison
+      : activeTab === 'glossary'
+      ? VISUAL_LIBRARY_PATHS.colorKodakPortra
+      : VISUAL_LIBRARY_PATHS.compLeadingLines;
+
   return (
     <section
       id="herramientas-academia"
-      className="py-16 border-b border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900/30 transition-colors scroll-mt-20"
+      className="pb-16 border-b border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900/30 transition-colors scroll-mt-20"
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 space-y-8">
-        {/* Header */}
-        <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-4">
-          <div>
-            <div className="flex items-center gap-2 text-xs font-mono-code uppercase tracking-wider text-amber-700 dark:text-amber-400 font-bold mb-1.5">
-              <span>ECOSISTEMA Y FORMACIÓN</span>
-              <span aria-hidden="true" className="text-stone-400">/</span>
-              <span>APPS IA, RETOS Y GLOSARIO BILINGÜE</span>
-            </div>
-            <h2 className="text-3xl sm:text-4xl font-bold font-serif-title text-stone-900 dark:text-stone-100">
-              Directorio de Aplicaciones IA y Academia Visual
-            </h2>
-            <p className="text-sm text-stone-600 dark:text-stone-400 mt-1 max-w-2xl">
-              Explora {AI_TOOLS_DIRECTORY.length} aplicaciones clave —desde Google AI Studio, Gemini, Claude y NotebookLM hasta CapCut, Lovable, Bolt, Runway y Blender— para practicar tus prompts directamente en herramientas reales.
-            </p>
-          </div>
-          <div className="flex flex-wrap items-center gap-2 shrink-0 text-xs font-mono-code">
+      <SectionPhotoBanner
+        image={academyBannerImage}
+        imageAlt="Directorio de Aplicaciones IA y Academia Visual"
+        accentTint="navy"
+        kicker={
+          <>
+            <span>ECOSISTEMA Y FORMACIÓN</span>
+            <span aria-hidden="true" className="text-white/35">/</span>
+            <span className="text-[#93B4FF]">APPS IA, RETOS Y GLOSARIO BILINGÜE</span>
+          </>
+        }
+        title="Directorio de Aplicaciones IA y Academia Visual"
+        subtitle={`Explora ${AI_TOOLS_DIRECTORY.length} aplicaciones clave (${freeToolsCount} con acceso gratuito o freemium) —desde Google AI Studio, Gemini, Flow, DeepSeek, Kimi.ai y Canva hasta ElevenLabs, Adobe Podcast, Suno, Udio, Stable Audio, Audacity, CapCut y Runway— filtradas según el ejercicio que quieras practicar.`}
+        actions={
+          <>
             <button
               type="button"
               onClick={() => onJumpToSection('galeria')}
-              className="px-3 py-1.5 rounded-lg bg-[#FAF8F5] dark:bg-stone-950 border border-stone-300 dark:border-stone-700 hover:border-amber-500 text-stone-800 dark:text-stone-200 font-semibold"
+              className="px-3.5 py-2 rounded-lg bg-[#101014]/70 hover:bg-[#101014] border border-white/20 text-[#F4F2ED] text-xs font-mono-code font-semibold transition-colors cursor-pointer whitespace-nowrap backdrop-blur-xs"
             >
               Galería Visual
             </button>
             <button
               type="button"
               onClick={() => onJumpToSection('laboratorios')}
-              className="px-3 py-1.5 rounded-lg bg-[#FAF8F5] dark:bg-stone-950 border border-stone-300 dark:border-stone-700 hover:border-amber-500 text-stone-800 dark:text-stone-200 font-semibold"
+              className="px-3.5 py-2 rounded-lg bg-[#7545D6] hover:bg-[#6134BF] text-white text-xs font-mono-code font-bold transition-colors cursor-pointer whitespace-nowrap shadow-xs"
             >
               Laboratorios
             </button>
             <button
               type="button"
               onClick={() => onJumpToSection('film-director')}
-              className="px-3 py-1.5 rounded-lg bg-[#FAF8F5] dark:bg-stone-950 border border-stone-300 dark:border-stone-700 hover:border-amber-500 text-stone-800 dark:text-stone-200 font-semibold"
+              className="px-3.5 py-2 rounded-lg bg-[#326BFF] hover:bg-[#2358E6] text-white text-xs font-mono-code font-bold transition-colors cursor-pointer whitespace-nowrap shadow-xs"
             >
               Director 8 Etapas
             </button>
             <button
               type="button"
               onClick={() => onJumpToSection('builder')}
-              className="px-3 py-1.5 rounded-lg bg-[#F8C300] text-[#101014] font-bold"
+              className="px-4 py-2 rounded-lg bg-[#F8C300] hover:bg-[#e5b400] text-[#101014] text-xs font-mono-code font-bold transition-colors cursor-pointer whitespace-nowrap shadow-xs"
             >
               Constructor
             </button>
-          </div>
-        </div>
+          </>
+        }
+      />
 
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-8 space-y-8">
         {/* 3 Main Tabs */}
         <div className="flex flex-wrap gap-2 pb-3 border-b border-stone-200 dark:border-stone-800">
           {(
@@ -248,26 +333,73 @@ export const ToolsAndAcademy: React.FC<ToolsAndAcademyProps> = ({
         {/* TAB 1: DIRECTORIO DE HERRAMIENTAS */}
         {activeTab === 'tools' && (
           <div className="space-y-6">
+            {/* Quick Exercise Need Matcher + Free Toggle */}
+            <div className="p-4 rounded-xl bg-[#FAF8F5] dark:bg-stone-950 border border-stone-200 dark:border-stone-800 space-y-3">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <span className="text-[11px] font-mono-code uppercase tracking-wider font-bold text-stone-700 dark:text-amber-400">
+                  Elige tu necesidad o tipo de ejercicio:
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setOnlyFree((prev) => !prev)}
+                  className={`px-3 py-1.5 text-xs font-mono-code rounded-lg border transition-colors self-start sm:self-auto ${
+                    onlyFree
+                      ? 'bg-emerald-600 text-white border-emerald-600 font-bold'
+                      : 'bg-white dark:bg-stone-900 text-stone-700 dark:text-stone-300 border-stone-300 dark:border-stone-700 hover:border-emerald-500'
+                  }`}
+                >
+                  {onlyFree
+                    ? `✓ Solo Gratis / Freemium (${freeToolsCount})`
+                    : `Filtrar Gratis / Freemium (${freeToolsCount})`}
+                </button>
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                {EXERCISE_NEEDS.map((need) => {
+                  const active = needFilter === need.id;
+                  return (
+                    <button
+                      key={need.id}
+                      type="button"
+                      onClick={() => {
+                        setNeedFilter(need.id);
+                        if (need.id !== 'todas') setAreaFilter('Todas');
+                      }}
+                      className={`px-3 py-1.5 text-xs rounded-lg border transition-colors ${
+                        active
+                          ? 'bg-[#326BFF] text-white border-[#326BFF] font-bold'
+                          : 'bg-white dark:bg-stone-900 text-stone-700 dark:text-stone-300 border-stone-200 dark:border-stone-800 hover:border-[#326BFF]'
+                      }`}
+                    >
+                      {need.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
             {/* Search & Area Filter Row */}
             <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
               <div className="flex flex-wrap items-center gap-1.5">
                 {TOOL_AREAS.map((area) => {
                   const count =
-                    area === 'Todas'
+                    area.value === 'Todas'
                       ? AI_TOOLS_DIRECTORY.length
-                      : AI_TOOLS_DIRECTORY.filter((t) => t.area === area).length;
+                      : AI_TOOLS_DIRECTORY.filter((t) => t.area === area.value).length;
                   return (
                     <button
-                      key={area}
+                      key={area.value}
                       type="button"
-                      onClick={() => setAreaFilter(area)}
+                      onClick={() => {
+                        setAreaFilter(area.value);
+                        setNeedFilter('todas');
+                      }}
                       className={`px-3 py-1.5 text-xs font-mono-code rounded border transition-colors ${
-                        areaFilter === area
+                        areaFilter === area.value
                           ? 'bg-stone-900 dark:bg-amber-400 text-white dark:text-stone-950 border-stone-900 dark:border-amber-400 font-bold'
                           : 'bg-[#FAF8F5] dark:bg-stone-950 text-stone-600 dark:text-stone-400 border-stone-200 dark:border-stone-800 hover:border-amber-400'
                       }`}
                     >
-                      {area} ({count})
+                      {area.label} ({count})
                     </button>
                   );
                 })}
@@ -279,7 +411,7 @@ export const ToolsAndAcademy: React.FC<ToolsAndAcademyProps> = ({
                   type="text"
                   value={toolQuery}
                   onChange={(e) => setToolQuery(e.target.value)}
-                  placeholder="Buscar app (Claude, CapCut, Lovable...)"
+                  placeholder="Buscar app (Flow, DeepSeek, Kimi, Podcast...)"
                   aria-label="Buscar aplicación IA"
                   className="w-full pl-9 pr-3 py-2 text-xs bg-[#FAF8F5] dark:bg-stone-950 border border-stone-300 dark:border-stone-700 rounded-lg text-stone-900 dark:text-stone-100 focus:outline-none focus:border-amber-500"
                 />
@@ -289,12 +421,14 @@ export const ToolsAndAcademy: React.FC<ToolsAndAcademyProps> = ({
             {filteredTools.length === 0 ? (
               <div className="p-8 rounded-xl bg-[#FAF8F5] dark:bg-stone-950 border border-stone-200 dark:border-stone-800 text-center space-y-2">
                 <p className="text-sm font-semibold text-stone-800 dark:text-stone-200">
-                  No encontramos aplicaciones con «{toolQuery}» en esta categoría.
+                  No encontramos aplicaciones con «{toolQuery}» para este filtro.
                 </p>
                 <button
                   type="button"
                   onClick={() => {
                     setAreaFilter('Todas');
+                    setNeedFilter('todas');
+                    setOnlyFree(false);
                     setToolQuery('');
                   }}
                   className="text-xs font-mono-code text-amber-700 dark:text-amber-400 underline"
@@ -304,14 +438,22 @@ export const ToolsAndAcademy: React.FC<ToolsAndAcademyProps> = ({
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                {filteredTools.map((tool) => {
+                {filteredTools.map((tool, idx) => {
                   const cleanDomain = tool.officialUrl
                     .replace(/^https?:\/\//, '')
                     .replace(/\/.*$/, '');
                   return (
-                    <article
+                    <motion.article
                       key={tool.id}
-                      className="rounded-xl overflow-hidden bg-[#FAF8F5] dark:bg-stone-950 border border-stone-200 dark:border-stone-800 flex flex-col justify-between hover:border-amber-400 transition-colors shadow-xs group"
+                      initial={{ opacity: 0, y: 16 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={VIEWPORT_CONFIG}
+                      transition={{
+                        duration: 0.42,
+                        delay: Math.min((idx % 3) * 0.055, 0.12),
+                        ease: EDITORIAL_EASE,
+                      }}
+                      className="rounded-xl overflow-hidden bg-[#FAF8F5] dark:bg-stone-950 border border-stone-200 dark:border-stone-800 flex flex-col justify-between hover:border-amber-400 nc-card-lift shadow-xs group"
                     >
                       <div>
                         {/* Visual Reference Header Banner */}
@@ -386,7 +528,7 @@ export const ToolsAndAcademy: React.FC<ToolsAndAcademyProps> = ({
                           <ExternalLink className="w-3 h-3" />
                         </a>
                       </div>
-                    </article>
+                    </motion.article>
                   );
                 })}
               </div>

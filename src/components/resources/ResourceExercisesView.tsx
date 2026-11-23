@@ -7,6 +7,7 @@ import {
   ChevronUp,
   Copy,
   Dumbbell,
+  ExternalLink,
   Square,
   Wand2,
 } from 'lucide-react';
@@ -209,10 +210,10 @@ export const ResourceExercisesView: React.FC<ResourceExercisesViewProps> = ({
                 <span>ENTRENAMIENTO POR COMPETENCIAS</span>
               </div>
               <h2 className="text-2xl sm:text-3xl font-bold font-serif-title text-[#101014] dark:text-[#F4F2ED]">
-                8 Ejercicios Prácticos Guiados
+                {PRACTICE_DRILLS.length} Ejercicios Prácticos Guiados
               </h2>
               <p className="text-sm text-[#4A4A55] dark:text-[#A09E97] mt-1.5 max-w-2xl">
-                Prácticas breves de 15 a 30 minutos para talleres, clases o autoaprendizaje. Marca los que vayas completando.
+                Prácticas de 15 a 30 minutos (imagen, video, cartel, ética, audio, música, FX y podcast) con apps gratuitas recomendadas para cada necesidad.
               </p>
             </div>
 
@@ -309,9 +310,36 @@ export const ResourceExercisesView: React.FC<ResourceExercisesViewProps> = ({
                     <h3 className="text-lg font-bold font-serif-title text-[#101014] dark:text-[#F4F2ED] mb-1.5">
                       {drill.title}
                     </h3>
-                    <p className="text-xs text-[#4A4A55] dark:text-[#A09E97] leading-relaxed mb-4">
+                    <p className="text-xs text-[#4A4A55] dark:text-[#A09E97] leading-relaxed mb-3">
                       {drill.objective}
                     </p>
+
+                    {/* Recommended Free Tools for this Drill */}
+                    {drill.freeTools && drill.freeTools.length > 0 && (
+                      <div className="mb-3.5 p-2.5 rounded-lg bg-[#F4F2ED] dark:bg-[#101014] border border-[#DEDAD0] dark:border-[#26262E]">
+                        <div className="text-[10px] font-mono-code uppercase tracking-wider font-bold text-[#5B5B66] dark:text-[#A09E97] mb-1.5">
+                          Apps gratis recomendadas para este ejercicio
+                        </div>
+                        <div className="flex flex-wrap gap-1.5">
+                          {drill.freeTools.map((tool) => (
+                            <a
+                              key={tool.name}
+                              href={tool.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              title={tool.role}
+                              className="inline-flex items-center gap-1 px-2 py-1 rounded bg-white dark:bg-[#16161C] border border-[#DEDAD0] dark:border-[#26262E] hover:border-[#326BFF] dark:hover:border-[#F8C300] text-[11px] font-medium text-[#101014] dark:text-[#F4F2ED] transition-colors"
+                            >
+                              <span className="font-semibold">{tool.name}</span>
+                              <span className="text-[10px] text-[#5B5B66] dark:text-[#8E8C85] hidden sm:inline">
+                                · {tool.role}
+                              </span>
+                              <ExternalLink className="w-2.5 h-2.5 text-[#326BFF] dark:text-[#F8C300] shrink-0" />
+                            </a>
+                          ))}
+                        </div>
+                      </div>
+                    )}
 
                     <button
                       type="button"

@@ -41,11 +41,87 @@
   }
 }
 
+@keyframes ncFadeUp {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 14px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes ncBackdropIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes ncPanelIn {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 14px, 0) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+}
+
+@layer utilities {
+  .nc-animate-fade-up {
+    animation: ncFadeUp 460ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+  .nc-animate-backdrop {
+    animation: ncBackdropIn 200ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+  .nc-animate-panel {
+    animation: ncPanelIn 320ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+  .nc-card-lift {
+    transition: transform 200ms cubic-bezier(0.16, 1, 0.3, 1),
+      border-color 200ms cubic-bezier(0.16, 1, 0.3, 1),
+      box-shadow 220ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .nc-card-lift:hover {
+    transform: translate3d(0, -3px, 0);
+    box-shadow: 0 12px 28px -14px rgba(16, 16, 20, 0.18);
+  }
+
+  .dark .nc-card-lift:hover {
+    box-shadow: 0 14px 32px -14px rgba(0, 0, 0, 0.55);
+  }
+}
+
+/* Subtle tactile hover lift for editorial cards across all sub-views and labs */
+main article {
+  transition: transform 200ms cubic-bezier(0.16, 1, 0.3, 1),
+    border-color 200ms cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 220ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+main article:hover {
+  transform: translate3d(0, -3px, 0);
+}
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
+  }
+
+  main article:hover,
+  .nc-card-lift:hover {
+    transform: none !important;
   }
 }

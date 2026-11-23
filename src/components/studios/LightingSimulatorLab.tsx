@@ -1,8 +1,10 @@
 import React, { useMemo, useState } from 'react';
 import {
   Check,
+  Compass,
   Copy,
   Lightbulb,
+  Maximize2,
   RotateCcw,
   Sliders,
   Sparkles,
@@ -12,6 +14,7 @@ import {
 import { VISUAL_LIBRARY_PATHS } from '../../data/visualLibraryRegistry';
 import { STUDIO_MEDIA_ASSETS } from '../../data/creativeStudiosData';
 import type { PromptBuilderState } from '../PromptBuilder';
+import { ThreePointLightingOverlay } from './ThreePointLightingOverlay';
 
 interface LightingSimulatorLabProps {
   onApplyToBuilder: (patch: Partial<PromptBuilderState>) => void;
@@ -27,7 +30,7 @@ type DiffuserType =
   | 'scrim-bandera'
   | 'ventana-natural';
 
-interface LightingRigState {
+export interface LightingRigState {
   keyAngle: number; // -135 to 135 deg (0 = front, -45 = left 45°, 90 = right side)
   keyIntensity: number; // 0..100
   fillIntensity: number; // 0..100
@@ -42,6 +45,13 @@ interface LightingRigState {
   globalIntensity: GlobalIntensity;
   shadowQuality: ShadowQuality;
   diffuser: DiffuserType;
+}
+
+export interface LightingPreset {
+  name: string;
+  tag: string;
+  threePointNote: string;
+  state: LightingRigState;
 }
 
 const SUBJECT_PRESETS = [
@@ -113,10 +123,34 @@ const DIFFUSER_OPTIONS: { id: DiffuserType; label: string; en: string; blurFacto
   },
 ];
 
-const LIGHTING_PRESETS: { name: string; tag: string; state: LightingRigState }[] = [
+const LIGHTING_PRESETS: LightingPreset[] = [
+  {
+    name: '3 Puntos Estándar',
+    tag: 'Key 45° + Fill + Back',
+    threePointNote:
+      'Esquema base de cine y retrato: Key Light a -45° (85%) define el volumen, Fill opuesto al 42% suaviza las sombras con ratio equilibrado (~3:1) y Back Light al 60% recorta hombros y cabello del fondo.',
+    state: {
+      keyAngle: -45,
+      keyIntensity: 85,
+      fillIntensity: 42,
+      rimEnabled: true,
+      rimIntensity: 60,
+      sideEnabled: false,
+      sideDirection: 'derecha',
+      sideIntensity: 0,
+      topEnabled: false,
+      topIntensity: 0,
+      kelvin: 5200,
+      globalIntensity: 'mid-key',
+      shadowQuality: 'suave',
+      diffuser: 'softbox',
+    },
+  },
   {
     name: 'Rembrandt Clásico',
     tag: '45° + triángulo facial',
+    threePointNote:
+      'Key Light oblicua a -45° (84%) con Fill reducido al 26% para crear un ratio dramático (~4.2:1) y el característico triángulo de luz en la mejilla sombreada, más un contraluz sutil al 45%.',
     state: {
       keyAngle: -45,
       keyIntensity: 84,
@@ -137,6 +171,8 @@ const LIGHTING_PRESETS: { name: string; tag: string; state: LightingRigState }[]
   {
     name: 'Butterfly Editorial',
     tag: 'Frontal elevada + relleno',
+    threePointNote:
+      'Key Light frontal sobre el eje de cámara (0°, 88%) apoyada por un Fill generoso (56%) y leve luz superior para una sombra simétrica bajo la nariz y piel editorial limpia.',
     state: {
       keyAngle: 0,
       keyIntensity: 88,
@@ -157,6 +193,8 @@ const LIGHTING_PRESETS: { name: string; tag: string; state: LightingRigState }[]
   {
     name: 'Split Lateral 90°',
     tag: 'Mitad luz / mitad sombra',
+    threePointNote:
+      'Key Light desplazada a -90° lateral puro (92%) con Fill mínimo (10%) y contraluz apagado: divide el rostro en una mitad iluminada y otra en penumbra escultórica.',
     state: {
       keyAngle: -90,
       keyIntensity: 92,
@@ -177,6 +215,8 @@ const LIGHTING_PRESETS: { name: string; tag: string; state: LightingRigState }[]
   {
     name: 'Contraluz Silueta',
     tag: 'Borde luminoso dramático',
+    threePointNote:
+      'Invierte la jerarquía clásica: el Back / Rim Light lidera al 96% recortando un halo brillante alrededor del sujeto, mientras Key (30%) y Fill (14%) mantienen el frente en clave baja.',
     state: {
       keyAngle: -30,
       keyIntensity: 30,
@@ -197,6 +237,8 @@ const LIGHTING_PRESETS: { name: string; tag: string; state: LightingRigState }[]
   {
     name: 'High Key Moda',
     tag: 'Envolvente sin sombras duras',
+    threePointNote:
+      'Key Light potente (94%) casi igualada por un Fill muy alto (84%, ratio ~2.1:1) y Back Light al 55%: elimina sombras densas y genera una atmósfera brillante y comercial.',
     state: {
       keyAngle: 15,
       keyIntensity: 94,
@@ -217,6 +259,8 @@ const LIGHTING_PRESETS: { name: string; tag: string; state: LightingRigState }[]
   {
     name: 'Cenital Neo-Noir',
     tag: 'Luz superior + volumen frío',
+    threePointNote:
+      'Combina Key suave a +25° (48%) y Fill mínimo (12%) con luz cenital dominante (90%) y Back Light frío (62%, 6800K) para atmósferas nocturnas de alto contraste.',
     state: {
       keyAngle: 25,
       keyIntensity: 48,
@@ -258,9 +302,20 @@ export const LightingSimulatorLab: React.FC<LightingSimulatorLabProps> = ({
   onApplyToBuilder,
 }) => {
   const [rig, setRig] = useState<LightingRigState>(LIGHTING_PRESETS[0].state);
+  const [activePresetName, setActivePresetName] = useState<string | null>(LIGHTING_PRESETS[0].name);
+  const [isOverlayOpen, setIsOverlayOpen] = useState(false);
+  const [autoOpenOverlay, setAutoOpenOverlay] = useState(true);
   const [subjectId, setSubjectId] = useState<(typeof SUBJECT_PRESETS)[number]['id']>('portrait');
   const [promptLang, setPromptLang] = useState<'es' | 'en'>('es');
   const [copied, setCopied] = useState(false);
+
+  const handleSelectPreset = (preset: LightingPreset, shouldOpenOverlay = autoOpenOverlay) => {
+    setRig(preset.state);
+    setActivePresetName(preset.name);
+    if (shouldOpenOverlay) {
+      setIsOverlayOpen(true);
+    }
+  };
 
   const activeSubject = SUBJECT_PRESETS.find((s) => s.id === subjectId) || SUBJECT_PRESETS[0];
   const activeDiffuser = DIFFUSER_OPTIONS.find((d) => d.id === rig.diffuser) || DIFFUSER_OPTIONS[1];
@@ -423,37 +478,68 @@ export const LightingSimulatorLab: React.FC<LightingSimulatorLabProps> = ({
               Ajusta luz principal, relleno, contraluz, lateral, cenital, temperatura Kelvin, intensidad, sombras y difusores. Observa el esquema cenital de estudio y transfiere la fórmula exacta al Constructor Modular.
             </p>
           </div>
-          <button
-            type="button"
-            onClick={() => setRig(LIGHTING_PRESETS[0].state)}
-            className="self-start lg:self-auto inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-black/15 dark:border-white/15 bg-[#F4F2ED] dark:bg-white/5 text-xs font-mono uppercase tracking-wider font-semibold text-[#101014] dark:text-[#F4F2ED] hover:border-black/35 cursor-pointer"
-          >
-            <RotateCcw className="w-3.5 h-3.5" />
-            Restablecer esquema
-          </button>
+          <div className="flex flex-wrap items-center gap-2 self-start lg:self-auto">
+            <button
+              type="button"
+              onClick={() => setIsOverlayOpen(true)}
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#101014] dark:bg-[#F8C300] text-[#F4F2ED] dark:text-[#101014] text-xs font-mono uppercase tracking-wider font-bold hover:brightness-110 transition-all cursor-pointer whitespace-nowrap"
+            >
+              <Compass className="w-3.5 h-3.5" />
+              Overlay 3 Puntos
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setRig(LIGHTING_PRESETS[0].state);
+                setActivePresetName(LIGHTING_PRESETS[0].name);
+              }}
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-black/15 dark:border-white/15 bg-[#F4F2ED] dark:bg-white/5 text-xs font-mono uppercase tracking-wider font-semibold text-[#101014] dark:text-[#F4F2ED] hover:border-black/35 cursor-pointer whitespace-nowrap"
+            >
+              <RotateCcw className="w-3.5 h-3.5" />
+              Restablecer esquema
+            </button>
+          </div>
         </div>
 
-        {/* 6 Classic Presets */}
+        {/* Classic Presets */}
         <div className="mt-6 pt-5 border-t border-black/10 dark:border-white/10">
-          <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-black/50 dark:text-white/50 mb-2.5">
-            Esquemas clásicos de estudio (1 clic)
+          <div className="flex flex-wrap items-center justify-between gap-2 mb-2.5">
+            <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-black/55 dark:text-white/55">
+              Esquemas clásicos de estudio (1 clic abre diagrama 3 puntos y sliders)
+            </div>
+            <label className="inline-flex items-center gap-2 text-[11px] font-mono text-black/65 dark:text-white/65 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={autoOpenOverlay}
+                onChange={(e) => setAutoOpenOverlay(e.target.checked)}
+                className="w-3.5 h-3.5 accent-[#326BFF]"
+              />
+              Abrir overlay 3 puntos al elegir esquema
+            </label>
           </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
-            {LIGHTING_PRESETS.map((preset) => (
-              <button
-                key={preset.name}
-                type="button"
-                onClick={() => setRig(preset.state)}
-                className="text-left p-2.5 rounded-xl border border-black/10 dark:border-white/10 bg-[#F4F2ED]/70 dark:bg-white/[0.03] hover:border-[#F8C300] hover:bg-[#F8C300]/10 transition-colors cursor-pointer"
-              >
-                <div className="text-xs font-bold text-[#101014] dark:text-[#F4F2ED] truncate">
-                  {preset.name}
-                </div>
-                <div className="font-mono text-[10px] text-black/50 dark:text-white/50 truncate mt-0.5">
-                  {preset.tag}
-                </div>
-              </button>
-            ))}
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-2">
+            {LIGHTING_PRESETS.map((preset) => {
+              const isSelected = activePresetName === preset.name;
+              return (
+                <button
+                  key={preset.name}
+                  type="button"
+                  onClick={() => handleSelectPreset(preset)}
+                  className={`text-left p-2.5 rounded-xl border transition-colors cursor-pointer ${
+                    isSelected
+                      ? 'border-[#F8C300] bg-[#F8C300]/15 dark:bg-[#F8C300]/20'
+                      : 'border-black/10 dark:border-white/10 bg-[#F4F2ED]/70 dark:bg-white/[0.03] hover:border-[#F8C300] hover:bg-[#F8C300]/10'
+                  }`}
+                >
+                  <div className="text-xs font-bold text-[#101014] dark:text-[#F4F2ED] truncate">
+                    {preset.name}
+                  </div>
+                  <div className="font-mono text-[10px] text-black/55 dark:text-white/55 truncate mt-0.5">
+                    {preset.tag}
+                  </div>
+                </button>
+              );
+            })}
           </div>
         </div>
       </div>
@@ -541,8 +627,19 @@ export const LightingSimulatorLab: React.FC<LightingSimulatorLabProps> = ({
 
               {/* Clean Overhead Studio Diagram (SVG) */}
               <div className="sm:col-span-5 rounded-2xl bg-[#09090D] border border-white/10 p-3 flex flex-col justify-between">
-                <div className="font-mono text-[10px] uppercase tracking-[0.16em] text-white/55 text-center">
-                  Planta cenital de estudio
+                <div className="flex items-center justify-between gap-2">
+                  <div className="font-mono text-[10px] uppercase tracking-[0.14em] text-white/60">
+                    Planta cenital
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setIsOverlayOpen(true)}
+                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-white/10 hover:bg-[#F8C300] hover:text-[#101014] font-mono text-[9px] uppercase tracking-wider text-white/85 transition-colors cursor-pointer whitespace-nowrap"
+                    title="Abrir diagrama interactivo de 3 puntos"
+                  >
+                    <Maximize2 className="w-2.5 h-2.5" />
+                    3 Puntos
+                  </button>
                 </div>
                 <svg viewBox="0 0 240 230" className="w-full h-auto max-h-[250px]" role="img" aria-label="Diagrama cenital de luces de estudio">
                   {/* Studio guide circles */}
@@ -1061,6 +1158,30 @@ export const LightingSimulatorLab: React.FC<LightingSimulatorLabProps> = ({
           </div>
         </div>
       </div>
+
+      {/* Interactive 3-Point Lighting Diagram & Intensity Sliders Overlay */}
+      <ThreePointLightingOverlay
+        isOpen={isOverlayOpen}
+        onClose={() => setIsOverlayOpen(false)}
+        presets={LIGHTING_PRESETS}
+        activePresetName={activePresetName}
+        onSelectPreset={(preset) => handleSelectPreset(preset, true)}
+        rig={rig}
+        onChangeRig={setRig}
+        activeSubject={activeSubject}
+        previewStyles={previewStyles}
+        kelvinInfo={kelvinInfo}
+        angleInfo={angleInfo}
+        contrastRatio={contrastRatio}
+        diffuserLabel={activeDiffuser.label}
+        diffuserBlurFactor={activeDiffuser.blurFactor}
+        activePrompt={activePrompt}
+        promptLang={promptLang}
+        onChangePromptLang={setPromptLang}
+        onCopyPrompt={handleCopy}
+        copied={copied}
+        onApplyToBuilder={handleApplyToBuilder}
+      />
     </div>
   );
 };

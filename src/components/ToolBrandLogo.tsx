@@ -119,9 +119,27 @@ export const ToolBrandLogo: React.FC<ToolBrandLogoProps> = ({
             <rect x="3.5" y="5" width="17" height="14" rx="2.5" stroke="currentColor" strokeWidth="1.7" />
           </svg>
         );
+      case 'tool-deepseek':
+      case 'tool-kimi':
+      case 'tool-qwen':
+        return (
+          <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none" aria-hidden="true">
+            <circle cx="12" cy="12" r="7.5" stroke="currentColor" strokeWidth="1.9" />
+            <path
+              d="M9 12L11 14L15.5 9.5"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+        );
       case 'tool-runway':
       case 'tool-kling':
       case 'tool-luma':
+      case 'tool-hailuo':
+      case 'tool-pika':
+      case 'tool-clipchamp':
         return (
           <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none" aria-hidden="true">
             <rect x="3" y="5" width="18" height="14" rx="2.5" stroke="currentColor" strokeWidth="1.9" />
@@ -144,6 +162,9 @@ export const ToolBrandLogo: React.FC<ToolBrandLogoProps> = ({
       case 'tool-ideogram':
       case 'tool-krea':
       case 'tool-firefly':
+      case 'tool-whisk':
+      case 'tool-leonardo':
+      case 'tool-ms-designer':
         return (
           <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none" aria-hidden="true">
             <rect x="4" y="4" width="16" height="16" rx="3" stroke="currentColor" strokeWidth="1.9" />
@@ -157,8 +178,26 @@ export const ToolBrandLogo: React.FC<ToolBrandLogoProps> = ({
             />
           </svg>
         );
+      case 'tool-adobe-podcast':
+      case 'tool-ttsmaker':
+      case 'tool-auphonic':
+        return (
+          <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none" aria-hidden="true">
+            <rect x="9" y="3.5" width="6" height="10" rx="3" stroke="currentColor" strokeWidth="1.9" />
+            <path
+              d="M6 11.5C6 14.8 8.7 17.5 12 17.5C15.3 17.5 18 14.8 18 11.5M12 17.5V21M9 21H15"
+              stroke="currentColor"
+              strokeWidth="1.9"
+              strokeLinecap="round"
+            />
+          </svg>
+        );
       case 'tool-elevenlabs':
       case 'tool-suno-udio':
+      case 'tool-udio':
+      case 'tool-stable-audio':
+      case 'tool-audacity':
+      case 'tool-freesound':
         return (
           <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none" aria-hidden="true">
             <path
@@ -194,6 +233,7 @@ export const ToolBrandLogo: React.FC<ToolBrandLogoProps> = ({
         );
       case 'tool-figma-ps':
       case 'tool-canva':
+      case 'tool-photopea':
       default:
         return (
           <span className="text-[11px] font-mono-code font-bold tracking-tighter">
