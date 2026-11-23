@@ -26,11 +26,14 @@ import { VISUAL_LIBRARY_PATHS } from '../data/visualLibraryRegistry';
 import { STUDIO_MEDIA_ASSETS } from '../data/creativeStudiosData';
 import { ResilientImage } from './ResilientImage';
 import { ToolBrandLogo } from './ToolBrandLogo';
+import type { PromptBuilderState } from './PromptBuilder';
+import { CreativeExperiencesHub } from './experiences/CreativeExperiencesHub';
 
 interface HomeViewProps {
   onNavigateSection: (section: AppSectionId, subTab?: string) => void;
   onOpenGalleryCollection?: (collectionTag: string) => void;
   onOpenWelcomeWizard?: () => void;
+  onSendPromptToBuilder?: (patch: Partial<PromptBuilderState>) => void;
 }
 
 const CURATED_COLLECTIONS_PREVIEW: {
@@ -197,6 +200,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
   onNavigateSection,
   onOpenGalleryCollection,
   onOpenWelcomeWizard,
+  onSendPromptToBuilder,
 }) => {
   const featuredApps = AI_TOOLS_DIRECTORY.filter((t) => FEATURED_APP_IDS.includes(t.id));
 
@@ -349,6 +353,19 @@ export const HomeView: React.FC<HomeViewProps> = ({
           </div>
         </div>
       </section>
+
+      {/* 0B. NUEVOS LABORATORIOS, RETOS EXPRESS, DESAFÍOS, EXPERIMENTOS Y GALERÍA */}
+      <CreativeExperiencesHub
+        mode="home"
+        onSendPromptToBuilder={(patch) => {
+          if (onSendPromptToBuilder) {
+            onSendPromptToBuilder(patch);
+          } else {
+            onNavigateSection('builder');
+          }
+        }}
+        onNavigateToFullSection={() => onNavigateSection('experiencias')}
+      />
 
       {/* 1. Qué es esta página + Cómo usarla en 3 pasos */}
       <section

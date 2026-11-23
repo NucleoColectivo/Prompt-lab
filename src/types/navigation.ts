@@ -4,6 +4,7 @@ export type AppSectionId =
   | 'fundamentos'
   | 'biblioteca'
   | 'laboratorios'
+  | 'experiencias'
   | 'film-director'
   | 'builder'
   | 'academia'
@@ -22,4 +23,11 @@ export type LabSubSection =
   | 'labs'
   | 'json';
 
-export type ResourceSubSection = 'recetas' | 'diccionario' | 'plantillas';
+export type ResourceSubSection =
+  | 'recetas'
+  | 'diccionario'
+  | 'plantillas'
+  | 'tutoriales'
+  | 'ejercicios'
+  | 'errores'
+  | 'guias';

@@ -11,6 +11,10 @@ import {
   ShoppingBag,
   Globe,
   Activity,
+  Dumbbell,
+  Wrench,
+  SlidersHorizontal,
+  PlayCircle,
 } from 'lucide-react';
 import { Header } from './components/Header';
 import { Hero } from './components/Hero';
@@ -31,6 +35,10 @@ import { PromptBuilder, PromptBuilderState } from './components/PromptBuilder';
 import { DictionaryBrowser } from './components/DictionaryBrowser';
 import { RecipesSection } from './components/RecipesSection';
 import { MasterTemplates } from './components/MasterTemplates';
+import { ResourceExercisesView } from './components/resources/ResourceExercisesView';
+import { ResourceTroubleshootingView } from './components/resources/ResourceTroubleshootingView';
+import { ResourceGuidesView } from './components/resources/ResourceGuidesView';
+import { ResourceTutorialsView } from './components/resources/ResourceTutorialsView';
 import { Footer } from './components/Footer';
 import { CommandDetailModal } from './components/CommandDetailModal';
 import { WorkshopExporterModal } from './components/WorkshopExporterModal';
@@ -40,6 +48,7 @@ import { GlobalSearchModal } from './components/GlobalSearchModal';
 import { FavoritesVaultView } from './components/FavoritesVaultView';
 import { EticaIaView } from './components/EticaIaView';
 import { MoviesIaView } from './components/MoviesIaView';
+import { CreativeExperiencesHub } from './components/experiences/CreativeExperiencesHub';
 import { CommandItem, RECIPES } from './data/promptData';
 import { LibraryEntry, ModuleId } from './data/modulesData';
 import { JsonStyleProfile } from './data/videoAndJsonData';
@@ -87,6 +96,13 @@ function resolveRouteFromHash(hashValue: string): {
       return { section: 'laboratorios', labSub: 'labs' };
     case 'json-lab':
       return { section: 'laboratorios', labSub: 'json' };
+    case 'experiencias':
+    case 'nuevos-laboratorios':
+    case 'retos-express':
+    case 'desafios-creativos':
+    case 'experimentos':
+    case 'experimentos-abiertos':
+      return { section: 'experiencias' };
     case 'film-director':
       return { section: 'film-director' };
     case 'builder':
@@ -113,6 +129,21 @@ function resolveRouteFromHash(hashValue: string): {
       return { section: 'recursos', resourceSub: 'diccionario' };
     case 'plantillas':
       return { section: 'recursos', resourceSub: 'plantillas' };
+    case 'tutoriales':
+    case 'tutoriales-ia':
+    case 'tutoriales-paso-a-paso':
+      return { section: 'recursos', resourceSub: 'tutoriales' };
+    case 'ejercicios':
+    case 'ejercicios-recursos':
+      return { section: 'recursos', resourceSub: 'ejercicios' };
+    case 'errores':
+    case 'diagnostico':
+    case 'negativos':
+      return { section: 'recursos', resourceSub: 'errores' };
+    case 'guias':
+    case 'ratios':
+    case 'paletas':
+      return { section: 'recursos', resourceSub: 'guias' };
     case 'inicio':
     case 'home':
     case '':
@@ -301,12 +332,20 @@ export default function App() {
         };
         hashTarget = hashByLab[nextSub];
       } else if (section === 'recursos') {
-        const nextRes: ResourceSubSection =
-          subTab === 'diccionario'
-            ? 'diccionario'
-            : subTab === 'plantillas'
-            ? 'plantillas'
-            : 'recetas';
+        const validResources: ResourceSubSection[] = [
+          'recetas',
+          'diccionario',
+          'plantillas',
+          'tutoriales',
+          'ejercicios',
+          'errores',
+          'guias',
+        ];
+        const nextRes: ResourceSubSection = validResources.includes(
+          subTab as ResourceSubSection
+        )
+          ? (subTab as ResourceSubSection)
+          : 'recetas';
         setActiveResourceSub(nextRes);
         hashTarget = nextRes;
       } else if (section === 'academia') {
@@ -549,6 +588,14 @@ export default function App() {
     navigateToSection('builder');
   };
 
+  const handlePatchBuilderFromResources = (patch: Partial<PromptBuilderState>) => {
+    setBuilderState((prev) => ({
+      ...prev,
+      ...patch,
+    }));
+    navigateToSection('builder');
+  };
+
   // Generate current prompt string for exporter
   const currentPromptText =
     builderState.mode === 'video'
@@ -585,6 +632,10 @@ export default function App() {
               onNavigateSection={navigateToSection}
               onOpenGalleryCollection={(col) => openGallery(col)}
               onOpenWelcomeWizard={() => setIsWelcomeWizardOpen(true)}
+              onSendPromptToBuilder={(patch) => {
+                setBuilderState((prev) => ({ ...prev, ...patch }));
+                navigateToSection('builder');
+              }}
             />
           </>
         )}
@@ -789,6 +840,17 @@ export default function App() {
           </div>
         )}
 
+        {/* 4B. SECCIÓN NUEVOS LABORATORIOS, RETOS EXPRESS Y EXPERIMENTOS CREATIVOS */}
+        {activeSection === 'experiencias' && (
+          <CreativeExperiencesHub
+            mode="full"
+            onSendPromptToBuilder={(patch) => {
+              setBuilderState((prev) => ({ ...prev, ...patch }));
+              navigateToSection('builder');
+            }}
+          />
+        )}
+
         {/* 5. SECCIÓN PLANIFICADOR AUDIOVISUAL (8 ETAPAS) */}
         {activeSection === 'film-director' && (
           <AiFilmDirector
@@ -876,12 +938,12 @@ export default function App() {
           />
         )}
 
-        {/* 9. SECCIÓN RECURSOS (Recetas Maestras, Diccionario, Plantillas Universales) */}
+        {/* 9. SECCIÓN RECURSOS (Recetas, Diccionario, Plantillas, Ejercicios, Diagnóstico, Guías) */}
         {activeSection === 'recursos' && (
           <div>
             <div className="bg-white dark:bg-[#16161C] border-b border-[#DEDAD0] dark:border-[#26262E]">
-              <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex flex-wrap items-center justify-between gap-3">
-                <div className="text-xs font-mono-code uppercase tracking-wider text-[#4A4A55] dark:text-[#A09E97] font-bold">
+              <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex flex-col xl:flex-row xl:items-center justify-between gap-3">
+                <div className="text-xs font-mono-code uppercase tracking-wider text-[#4A4A55] dark:text-[#A09E97] font-bold shrink-0">
                   ARCHIVO Y RECURSOS PRÁCTICOS
                 </div>
                 <div className="flex flex-wrap gap-2">
@@ -893,20 +955,40 @@ export default function App() {
                     },
                     {
                       id: 'diccionario' as ResourceSubSection,
-                      label: 'Diccionario de Comandos',
+                      label: 'Diccionario',
                       icon: <Compass className="w-3.5 h-3.5" />,
                     },
                     {
                       id: 'plantillas' as ResourceSubSection,
-                      label: 'Plantillas Universales',
+                      label: 'Plantillas',
                       icon: <FileText className="w-3.5 h-3.5" />,
+                    },
+                    {
+                      id: 'tutoriales' as ResourceSubSection,
+                      label: 'Tutoriales Paso a Paso',
+                      icon: <PlayCircle className="w-3.5 h-3.5" />,
+                    },
+                    {
+                      id: 'ejercicios' as ResourceSubSection,
+                      label: 'Ejercicios y Práctica',
+                      icon: <Dumbbell className="w-3.5 h-3.5" />,
+                    },
+                    {
+                      id: 'errores' as ResourceSubSection,
+                      label: 'Soluciones y Negativos',
+                      icon: <Wrench className="w-3.5 h-3.5" />,
+                    },
+                    {
+                      id: 'guias' as ResourceSubSection,
+                      label: 'Guías, Ratios y Paletas',
+                      icon: <SlidersHorizontal className="w-3.5 h-3.5" />,
                     },
                   ].map((tab) => (
                     <button
                       key={tab.id}
                       type="button"
                       onClick={() => navigateToSection('recursos', tab.id)}
-                      className={`px-4 py-2 text-xs font-semibold uppercase tracking-wider rounded-lg border transition-colors flex items-center gap-2 ${
+                      className={`min-h-[40px] px-3.5 py-2 text-xs font-semibold uppercase tracking-wider rounded-lg border transition-colors flex items-center gap-2 whitespace-nowrap ${
                         activeResourceSub === tab.id
                           ? 'bg-[#F8C300] text-[#101014] border-[#F8C300] font-bold'
                           : 'bg-[#F4F2ED] dark:bg-[#101014] text-[#101014] dark:text-[#F4F2ED] border-[#DEDAD0] dark:border-[#26262E] hover:border-[#326BFF]'
@@ -929,7 +1011,29 @@ export default function App() {
                 onAddCommandToBuilder={handleAddCommandToBuilder}
               />
             )}
-            {activeResourceSub === 'plantillas' && <MasterTemplates />}
+            {activeResourceSub === 'plantillas' && (
+              <MasterTemplates onSendToBuilder={handlePatchBuilderFromResources} />
+            )}
+            {activeResourceSub === 'tutoriales' && (
+              <ResourceTutorialsView
+                onSendToBuilder={handlePatchBuilderFromResources}
+              />
+            )}
+            {activeResourceSub === 'ejercicios' && (
+              <ResourceExercisesView
+                onSendToBuilder={handlePatchBuilderFromResources}
+              />
+            )}
+            {activeResourceSub === 'errores' && (
+              <ResourceTroubleshootingView
+                onSendToBuilder={handlePatchBuilderFromResources}
+              />
+            )}
+            {activeResourceSub === 'guias' && (
+              <ResourceGuidesView
+                onSendToBuilder={handlePatchBuilderFromResources}
+              />
+            )}
           </div>
         )}
       </main>

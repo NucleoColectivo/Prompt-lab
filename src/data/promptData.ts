@@ -305,6 +305,129 @@ export const RECIPES: RecipeItem[] = [
       aspectRatio: '16:9 (Panorámico Pantallas)'
     },
     context: 'Lanzamientos de productos, presentaciones de branding monumental y campañas de alto impacto visual.'
+  },
+  {
+    id: 'architectural-concrete-light',
+    title: 'Arquitectura Bioclimática & Luz Oblicua',
+    subtitle: 'Verticales perfectas con lente tilt-shift y geometría solar',
+    type: 'photo',
+    image: VISUAL_LIBRARY_PATHS.photoArchitecture,
+    commands: [
+      '/photorealistic',
+      '/architectural',
+      '/24mm',
+      '/availablelight',
+      '/naturalcolors',
+      '/notext'
+    ],
+    fullPrompt: 'Architectural photography of a contemporary bioclimatic pavilion built with board-formed raw concrete, warm local cedar timber louvers and native botanical courtyard. Captured on Sony A7R V with 24mm tilt-shift lens keeping strictly parallel vertical lines, oblique late-afternoon sunlight carving crisp geometric shadows, subtle human scale silhouette, authentic mineral texture, 3:2.',
+    description: 'Fórmula de precisión arquitectónica que corrige la distorsión de perspectiva y realza la relación entre concreto, madera cálida y sombra solar.',
+    specs: {
+      camera: 'Sony A7R V / Full Frame',
+      lens: '24mm Tilt-Shift f/8',
+      lighting: 'Oblique Late Afternoon Sunlight',
+      color: 'Warm Concrete, Cedar & Olive Green',
+      aspectRatio: '3:2 (Portafolio / Editorial)'
+    },
+    context: 'Ideal para visualización arquitectónica, centros culturales, espacios expositivos y concursos de diseño espacial.'
+  },
+  {
+    id: 'editorial-duotone-poster',
+    title: 'Cartel Editorial en Duotono Gráfico',
+    subtitle: 'Reducción expresiva a dos tintas para identidad cultural',
+    type: 'experimental',
+    image: VISUAL_LIBRARY_PATHS.colorDuotone,
+    commands: [
+      '/editorial',
+      '/duotone',
+      '/fineart',
+      '/highcontrast',
+      '/filmgrain',
+      '/notext'
+    ],
+    fullPrompt: 'Graphic editorial portrait crafted for a contemporary cultural festival poster, rendered in bold cobalt blue and vermilion duotone inks over warm textured uncoated print stock. Clean poster contrast, expressive lighting sculpting silhouette, generous clean upper negative space reserved for typography, subtle risograph halftone grain, strictly no text, 2:3.',
+    description: 'Transforma un retrato fotográfico en una pieza gráfica de alto impacto lista para maquetar afiches, portadas de discos o sistemas editoriales.',
+    specs: {
+      camera: 'Hasselblad X2D / Print Process',
+      lens: '80mm f/2.8 Medium Format',
+      lighting: 'Hard Sculpted Editorial Key Light',
+      color: 'Cobalt Blue & Vermilion Duotone',
+      aspectRatio: '2:3 (Cartel / Afiche)'
+    },
+    context: 'Afiches culturales, festivales de música y arte, fanzines, identidad gráfica y talleres de comunicación visual.'
+  },
+  {
+    id: 'stop-motion-craft-diorama',
+    title: 'Diorama Stop Motion Artesanal 12fps',
+    subtitle: 'Animación táctil en papel recortado, cartón kraft y fieltro',
+    type: 'video',
+    image: VISUAL_LIBRARY_PATHS.animStopMotion,
+    commands: [
+      '/artfilm',
+      '/slow-motion',
+      '/macro',
+      '/warm-light',
+      '/organic-motion'
+    ],
+    fullPrompt: 'Handcrafted stop-motion animation sequence at 12fps inside a miniature forest diorama built from layered kraft cardboard, wool felt, wire and textured handmade paper. Warm miniature tungsten spotlights create cozy depth, subtle tactile camera push-in with gentle artisanal frame cadence, real fabric fibers and paper shadows visible, 16:9.',
+    description: 'Aporta calidez artesanal y textura física tangible frente al exceso de 3D liso, ideal para narrativas poéticas y educativas.',
+    specs: {
+      camera: 'Canon R5 Macro Stop-Motion Rig',
+      lens: '50mm Macro f/4.0',
+      lighting: 'Warm Miniature Practical Spotlights',
+      color: 'Kraft Ochre, Moss Felt & Amber Glow',
+      motion: 'Gentle Push-In · 12 fps Tactile Cadence',
+      aspectRatio: '16:9 (Cortometraje / Taller)'
+    },
+    context: 'Cortos animados educativos, videoclips independientes, cuentos visuales y laboratorios comunitarios.'
+  },
+  {
+    id: 'minimal-floating-campaign',
+    title: 'Bodegón Flotante & Espacio Negativo',
+    subtitle: 'Publicidad escultórica minimalista lista para titular',
+    type: 'ads',
+    image: VISUAL_LIBRARY_PATHS.adFloating,
+    commands: [
+      '/commercial',
+      '/minimalist',
+      '/studio-light',
+      '/macro',
+      '/notext'
+    ],
+    fullPrompt: 'Minimalist floating still-life advertising campaign: matte hand-crafted ceramic vessel suspended weightlessly beside sculptural travertine stone blocks and a dried botanical sprig against a warm sand seamless backdrop. Crisp directional studio lighting, soft grounded shadows, clean top copy space for brand headline, Phase One IQ4 90mm f/8, no text or logos, 4:5.',
+    description: 'Composición publicitaria contemporánea con gravedad cero, materiales minerales honestos y aire superior limpio para comunicación de marca.',
+    specs: {
+      camera: 'Phase One IQ4 / Medium Format',
+      lens: '90mm Macro f/8',
+      lighting: 'Directional Hard Diffused Studio Key',
+      color: 'Warm Sand, Travertine & Matte Clay',
+      aspectRatio: '4:5 (Feed / Campaña)'
+    },
+    context: 'Marcas de diseño industrial, cosmética botánica, cerámica de autor y campañas editoriales de e-commerce.'
+  },
+  {
+    id: 'character-turnaround-bible',
+    title: 'Biblia de Personaje & Vistas de Referencia',
+    subtitle: 'Hoja técnica consistente para ilustración, cómic y animación',
+    type: 'experimental',
+    image: VISUAL_LIBRARY_PATHS.storyCharacterSheet,
+    commands: [
+      '/characterdesign',
+      '/conceptart',
+      '/editorial',
+      '/naturalcolors',
+      '/notext'
+    ],
+    fullPrompt: 'Clean character design turnaround sheet on warm cream studio paper showing the same original protagonist in front, three-quarter and side profile views plus two expressive facial studies. Consistent layered linen field jacket, leather satchel and warm ochre-teal color script, crisp editorial ink linework with soft gouache washes, balanced archival presentation, no gibberish annotations, 16:9.',
+    description: 'Establece una referencia visual unificada (vestuario, proporciones y paleta) antes de producir viñetas, storyboards o escenas de video.',
+    specs: {
+      camera: 'Flat Archival Concept Sheet',
+      lens: 'Orthographic Reference Views',
+      lighting: 'Even Neutral Studio Presentation',
+      color: 'Warm Ochre, Linen & Petrol Teal',
+      aspectRatio: '16:9 (Biblia / Storyboard)'
+    },
+    context: 'Preproducción de cómics, animación, videojuegos indie, novelas gráficas y diseño de mundos narrativos.'
   }
 ];
 

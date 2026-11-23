@@ -103,6 +103,15 @@ export const Footer: React.FC<FooterProps> = ({ onNavigateSection }) => {
               </li>
               <li>
                 <a
+                  href="#experiencias"
+                  onClick={(e) => handleLink(e, 'experiencias')}
+                  className="hover:text-[#326BFF] dark:hover:text-[#F8C300] transition-colors font-semibold text-[#101014] dark:text-[#F4F2ED]"
+                >
+                  Nuevos Laboratorios (26), Retos Express & Experimentos
+                </a>
+              </li>
+              <li>
+                <a
                   href="#film-director"
                   onClick={(e) => handleLink(e, 'film-director')}
                   className="hover:text-[#326BFF] dark:hover:text-[#F8C300] transition-colors"
@@ -170,7 +179,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavigateSection }) => {
                   onClick={(e) => handleLink(e, 'recursos', 'recetas')}
                   className="hover:text-[#326BFF] dark:hover:text-[#F8C300] transition-colors"
                 >
-                  Recetas Maestras & Fórmulas Visuales
+                  Recetas Maestras &amp; Fórmulas Visuales (12)
                 </a>
               </li>
               <li>
@@ -179,7 +188,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavigateSection }) => {
                   onClick={(e) => handleLink(e, 'recursos', 'diccionario')}
                   className="hover:text-[#326BFF] dark:hover:text-[#F8C300] transition-colors"
                 >
-                  Diccionario de Comandos & Paletas HEX
+                  Diccionario de Comandos &amp; Paletas HEX
                 </a>
               </li>
               <li>
@@ -188,7 +197,43 @@ export const Footer: React.FC<FooterProps> = ({ onNavigateSection }) => {
                   onClick={(e) => handleLink(e, 'recursos', 'plantillas')}
                   className="hover:text-[#326BFF] dark:hover:text-[#F8C300] transition-colors"
                 >
-                  Plantillas Universales (Foto, Cine & Talleres)
+                  Plantillas Maestras Rellenables (6 Disciplinas)
+                </a>
+              </li>
+              <li>
+                <a
+                  href="#tutoriales"
+                  onClick={(e) => handleLink(e, 'recursos', 'tutoriales')}
+                  className="hover:text-[#326BFF] dark:hover:text-[#F8C300] transition-colors font-semibold text-[#101014] dark:text-[#F4F2ED]"
+                >
+                  Tutoriales Paso a Paso en Video (12 Guías IA)
+                </a>
+              </li>
+              <li>
+                <a
+                  href="#ejercicios"
+                  onClick={(e) => handleLink(e, 'recursos', 'ejercicios')}
+                  className="hover:text-[#326BFF] dark:hover:text-[#F8C300] transition-colors"
+                >
+                  Ejercicios Prácticos &amp; Antes/Después de Prompts
+                </a>
+              </li>
+              <li>
+                <a
+                  href="#errores"
+                  onClick={(e) => handleLink(e, 'recursos', 'errores')}
+                  className="hover:text-[#326BFF] dark:hover:text-[#F8C300] transition-colors"
+                >
+                  Clínica de Errores &amp; Constructor de Negative Prompts
+                </a>
+              </li>
+              <li>
+                <a
+                  href="#guias"
+                  onClick={(e) => handleLink(e, 'recursos', 'guias')}
+                  className="hover:text-[#326BFF] dark:hover:text-[#F8C300] transition-colors"
+                >
+                  Guía de Aspect Ratios, Chuletas &amp; Checklist de Taller
                 </a>
               </li>
             </ul>

@@ -61,6 +61,16 @@ interface Particle {
   hue: string;
 }
 
+interface SoundRipple {
+  x: number;
+  y: number;
+  radius: number;
+  maxRadius: number;
+  alpha: number;
+  color: string;
+  label: string;
+}
+
 interface LandmarkPoint {
   x: number;
   y: number;
@@ -87,6 +97,27 @@ const HAND_CONNECTIONS: [number, number][] = [
   [0, 17],
 ];
 
+// MediaPipe FaceMesh anatomical contours (clean vector mask instead of noisy dot cloud)
+const FACE_OVAL_INDICES = [
+  10, 338, 297, 332, 284, 251, 389, 356, 454, 323, 361, 288,
+  397, 365, 379, 378, 400, 377, 152, 148, 176, 149, 150, 136,
+  172, 58, 132, 93, 234, 127, 162, 21, 54, 103, 67, 109, 10,
+];
+const LEFT_EYE_INDICES = [33, 160, 158, 133, 153, 144, 33];
+const RIGHT_EYE_INDICES = [362, 385, 387, 263, 373, 380, 362];
+const LEFT_BROW_INDICES = [70, 63, 105, 66, 107];
+const RIGHT_BROW_INDICES = [300, 293, 334, 296, 336];
+const OUTER_LIPS_INDICES = [61, 185, 40, 39, 37, 0, 267, 269, 270, 409, 291, 375, 321, 405, 314, 17, 84, 181, 91, 146, 61];
+const NOSE_BRIDGE_INDICES = [168, 6, 197, 195, 5, 4];
+
+const EXPERIMENT_SHORT_LABELS: Record<PlayableExperimentPreset['id'], string> = {
+  'mugevi-air-piano': 'MuGeVI Air Piano',
+  'ipd-grid': 'Grilla IPD',
+  'shy-machine-fft': 'Shy Machine FFT',
+  'rain-room-silhouette': 'Rain Room',
+  'caosmosis-videoart': 'Caleidoscopio',
+};
+
 function countExtendedFingers(landmarks: LandmarkPoint[]): number {
   if (landmarks.length < 21) return 0;
   const wrist = landmarks[0];
@@ -94,7 +125,6 @@ function countExtendedFingers(landmarks: LandmarkPoint[]): number {
     Math.hypot(a.x - b.x, a.y - b.y);
 
   let count = 0;
-  // Index (8 vs 6), Middle (12 vs 10), Ring (16 vs 14), Pinky (20 vs 18)
   const pairs: [number, number][] = [
     [8, 6],
     [12, 10],
@@ -102,16 +132,70 @@ function countExtendedFingers(landmarks: LandmarkPoint[]): number {
     [20, 18],
   ];
   pairs.forEach(([tipIdx, pipIdx]) => {
-    if (dist(landmarks[tipIdx], wrist) > dist(landmarks[pipIdx], wrist) * 1.12) {
+    if (dist(landmarks[tipIdx], wrist) > dist(landmarks[pipIdx], wrist) * 1.1) {
       count += 1;
     }
   });
-
-  // Thumb check inspired by MuGeVI (comparing tip 4 distance to ring MCP 13)
-  if (dist(landmarks[4], landmarks[13]) > dist(landmarks[2], landmarks[13]) * 1.18) {
+  if (dist(landmarks[4], landmarks[13]) > dist(landmarks[2], landmarks[13]) * 1.15) {
     count += 1;
   }
   return count;
+}
+
+// Compute aspect-preserving cover crop so webcam video is never stretched
+function getCoverRect(srcW: number, srcH: number, dstW: number, dstH: number) {
+  const srcRatio = srcW / Math.max(1, srcH);
+  const dstRatio = dstW / Math.max(1, dstH);
+  let sx = 0;
+  let sy = 0;
+  let sw = srcW;
+  let sh = srcH;
+  if (srcRatio > dstRatio) {
+    sw = srcH * dstRatio;
+    sx = (srcW - sw) / 2;
+  } else {
+    sh = srcW / dstRatio;
+    sy = (srcH - sh) / 2;
+  }
+  return { sx, sy, sw, sh };
+}
+
+// Map normalized MediaPipe coordinate (0..1 in video space) into cropped 16:9 canvas space
+function mapLandmarkToCanvas(
+  pt: LandmarkPoint,
+  srcW: number,
+  srcH: number,
+  dstW: number,
+  dstH: number,
+  mirror: boolean
+) {
+  const { sx, sy, sw, sh } = getCoverRect(srcW, srcH, dstW, dstH);
+  const pxSrc = pt.x * srcW;
+  const pySrc = pt.y * srcH;
+  let nx = (pxSrc - sx) / sw;
+  const ny = (pySrc - sy) / sh;
+  if (mirror) nx = 1 - nx;
+  return { x: nx * dstW, y: ny * dstH, nx, ny };
+}
+
+function drawContourPath(
+  ctx: CanvasRenderingContext2D,
+  pts: { x: number; y: number }[],
+  indices: number[]
+) {
+  ctx.beginPath();
+  let started = false;
+  for (let i = 0; i < indices.length; i += 1) {
+    const p = pts[indices[i]];
+    if (!p) continue;
+    if (!started) {
+      ctx.moveTo(p.x, p.y);
+      started = true;
+    } else {
+      ctx.lineTo(p.x, p.y);
+    }
+  }
+  ctx.stroke();
 }
 
 export const InteractiveMediaLab: React.FC<InteractiveMediaLabProps> = ({
@@ -126,11 +210,13 @@ export const InteractiveMediaLab: React.FC<InteractiveMediaLabProps> = ({
 
   const [artStyle, setArtStyle] = useState<VideoArtStyle>('particles');
   const [paletteChoice, setPaletteChoice] = useState<PaletteChoice>('nucleo-gold');
-  const [sensitivity, setSensitivity] = useState<number>(38);
-  const [feedbackAmount, setFeedbackAmount] = useState<number>(0.84);
+  const [sensitivity, setSensitivity] = useState<number>(42);
+  const [cameraOpacity, setCameraOpacity] = useState<number>(0.78);
+  const [feedbackAmount, setFeedbackAmount] = useState<number>(0.86);
   const [symmetry, setSymmetry] = useState<1 | 2 | 4 | 8>(4);
-  const [rgbShift, setRgbShift] = useState<number>(5);
+  const [rgbShift, setRgbShift] = useState<number>(6);
   const [showHudOverlay, setShowHudOverlay] = useState<boolean>(true);
+  const [showFaceMesh, setShowFaceMesh] = useState<boolean>(true);
   const [pinchValue, setPinchValue] = useState<number>(0.65);
 
   // Audio & Synth parameters
@@ -138,6 +224,7 @@ export const InteractiveMediaLab: React.FC<InteractiveMediaLabProps> = ({
   const [isDroneOn, setIsDroneOn] = useState<boolean>(false);
   const [wahResonance, setWahResonance] = useState<number>(4.5);
   const [masterVolume, setMasterVolume] = useState<number>(0.24);
+  const [audioGainBoost, setAudioGainBoost] = useState<number>(1.35);
 
   // Hardware & Media File state
   const [isCameraOn, setIsCameraOn] = useState(false);
@@ -170,6 +257,8 @@ export const InteractiveMediaLab: React.FC<InteractiveMediaLabProps> = ({
     fingersCount: 0,
     mlHandsDetected: 0,
     mlFaceDetected: false,
+    mouthOpenPct: 0,
+    pinchActive: false,
   });
 
   // Catalog & References Filter State
@@ -196,6 +285,7 @@ export const InteractiveMediaLab: React.FC<InteractiveMediaLabProps> = ({
   const offscreenRef = useRef<HTMLCanvasElement | null>(null);
   const prevFrameRef = useRef<Uint8ClampedArray | null>(null);
   const particlesRef = useRef<Particle[]>([]);
+  const ripplesRef = useRef<SoundRipple[]>([]);
   const pointerRef = useRef<{ x: number; y: number; down: boolean; active: boolean }>({
     x: 0.5,
     y: 0.5,
@@ -228,18 +318,26 @@ export const InteractiveMediaLab: React.FC<InteractiveMediaLabProps> = ({
     detectForVideo: (v: HTMLVideoElement, t: number) => { faceLandmarks?: LandmarkPoint[][] };
     close?: () => void;
   } | null>(null);
+  const mlInitializingRef = useRef(false);
+  const lastVideoTimeRef = useRef(-1);
+  const lastMlTimestampRef = useRef(0);
+  const handPinchLatchesRef = useRef<boolean[]>([false, false]);
+
   const latestMlRef = useRef<{
     hands: LandmarkPoint[][];
     face: LandmarkPoint[] | null;
-    pinchClosed: boolean;
-    fingers: number;
+    pinchStates: boolean[];
+    fingersTotal: number;
+    mouthOpenPct: number;
   }>({
     hands: [],
     face: null,
-    pinchClosed: false,
-    fingers: 0,
+    pinchStates: [],
+    fingersTotal: 0,
+    mouthOpenPct: 0,
   });
 
+  const smoothAudioRef = useRef({ bass: 12, mids: 14, treble: 10 });
   const lastNoteTriggerRef = useRef<{ time: number; idx: number }>({ time: 0, idx: -1 });
   const activeVisualNoteRef = useRef<{ idx: number; time: number }>({ idx: -1, time: 0 });
 
@@ -249,10 +347,12 @@ export const InteractiveMediaLab: React.FC<InteractiveMediaLabProps> = ({
     artStyle,
     paletteChoice,
     sensitivity,
+    cameraOpacity,
     feedbackAmount,
     symmetry,
     rgbShift,
     showHudOverlay,
+    showFaceMesh,
     pinchValue,
     isCameraOn,
     isUploadedVideoOn,
@@ -262,7 +362,9 @@ export const InteractiveMediaLab: React.FC<InteractiveMediaLabProps> = ({
     soundEnabled,
     wahResonance,
     masterVolume,
+    audioGainBoost,
     enableMlTracking,
+    mlStatus,
   });
 
   useEffect(() => {
@@ -272,10 +374,12 @@ export const InteractiveMediaLab: React.FC<InteractiveMediaLabProps> = ({
       artStyle,
       paletteChoice,
       sensitivity,
+      cameraOpacity,
       feedbackAmount,
       symmetry,
       rgbShift,
       showHudOverlay,
+      showFaceMesh,
       pinchValue,
       isCameraOn,
       isUploadedVideoOn,
@@ -285,7 +389,9 @@ export const InteractiveMediaLab: React.FC<InteractiveMediaLabProps> = ({
       soundEnabled,
       wahResonance,
       masterVolume,
+      audioGainBoost,
       enableMlTracking,
+      mlStatus,
     };
   }, [
     studioMode,
@@ -293,10 +399,12 @@ export const InteractiveMediaLab: React.FC<InteractiveMediaLabProps> = ({
     artStyle,
     paletteChoice,
     sensitivity,
+    cameraOpacity,
     feedbackAmount,
     symmetry,
     rgbShift,
     showHudOverlay,
+    showFaceMesh,
     pinchValue,
     isCameraOn,
     isUploadedVideoOn,
@@ -306,17 +414,17 @@ export const InteractiveMediaLab: React.FC<InteractiveMediaLabProps> = ({
     soundEnabled,
     wahResonance,
     masterVolume,
+    audioGainBoost,
     enableMlTracking,
+    mlStatus,
   ]);
 
   const refreshDeviceList = useCallback(async () => {
     if (!navigator.mediaDevices?.enumerateDevices) return;
     try {
       const list = await navigator.mediaDevices.enumerateDevices();
-      const vids = list.filter((d) => d.kind === 'videoinput');
-      const auds = list.filter((d) => d.kind === 'audioinput');
-      setVideoDevices(vids);
-      setAudioDevices(auds);
+      setVideoDevices(list.filter((d) => d.kind === 'videoinput'));
+      setAudioDevices(list.filter((d) => d.kind === 'audioinput'));
     } catch {
       // ignore enumeration errors
     }
@@ -335,7 +443,7 @@ export const InteractiveMediaLab: React.FC<InteractiveMediaLabProps> = ({
     if (!analyserRef.current) {
       const analyser = audioCtxRef.current.createAnalyser();
       analyser.fftSize = 256;
-      analyser.smoothingTimeConstant = 0.78;
+      analyser.smoothingTimeConstant = 0.72;
       analyserRef.current = analyser;
       freqDataRef.current = new Uint8Array(analyser.frequencyBinCount);
     }
@@ -343,14 +451,30 @@ export const InteractiveMediaLab: React.FC<InteractiveMediaLabProps> = ({
   }, []);
 
   const playAirPianoNote = useCallback(
-    (noteIdx: number, yNorm: number) => {
+    (noteIdx: number, yNorm: number, rippleX?: number, rippleY?: number) => {
       const clampedIdx = Math.max(0, Math.min(AIR_PIANO_NOTES.length - 1, noteIdx));
+      const note = AIR_PIANO_NOTES[clampedIdx];
       const nowMs = performance.now();
       activeVisualNoteRef.current = { idx: clampedIdx, time: nowMs };
 
+      // Visual ripple feedback
+      const canvas = canvasRef.current;
+      if (canvas) {
+        const rx = rippleX ?? ((clampedIdx + 0.5) / AIR_PIANO_NOTES.length) * canvas.width;
+        const ry = rippleY ?? Math.max(0.15, Math.min(0.85, yNorm)) * canvas.height;
+        ripplesRef.current.push({
+          x: rx,
+          y: ry,
+          radius: 14,
+          maxRadius: 110,
+          alpha: 0.95,
+          color: '#F8C300',
+          label: note.label,
+        });
+      }
+
       if (!configRef.current.soundEnabled) return;
       const { ctx, analyser } = ensureAudioContext();
-      const note = AIR_PIANO_NOTES[clampedIdx];
       const now = ctx.currentTime;
 
       const osc1 = ctx.createOscillator();
@@ -363,16 +487,15 @@ export const InteractiveMediaLab: React.FC<InteractiveMediaLabProps> = ({
       osc1.frequency.setValueAtTime(note.freq, now);
       osc2.frequency.setValueAtTime(note.freq * 2, now);
 
-      // MuGeVI Audio Effects style: vertical axis sweeps Wah-Wah filter cutoff
-      const cutoff = Math.round(280 + (1 - Math.max(0, Math.min(1, yNorm))) * 2500);
+      const cutoff = Math.round(320 + (1 - Math.max(0, Math.min(1, yNorm))) * 2500);
       filter.type = 'lowpass';
       filter.frequency.setValueAtTime(cutoff, now);
       filter.Q.setValueAtTime(configRef.current.wahResonance, now);
 
       const vol = Math.max(0.05, Math.min(0.45, configRef.current.masterVolume));
       env.gain.setValueAtTime(0.001, now);
-      env.gain.exponentialRampToValueAtTime(vol, now + 0.02);
-      env.gain.exponentialRampToValueAtTime(0.001, now + 0.55);
+      env.gain.exponentialRampToValueAtTime(vol, now + 0.018);
+      env.gain.exponentialRampToValueAtTime(0.001, now + 0.52);
 
       osc1.connect(filter);
       osc2.connect(filter);
@@ -382,57 +505,91 @@ export const InteractiveMediaLab: React.FC<InteractiveMediaLabProps> = ({
 
       osc1.start(now);
       osc2.start(now);
-      osc1.stop(now + 0.58);
-      osc2.stop(now + 0.58);
+      osc1.stop(now + 0.56);
+      osc2.stop(now + 0.56);
     },
     [ensureAudioContext]
   );
 
-  // Lazy-load MediaPipe HandLandmarker & FaceLandmarker when video feed starts
+  // Robust MediaPipe initialization: independent GPU -> CPU fallback & lower detection thresholds for faster tracking
   const initMediaPipeIfNeeded = useCallback(async () => {
-    if (handLandmarkerRef.current && faceLandmarkerRef.current) {
+    if (handLandmarkerRef.current || faceLandmarkerRef.current) {
       setMlStatus('ready');
       return;
     }
-    if (mlStatus === 'loading') return;
-
+    if (mlInitializingRef.current) return;
+    mlInitializingRef.current = true;
     setMlStatus('loading');
+
     try {
       const visionPkg = await import('@mediapipe/tasks-vision');
       const wasmFileset = await visionPkg.FilesetResolver.forVisionTasks(
         'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@1.2.3/wasm'
       );
 
+      // 1) HandLandmarker (priority — try GPU then CPU fallback)
       if (!handLandmarkerRef.current) {
-        handLandmarkerRef.current = await visionPkg.HandLandmarker.createFromOptions(wasmFileset, {
-          baseOptions: {
-            modelAssetPath:
-              'https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task',
-            delegate: 'GPU',
-          },
-          runningMode: 'VIDEO',
-          numHands: 2,
-        });
+        for (const delegate of ['GPU', 'CPU'] as const) {
+          try {
+            handLandmarkerRef.current = await visionPkg.HandLandmarker.createFromOptions(
+              wasmFileset,
+              {
+                baseOptions: {
+                  modelAssetPath:
+                    'https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task',
+                  delegate,
+                },
+                runningMode: 'VIDEO',
+                numHands: 2,
+                minHandDetectionConfidence: 0.35,
+                minHandPresenceConfidence: 0.35,
+                minTrackingConfidence: 0.35,
+              }
+            );
+            break;
+          } catch {
+            // Try next delegate
+          }
+        }
       }
 
+      // 2) FaceLandmarker (independent so failure never breaks hand tracking)
       if (!faceLandmarkerRef.current) {
-        faceLandmarkerRef.current = await visionPkg.FaceLandmarker.createFromOptions(wasmFileset, {
-          baseOptions: {
-            modelAssetPath:
-              'https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task',
-            delegate: 'GPU',
-          },
-          runningMode: 'VIDEO',
-          numFaces: 1,
-        });
+        for (const delegate of ['GPU', 'CPU'] as const) {
+          try {
+            faceLandmarkerRef.current = await visionPkg.FaceLandmarker.createFromOptions(
+              wasmFileset,
+              {
+                baseOptions: {
+                  modelAssetPath:
+                    'https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task',
+                  delegate,
+                },
+                runningMode: 'VIDEO',
+                numFaces: 1,
+                minFaceDetectionConfidence: 0.4,
+                minFacePresenceConfidence: 0.4,
+                minTrackingConfidence: 0.4,
+              }
+            );
+            break;
+          } catch {
+            // Try next delegate
+          }
+        }
       }
 
-      setMlStatus('ready');
+      if (handLandmarkerRef.current || faceLandmarkerRef.current) {
+        setMlStatus('ready');
+      } else {
+        setMlStatus('fallback');
+      }
     } catch {
-      // Fallback safely if CDN or WASM blocked offline
       setMlStatus('fallback');
+    } finally {
+      mlInitializingRef.current = false;
     }
-  }, [mlStatus]);
+  }, []);
 
   const stopUploadedMedia = useCallback(() => {
     if (videoRef.current && isUploadedVideoOn) {
@@ -449,6 +606,7 @@ export const InteractiveMediaLab: React.FC<InteractiveMediaLabProps> = ({
       URL.revokeObjectURL(uploadedUrlRef.current);
       uploadedUrlRef.current = null;
     }
+    lastVideoTimeRef.current = -1;
     setIsUploadedVideoOn(false);
     setIsUploadedAudioOn(false);
     setUploadedMediaName(null);
@@ -463,7 +621,8 @@ export const InteractiveMediaLab: React.FC<InteractiveMediaLabProps> = ({
       videoRef.current.srcObject = null;
     }
     prevFrameRef.current = null;
-    latestMlRef.current = { hands: [], face: null, pinchClosed: false, fingers: 0 };
+    lastVideoTimeRef.current = -1;
+    latestMlRef.current = { hands: [], face: null, pinchStates: [], fingersTotal: 0, mouthOpenPct: 0 };
     setIsCameraOn(false);
   }, [isUploadedVideoOn]);
 
@@ -472,7 +631,7 @@ export const InteractiveMediaLab: React.FC<InteractiveMediaLabProps> = ({
       setCameraError(null);
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
         setCameraError(
-          'Este navegador o iframe restringe navigator.mediaDevices. Prueba abrir en pestaña nueva o subir un video de prueba.'
+          'Este navegador o iframe restringe navigator.mediaDevices. Abre en pestaña nueva o sube un video de prueba.'
         );
         return;
       }
@@ -485,8 +644,8 @@ export const InteractiveMediaLab: React.FC<InteractiveMediaLabProps> = ({
 
         const devId = overrideDeviceId || selectedVideoId;
         const videoConstraint: MediaTrackConstraints = devId
-          ? { deviceId: { exact: devId }, width: { ideal: 640 }, height: { ideal: 360 } }
-          : { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 360 } };
+          ? { deviceId: { exact: devId }, width: { ideal: 1280 }, height: { ideal: 720 } }
+          : { facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 720 } };
 
         const stream = await navigator.mediaDevices.getUserMedia({
           video: videoConstraint,
@@ -499,6 +658,7 @@ export const InteractiveMediaLab: React.FC<InteractiveMediaLabProps> = ({
           videoRef.current.muted = true;
           await videoRef.current.play();
         }
+        lastVideoTimeRef.current = -1;
         setIsCameraOn(true);
         void refreshDeviceList();
         if (configRef.current.enableMlTracking) {
@@ -508,11 +668,11 @@ export const InteractiveMediaLab: React.FC<InteractiveMediaLabProps> = ({
         const errName = (err as { name?: string })?.name || '';
         if (errName === 'NotAllowedError' || errName === 'PermissionDeniedError' || errName === 'SecurityError') {
           setCameraError(
-            'El navegador o el contenedor embebido bloqueó el permiso de cámara. Concede el permiso en la barra del navegador, abre la app en pestaña nueva o sube un video MP4 de prueba.'
+            'El navegador o contenedor embebido bloqueó el permiso de cámara. Concede el permiso, abre en pestaña nueva o sube un video MP4.'
           );
         } else if (errName === 'NotFoundError' || errName === 'DevicesNotFoundError') {
           setCameraError(
-            'No se detectó cámara física conectada. Puedes probar el tracking subiendo un video local o usando el lienzo táctil/cursor.'
+            'No se detectó cámara física conectada. Puedes probar subiendo un video local o usando el lienzo táctil/cursor.'
           );
         } else {
           setCameraError(
@@ -546,7 +706,7 @@ export const InteractiveMediaLab: React.FC<InteractiveMediaLabProps> = ({
       setMicError(null);
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
         setMicError(
-          'El contexto actual no permite getUserMedia de audio. Enciende el "Sintetizador FFT" o sube un audio MP3/WAV.'
+          'El contexto actual no permite getUserMedia de audio. Enciende el "Dron Synth FFT" o sube un audio MP3/WAV.'
         );
         return;
       }
@@ -559,8 +719,8 @@ export const InteractiveMediaLab: React.FC<InteractiveMediaLabProps> = ({
 
         const devId = overrideDeviceId || selectedAudioId;
         const audioConstraint: boolean | MediaTrackConstraints = devId
-          ? { deviceId: { exact: devId }, echoCancellation: true, noiseSuppression: true }
-          : { echoCancellation: true, noiseSuppression: true };
+          ? { deviceId: { exact: devId }, echoCancellation: false, noiseSuppression: false, autoGainControl: true }
+          : { echoCancellation: false, noiseSuppression: false, autoGainControl: true };
 
         const stream = await navigator.mediaDevices.getUserMedia({
           audio: audioConstraint,
@@ -569,7 +729,6 @@ export const InteractiveMediaLab: React.FC<InteractiveMediaLabProps> = ({
         micStreamRef.current = stream;
 
         const source = ctx.createMediaStreamSource(stream);
-        // Connect ONLY to analyser so there is zero loudspeaker feedback loop
         source.connect(analyser);
         micSourceRef.current = source;
 
@@ -579,11 +738,11 @@ export const InteractiveMediaLab: React.FC<InteractiveMediaLabProps> = ({
         const errName = (err as { name?: string })?.name || '';
         if (errName === 'NotAllowedError' || errName === 'PermissionDeniedError' || errName === 'SecurityError') {
           setMicError(
-            'Permiso de micrófono bloqueado por navegador o iframe. Abre en pestaña nueva, sube un MP3/WAV o usa el Sintetizador Web Audio integrado.'
+            'Permiso de micrófono bloqueado por navegador o iframe. Abre en pestaña nueva, sube un MP3/WAV o usa el Dron Synth integrado.'
           );
         } else {
           setMicError(
-            'No se detectó micrófono disponible. Puedes usar un archivo MP3/WAV o el Sintetizador integrado para experimentar con el FFT.'
+            'No se detectó micrófono disponible. Puedes usar un archivo MP3/WAV o el Dron Synth integrado.'
           );
         }
         setIsMicOn(false);
@@ -672,7 +831,6 @@ export const InteractiveMediaLab: React.FC<InteractiveMediaLabProps> = ({
               void initMediaPipeIfNeeded();
             }
           } catch {
-            // If autoplay with audio was prevented, retry muted video playback
             videoEl.muted = true;
             await videoEl.play().catch(() => {});
             setIsUploadedVideoOn(true);
@@ -758,7 +916,7 @@ export const InteractiveMediaLab: React.FC<InteractiveMediaLabProps> = ({
     }
   };
 
-  // 60FPS Real-time Canvas, ML Landmarks & Audio FFT Engine
+  // 60FPS Real-time Canvas, MediaPipe 2-Hand/Face & Web Audio FFT Engine
   useEffect(() => {
     let animId = 0;
     let tick = 0;
@@ -784,6 +942,10 @@ export const InteractiveMediaLab: React.FC<InteractiveMediaLabProps> = ({
       const H = canvas.height;
       const cfg = configRef.current;
       const hasVideoFeed = cfg.isCameraOn || cfg.isUploadedVideoOn;
+      const video = videoRef.current;
+      const videoReady = Boolean(
+        hasVideoFeed && video && video.readyState >= 2 && video.videoWidth > 0 && video.videoHeight > 0
+      );
 
       const paletteColors =
         cfg.paletteChoice === 'nucleo-gold'
@@ -792,22 +954,20 @@ export const InteractiveMediaLab: React.FC<InteractiveMediaLabProps> = ({
           ? ['#7545D6', '#326BFF', '#F4F2ED', '#F8C300']
           : ['#F4F2ED', '#B4B2AC', '#71717A', '#F8C300'];
 
-      // 1) Video Optical Motion + Optional MediaPipe 21-pt Hand & 478-pt Face ML
-      let trackedX = pointerRef.current.x;
-      let trackedY = pointerRef.current.y;
-      let motionPct = pointerRef.current.active ? (pointerRef.current.down ? 74 : 36) : 16;
-
-      const video = videoRef.current;
+      // 1) Optical Motion + Accurate MediaPipe Inference (only on new video frames)
+      let motionPct = pointerRef.current.active ? (pointerRef.current.down ? 72 : 34) : 14;
       const off = offscreenRef.current;
-      if (hasVideoFeed && video && video.readyState >= 2 && off) {
+
+      if (videoReady && video && off) {
+        const { sx, sy, sw, sh } = getCoverRect(video.videoWidth, video.videoHeight, off.width, off.height);
         const octx = off.getContext('2d', { willReadFrequently: true });
         if (octx) {
           octx.save();
           if (cfg.isCameraOn) {
             octx.scale(-1, 1);
-            octx.drawImage(video, -off.width, 0, off.width, off.height);
+            octx.drawImage(video, sx, sy, sw, sh, -off.width, 0, off.width, off.height);
           } else {
-            octx.drawImage(video, 0, 0, off.width, off.height);
+            octx.drawImage(video, sx, sy, sw, sh, 0, 0, off.width, off.height);
           }
           octx.restore();
           const frame = octx.getImageData(0, 0, off.width, off.height).data;
@@ -817,7 +977,7 @@ export const InteractiveMediaLab: React.FC<InteractiveMediaLabProps> = ({
             let sumX = 0;
             let sumY = 0;
             let count = 0;
-            const threshold = Math.max(12, 75 - cfg.sensitivity);
+            const threshold = Math.max(10, 72 - cfg.sensitivity);
 
             for (let y = 0; y < off.height; y += 2) {
               for (let x = 0; x < off.width; x += 2) {
@@ -835,95 +995,154 @@ export const InteractiveMediaLab: React.FC<InteractiveMediaLabProps> = ({
               }
             }
             const sampledPixels = (off.width / 2) * (off.height / 2);
-            motionPct = Math.min(100, Math.round((count / sampledPixels) * 320));
-            if (count > 8) {
-              trackedX = sumX / count / off.width;
-              trackedY = sumY / count / off.height;
-              pointerRef.current.x = pointerRef.current.x * 0.72 + trackedX * 0.28;
-              pointerRef.current.y = pointerRef.current.y * 0.72 + trackedY * 0.28;
+            motionPct = Math.min(100, Math.round((count / sampledPixels) * 380));
+            // Only move pointer centroid via optical flow when NOT in ML hand-tracking mode with ML active
+            const mlControlsPointer = cfg.studioMode === 'hand-face-hud' && cfg.enableMlTracking && cfg.mlStatus === 'ready';
+            if (count > 10 && !mlControlsPointer && !pointerRef.current.down) {
+              const ox = sumX / count / off.width;
+              const oy = sumY / count / off.height;
+              pointerRef.current.x = pointerRef.current.x * 0.7 + ox * 0.3;
+              pointerRef.current.y = pointerRef.current.y * 0.7 + oy * 0.3;
             }
           }
           prevFrameRef.current = new Uint8ClampedArray(frame);
         }
 
-        // Run MediaPipe inference every 2 frames when active & loaded
-        if (cfg.enableMlTracking && tick % 2 === 0 && (handLandmarkerRef.current || faceLandmarkerRef.current)) {
-          const ts = performance.now();
-          try {
-            const handRes = handLandmarkerRef.current?.detectForVideo(video, ts);
-            const rawHands = handRes?.landmarks ?? [];
-            const mirroredHands = rawHands.map((hand) =>
-              hand.map((pt) => ({
-                x: cfg.isCameraOn ? 1 - pt.x : pt.x,
-                y: pt.y,
-                z: pt.z,
-              }))
+        // Run MediaPipe strictly when video frame actually updated (prevents dropped frames / errors)
+        if (
+          cfg.enableMlTracking &&
+          video.currentTime !== lastVideoTimeRef.current &&
+          (handLandmarkerRef.current || faceLandmarkerRef.current)
+        ) {
+          lastVideoTimeRef.current = video.currentTime;
+          const ts = Math.max(lastMlTimestampRef.current + 1, Math.round(performance.now()));
+          lastMlTimestampRef.current = ts;
+
+          let detectedHands: LandmarkPoint[][] = latestMlRef.current.hands;
+          let detectedFace: LandmarkPoint[] | null = latestMlRef.current.face;
+
+          // Hand tracking runs every new video frame
+          if (handLandmarkerRef.current) {
+            try {
+              const handRes = handLandmarkerRef.current.detectForVideo(video, ts);
+              detectedHands = handRes?.landmarks ?? [];
+            } catch {
+              // ignore transient inference hiccup
+            }
+          }
+
+          // Face tracking runs every 2nd tick when enabled (keeps FPS smooth)
+          if (faceLandmarkerRef.current && cfg.showFaceMesh && tick % 2 === 0) {
+            try {
+              const faceRes = faceLandmarkerRef.current.detectForVideo(video, ts + 1);
+              detectedFace = faceRes?.faceLandmarks?.[0] ?? null;
+              lastMlTimestampRef.current = ts + 1;
+            } catch {
+              // ignore
+            }
+          } else if (!cfg.showFaceMesh) {
+            detectedFace = null;
+          }
+
+          // Compute real gestures (pinch with hysteresis + extended fingers) for each hand
+          const pinchStates: boolean[] = [];
+          let fingersTotal = 0;
+
+          detectedHands.forEach((rawHand, hIdx) => {
+            if (rawHand.length < 21) return;
+            fingersTotal += countExtendedFingers(rawHand);
+
+            // Normalize pinch distance by palm size (wrist 0 to middle MCP 9) so distance from camera doesn't break pinch!
+            const palmSize = Math.max(
+              0.04,
+              Math.hypot(rawHand[0].x - rawHand[9].x, rawHand[0].y - rawHand[9].y)
+            );
+            const rawPinchDist = Math.hypot(
+              rawHand[4].x - rawHand[8].x,
+              rawHand[4].y - rawHand[8].y
+            );
+            const normalizedPinch = rawPinchDist / palmSize;
+            const prevLatch = handPinchLatchesRef.current[hIdx] ?? false;
+            const isPinched = prevLatch ? normalizedPinch < 0.44 : normalizedPinch < 0.34;
+            pinchStates[hIdx] = isPinched;
+
+            const mappedIdx = mapLandmarkToCanvas(
+              rawHand[8],
+              video.videoWidth,
+              video.videoHeight,
+              W,
+              H,
+              cfg.isCameraOn
             );
 
-            let pinchClosed = false;
-            let fingers = 0;
-            if (mirroredHands.length > 0 && mirroredHands[0].length >= 21) {
-              const primary = mirroredHands[0];
-              const thumbTip = primary[4];
-              const indexTip = primary[8];
-              const d = Math.hypot(thumbTip.x - indexTip.x, thumbTip.y - indexTip.y);
-              pinchClosed = d < 0.055;
-              fingers = countExtendedFingers(primary);
-
-              // Anchor stage pointer cleanly to Index fingertip (keypoint 8)
-              pointerRef.current.x = pointerRef.current.x * 0.4 + indexTip.x * 0.6;
-              pointerRef.current.y = pointerRef.current.y * 0.4 + indexTip.y * 0.6;
-
-              // Trigger MuGeVI Air Piano note when pinch closes after cooldown
-              if (
-                cfg.studioMode === 'hand-face-hud' &&
-                cfg.gestureSubMode === 'air-piano' &&
-                pinchClosed &&
-                ts - lastNoteTriggerRef.current.time > 260
-              ) {
-                const noteIdx = Math.floor(
-                  Math.max(0, Math.min(0.999, indexTip.x)) * AIR_PIANO_NOTES.length
-                );
-                lastNoteTriggerRef.current = { time: ts, idx: noteIdx };
-                playAirPianoNote(noteIdx, indexTip.y);
-              }
+            // Primary hand updates pointer smoothly
+            if (hIdx === 0) {
+              pointerRef.current.x = pointerRef.current.x * 0.35 + mappedIdx.nx * 0.65;
+              pointerRef.current.y = pointerRef.current.y * 0.35 + mappedIdx.ny * 0.65;
             }
 
-            const faceRes = faceLandmarkerRef.current?.detectForVideo(video, ts);
-            const rawFace = faceRes?.faceLandmarks?.[0] ?? null;
-            const mirroredFace = rawFace
-              ? rawFace.map((pt) => ({
-                  x: cfg.isCameraOn ? 1 - pt.x : pt.x,
-                  y: pt.y,
-                  z: pt.z,
-                }))
-              : null;
+            // Edge-trigger Air Piano note on rising edge of pinch!
+            if (
+              cfg.studioMode === 'hand-face-hud' &&
+              cfg.gestureSubMode === 'air-piano' &&
+              isPinched &&
+              !prevLatch &&
+              ts - lastNoteTriggerRef.current.time > 140
+            ) {
+              const noteIdx = Math.floor(
+                Math.max(0, Math.min(0.999, mappedIdx.nx)) * AIR_PIANO_NOTES.length
+              );
+              lastNoteTriggerRef.current = { time: ts, idx: noteIdx };
+              playAirPianoNote(noteIdx, mappedIdx.ny, mappedIdx.x, mappedIdx.y);
+            }
+            handPinchLatchesRef.current[hIdx] = isPinched;
+          });
 
-            latestMlRef.current = {
-              hands: mirroredHands,
-              face: mirroredFace,
-              pinchClosed,
-              fingers,
-            };
-          } catch {
-            // ignore intermittent timestamp collisions
+          if (detectedHands.length === 0) {
+            handPinchLatchesRef.current = [false, false];
           }
+
+          // Compute mouth openness from FaceLandmarker (upper lip 13 vs lower lip 14, normalized by face height 10..152)
+          let mouthOpenPct = 0;
+          if (detectedFace && detectedFace.length > 400) {
+            const faceH = Math.max(
+              0.05,
+              Math.hypot(
+                detectedFace[10].x - detectedFace[152].x,
+                detectedFace[10].y - detectedFace[152].y
+              )
+            );
+            const mouthGap = Math.hypot(
+              detectedFace[13].x - detectedFace[14].x,
+              detectedFace[13].y - detectedFace[14].y
+            );
+            mouthOpenPct = Math.min(100, Math.round((mouthGap / faceH) * 420));
+          }
+
+          latestMlRef.current = {
+            hands: detectedHands,
+            face: detectedFace,
+            pinchStates,
+            fingersTotal,
+            mouthOpenPct,
+          };
         }
       } else if (!pointerRef.current.active) {
-        trackedX = 0.5 + Math.cos(tick * 0.024) * 0.24;
-        trackedY = 0.5 + Math.sin(tick * 0.031) * 0.18;
-        pointerRef.current.x = trackedX;
-        pointerRef.current.y = trackedY;
+        pointerRef.current.x = 0.5 + Math.cos(tick * 0.022) * 0.24;
+        pointerRef.current.y = 0.5 + Math.sin(tick * 0.028) * 0.18;
       }
 
-      // 2) Analyze Web Audio FFT
-      let bass = 18 + Math.sin(tick * 0.08) * 9;
-      let mids = 22 + Math.cos(tick * 0.05) * 10;
-      let treble = 14 + Math.sin(tick * 0.12) * 8;
+      // 2) Analyze Web Audio FFT with Gain Boost & Smooth Damping
+      let targetBass = 14 + Math.sin(tick * 0.08) * 7;
+      let targetMids = 16 + Math.cos(tick * 0.05) * 8;
+      let targetTreble = 12 + Math.sin(tick * 0.12) * 6;
 
       const hasAudioSource =
-        cfg.isMicOn || cfg.isDroneOn || cfg.isUploadedAudioOn || cfg.isUploadedVideoOn ||
-        performance.now() - activeVisualNoteRef.current.time < 900;
+        cfg.isMicOn ||
+        cfg.isDroneOn ||
+        cfg.isUploadedAudioOn ||
+        cfg.isUploadedVideoOn ||
+        performance.now() - activeVisualNoteRef.current.time < 950;
 
       if (hasAudioSource && analyserRef.current && freqDataRef.current) {
         analyserRef.current.getByteFrequencyData(freqDataRef.current);
@@ -931,17 +1150,19 @@ export const InteractiveMediaLab: React.FC<InteractiveMediaLabProps> = ({
         const avg = (start: number, end: number) => {
           let total = 0;
           for (let i = start; i < end; i += 1) total += data[i];
-          return Math.round((total / Math.max(1, end - start) / 255) * 100);
+          return Math.min(
+            100,
+            Math.round(((total / Math.max(1, end - start)) / 255) * 100 * cfg.audioGainBoost)
+          );
         };
-        bass = Math.max(8, avg(0, 12));
-        mids = Math.max(8, avg(12, 42));
-        treble = Math.max(6, avg(42, 96));
+        targetBass = avg(1, 10);
+        targetMids = avg(10, 40);
+        targetTreble = avg(40, 96);
 
-        // Modulate drone synth & Wah-Wah filter cutoff by pointer X/Y
         if (cfg.isDroneOn && droneNodesRef.current) {
           const baseFreq = 82 + pointerRef.current.x * 220;
           const harmonic = baseFreq * (1.25 + (1 - pointerRef.current.y) * 0.75);
-          const filterHz = 260 + (1 - pointerRef.current.y) * 2400;
+          const filterHz = 280 + (1 - pointerRef.current.y) * 2400;
           droneNodesRef.current.osc1.frequency.setTargetAtTime(baseFreq, 0, 0.06);
           droneNodesRef.current.osc2.frequency.setTargetAtTime(harmonic, 0, 0.06);
           droneNodesRef.current.filter.frequency.setTargetAtTime(filterHz, 0, 0.05);
@@ -949,30 +1170,45 @@ export const InteractiveMediaLab: React.FC<InteractiveMediaLabProps> = ({
         }
       }
 
-      // 3) Background / Feedback Pass
-      const fadeAlpha =
-        cfg.studioMode === 'video-art' || cfg.artStyle === 'feedback'
-          ? Math.max(0.03, 1 - cfg.feedbackAmount)
-          : 0.24;
-      ctx.fillStyle = `rgba(16, 16, 20, ${fadeAlpha})`;
-      ctx.fillRect(0, 0, W, H);
+      smoothAudioRef.current.bass += (targetBass - smoothAudioRef.current.bass) * 0.28;
+      smoothAudioRef.current.mids += (targetMids - smoothAudioRef.current.mids) * 0.28;
+      smoothAudioRef.current.treble += (targetTreble - smoothAudioRef.current.treble) * 0.28;
+      const bass = smoothAudioRef.current.bass;
+      const mids = smoothAudioRef.current.mids;
+      const treble = smoothAudioRef.current.treble;
 
-      // Draw live video or camera feed (mirrored for webcam)
-      if (hasVideoFeed && video && video.readyState >= 2) {
+      // 3) Crisp Frame Clearing (NO muddy ghosting unless Eco Feedback or Videoarte!)
+      const usePersistenceTrail = cfg.artStyle === 'feedback' || cfg.studioMode === 'video-art';
+      if (usePersistenceTrail) {
+        const fadeAlpha = Math.max(0.05, 1 - cfg.feedbackAmount);
+        ctx.fillStyle = `rgba(13, 13, 18, ${fadeAlpha})`;
+        ctx.fillRect(0, 0, W, H);
+      } else {
+        ctx.fillStyle = '#0D0D12';
+        ctx.fillRect(0, 0, W, H);
+      }
+
+      // Draw crisp aspect-preserved webcam/video (except in video-art kaleidoscope which slices the video itself)
+      if (videoReady && video && cfg.cameraOpacity > 0.01 && cfg.studioMode !== 'video-art') {
+        const { sx, sy, sw, sh } = getCoverRect(video.videoWidth, video.videoHeight, W, H);
         ctx.save();
-        ctx.globalAlpha = cfg.artStyle === 'duotone' ? 0.56 : 0.44;
+        ctx.globalAlpha = usePersistenceTrail
+          ? Math.min(0.45, cfg.cameraOpacity * 0.55)
+          : cfg.cameraOpacity;
         if (cfg.isCameraOn) {
           ctx.translate(W, 0);
           ctx.scale(-1, 1);
         }
-        ctx.drawImage(video, 0, 0, W, H);
+        ctx.drawImage(video, sx, sy, sw, sh, 0, 0, W, H);
         ctx.restore();
 
         if (cfg.artStyle === 'duotone') {
           ctx.fillStyle =
             cfg.paletteChoice === 'violet-electric'
-              ? 'rgba(117, 69, 214, 0.22)'
-              : 'rgba(248, 195, 0, 0.14)';
+              ? 'rgba(117, 69, 214, 0.28)'
+              : cfg.paletteChoice === 'nucleo-gold'
+              ? 'rgba(248, 195, 0, 0.16)'
+              : 'rgba(16, 16, 20, 0.35)';
           ctx.fillRect(0, 0, W, H);
         }
       }
@@ -982,46 +1218,45 @@ export const InteractiveMediaLab: React.FC<InteractiveMediaLabProps> = ({
 
       // 4) Mode-Specific Rendering
       if (cfg.studioMode === 'camera-motion') {
-        // Rain Room + Optical Flow Particles
-        const rainDropsCount = 4;
-        for (let r = 0; r < rainDropsCount; r += 1) {
+        // Rain Room + Optical Flow Repulsion Field
+        for (let r = 0; r < 5; r += 1) {
           particlesRef.current.push({
             x: Math.random() * W,
-            y: -8,
-            vx: (Math.random() - 0.5) * 0.8,
-            vy: 3.4 + Math.random() * 2.5,
+            y: -6,
+            vx: (Math.random() - 0.5) * 0.5,
+            vy: 4.2 + Math.random() * 2.8,
             life: 0,
-            maxLife: 105,
-            size: 2.2 + Math.random() * 2,
+            maxLife: 115,
+            size: 2 + Math.random() * 2,
             hue: paletteColors[1],
           });
         }
 
-        const spawnCount = Math.max(2, Math.round(motionPct / 15));
+        const spawnCount = Math.max(2, Math.round(motionPct / 12));
         for (let i = 0; i < spawnCount; i += 1) {
           particlesRef.current.push({
-            x: cx + (Math.random() - 0.5) * 26,
-            y: cy + (Math.random() - 0.5) * 26,
-            vx: (Math.random() - 0.5) * (2.5 + motionPct * 0.06),
-            vy: (Math.random() - 0.5) * (2.5 + motionPct * 0.06) - 0.6,
+            x: cx + (Math.random() - 0.5) * 34,
+            y: cy + (Math.random() - 0.5) * 34,
+            vx: (Math.random() - 0.5) * (2.6 + motionPct * 0.06),
+            vy: (Math.random() - 0.5) * (2.6 + motionPct * 0.06) - 0.8,
             life: 0,
-            maxLife: 44 + Math.random() * 24,
-            size: 2.8 + Math.random() * 4.5,
+            maxLife: 42 + Math.random() * 24,
+            size: 3 + Math.random() * 4.5,
             hue: paletteColors[i % paletteColors.length],
           });
         }
-        if (particlesRef.current.length > 320) {
-          particlesRef.current = particlesRef.current.slice(-320);
+        if (particlesRef.current.length > 340) {
+          particlesRef.current = particlesRef.current.slice(-340);
         }
 
+        const repulsionRadius = 76 + bass * 0.55;
         particlesRef.current.forEach((p) => {
-          // Rain Room repulsion halo around centroid
           const dx = p.x - cx;
           const dy = p.y - cy;
           const d = Math.hypot(dx, dy);
-          if (d < 68 && d > 1) {
-            p.vx += (dx / d) * 0.55;
-            p.vy += (dy / d) * 0.35;
+          if (d < repulsionRadius && d > 1) {
+            p.vx += (dx / d) * 0.7;
+            p.vy += (dy / d) * 0.4;
           }
           p.x += p.vx;
           p.y += p.vy;
@@ -1033,7 +1268,7 @@ export const InteractiveMediaLab: React.FC<InteractiveMediaLabProps> = ({
             ctx.fillRect(p.x, p.y, p.size * 3.5, 2);
           } else {
             ctx.beginPath();
-            ctx.arc(p.x, p.y, p.size * alpha + 1, 0, Math.PI * 2);
+            ctx.arc(p.x, p.y, p.size * alpha + 1.2, 0, Math.PI * 2);
             ctx.fill();
           }
         });
@@ -1044,115 +1279,154 @@ export const InteractiveMediaLab: React.FC<InteractiveMediaLabProps> = ({
 
         if (cfg.showHudOverlay) {
           ctx.strokeStyle = '#F8C300';
-          ctx.lineWidth = 1.5;
+          ctx.lineWidth = 1.8;
           ctx.beginPath();
-          ctx.arc(cx, cy, 42 + motionPct * 0.35, 0, Math.PI * 2);
+          ctx.arc(cx, cy, repulsionRadius * 0.65, 0, Math.PI * 2);
           ctx.stroke();
           ctx.beginPath();
-          ctx.moveTo(cx - 28, cy);
-          ctx.lineTo(cx + 28, cy);
-          ctx.moveTo(cx, cy - 28);
-          ctx.lineTo(cx, cy + 28);
+          ctx.moveTo(cx - 24, cy);
+          ctx.lineTo(cx + 24, cy);
+          ctx.moveTo(cx, cy - 24);
+          ctx.lineTo(cx, cy + 24);
           ctx.stroke();
         }
       } else if (cfg.studioMode === 'hand-face-hud') {
         const ml = latestMlRef.current;
-        const effectivePinch =
-          ml.hands.length > 0
-            ? ml.pinchClosed
-              ? 0.12
-              : 0.8
-            : pointerRef.current.down
-            ? 0.16
-            : cfg.pinchValue;
+        const hasRealHands = videoReady && ml.hands.length > 0;
+
+        // Collect active attractors: real hands (palm/index) if present, else cursor ONLY when camera off or dragging
+        const attractors: { x: number; y: number; pinched: boolean }[] = [];
+        if (hasRealHands && video) {
+          ml.hands.forEach((hand, hIdx) => {
+            const pt = mapLandmarkToCanvas(
+              hand[9] || hand[8],
+              video.videoWidth,
+              video.videoHeight,
+              W,
+              H,
+              cfg.isCameraOn
+            );
+            attractors.push({ x: pt.x, y: pt.y, pinched: Boolean(ml.pinchStates[hIdx]) });
+          });
+        } else if (!videoReady || pointerRef.current.down || pointerRef.current.active) {
+          attractors.push({
+            x: cx,
+            y: cy,
+            pinched: pointerRef.current.down || cfg.pinchValue < 0.35,
+          });
+        }
 
         if (cfg.gestureSubMode === 'air-piano') {
-          // Draw MuGeVI 8 spatial note columns
           const colW = W / AIR_PIANO_NOTES.length;
-          const hoverIdx = Math.floor(Math.max(0, Math.min(0.999, pointerRef.current.x)) * AIR_PIANO_NOTES.length);
+          const activeCols = new Set<number>();
+          attractors.forEach((a) => {
+            const idx = Math.floor(Math.max(0, Math.min(0.999, a.x / W)) * AIR_PIANO_NOTES.length);
+            activeCols.add(idx);
+          });
           const recentHit = performance.now() - activeVisualNoteRef.current.time < 340;
 
           AIR_PIANO_NOTES.forEach((n, idx) => {
-            const isHover = idx === hoverIdx;
+            const isHover = activeCols.has(idx);
             const isTriggered = recentHit && activeVisualNoteRef.current.idx === idx;
             const x0 = idx * colW;
 
             ctx.fillStyle = isTriggered
-              ? 'rgba(248, 195, 0, 0.24)'
+              ? 'rgba(248, 195, 0, 0.28)'
               : isHover
-              ? 'rgba(50, 107, 255, 0.14)'
-              : 'rgba(255, 255, 255, 0.02)';
-            ctx.fillRect(x0 + 2, 16, colW - 4, H - 32);
+              ? 'rgba(50, 107, 255, 0.16)'
+              : 'rgba(13, 13, 18, 0.28)';
+            ctx.fillRect(x0 + 3, 14, colW - 6, H - 28);
 
             ctx.strokeStyle = isTriggered
               ? '#F8C300'
               : isHover
               ? '#326BFF'
-              : 'rgba(244, 242, 237, 0.14)';
-            ctx.lineWidth = isTriggered ? 2 : 1;
-            ctx.strokeRect(x0 + 2, 16, colW - 4, H - 32);
+              : 'rgba(244, 242, 237, 0.22)';
+            ctx.lineWidth = isTriggered ? 2.5 : 1;
+            ctx.strokeRect(x0 + 3, 14, colW - 6, H - 28);
 
-            ctx.fillStyle = isTriggered ? '#F8C300' : isHover ? '#F4F2ED' : 'rgba(244, 242, 237, 0.55)';
-            ctx.font = 'bold 12px monospace';
-            ctx.fillText(n.label, x0 + colW / 2 - 10, 36);
-            ctx.font = '10px monospace';
-            ctx.fillText(`[${n.key}]`, x0 + colW / 2 - 10, H - 24);
+            ctx.fillStyle = isTriggered ? '#F8C300' : isHover ? '#FFFFFF' : 'rgba(244, 242, 237, 0.72)';
+            ctx.font = 'bold 14px monospace';
+            ctx.fillText(n.label, x0 + colW / 2 - 11, 38);
+            ctx.font = '11px monospace';
+            ctx.fillText(`[${n.key}]`, x0 + colW / 2 - 11, H - 24);
           });
 
-          // Horizontal Wah-Wah Cutoff Frequency guide line
-          ctx.strokeStyle = 'rgba(117, 69, 214, 0.7)';
-          ctx.setLineDash([6, 4]);
+          // Horizontal Wah-Wah Cutoff Guide
+          const filterY = attractors[0]?.y ?? cy;
+          ctx.strokeStyle = 'rgba(248, 195, 0, 0.65)';
+          ctx.lineWidth = 1.5;
+          ctx.setLineDash([6, 5]);
           ctx.beginPath();
-          ctx.moveTo(0, cy);
-          ctx.lineTo(W, cy);
+          ctx.moveTo(0, filterY);
+          ctx.lineTo(W, filterY);
           ctx.stroke();
           ctx.setLineDash([]);
         } else if (cfg.gestureSubMode === 'ipd-grid') {
-          // IPD (Interactive Poster Design) Swiss parametric grid
+          // Crisp Swiss IPD Interactive Poster Grid responding to 1 or 2 hands + mic bass
           const cols = 10;
           const rows = 6;
           const cellW = W / cols;
           const cellH = H / rows;
+          const audioBoost = (bass / 100) * 0.26;
 
           for (let r = 0; r < rows; r += 1) {
             for (let c = 0; c < cols; c += 1) {
               const gx = (c + 0.5) * cellW;
               const gy = (r + 0.5) * cellH;
-              const dist = Math.hypot(gx - cx, gy - cy);
-              const influence = Math.max(0, 1 - dist / 220);
-              const isPinched = effectivePinch < 0.35;
-              const sizeScale = isPinched
-                ? Math.max(0.22, 0.85 - influence * 0.65)
-                : 0.35 + influence * 0.72 + (bass / 100) * 0.2;
+
+              let maxInf = 0;
+              let pinchedHere = false;
+              attractors.forEach((a) => {
+                const dist = Math.hypot(gx - a.x, gy - a.y);
+                const inf = Math.max(0, 1 - dist / 245);
+                if (inf > maxInf) {
+                  maxInf = inf;
+                  pinchedHere = a.pinched;
+                }
+              });
+
+              const scale = pinchedHere
+                ? Math.max(0.24, 0.85 - maxInf * 0.62)
+                : 0.34 + maxInf * 0.64 + audioBoost;
 
               ctx.save();
               ctx.translate(gx, gy);
-              ctx.rotate(influence * (isPinched ? -0.9 : 0.8) + tick * 0.004);
-              const boxW = cellW * 0.66 * sizeScale;
-              const boxH = cellH * 0.66 * sizeScale;
-              ctx.strokeStyle =
-                influence > 0.45 ? (isPinched ? '#F8C300' : '#7545D6') : 'rgba(244, 242, 237, 0.25)';
-              ctx.lineWidth = influence > 0.45 ? 2 : 1;
-              ctx.strokeRect(-boxW / 2, -boxH / 2, boxW, boxH);
-              if (influence > 0.55) {
-                ctx.fillStyle = isPinched ? 'rgba(248, 195, 0, 0.22)' : 'rgba(50, 107, 255, 0.22)';
-                ctx.fillRect(-boxW / 2, -boxH / 2, boxW, boxH);
+              ctx.rotate(maxInf * (pinchedHere ? -0.95 : 0.72));
+              const bw = cellW * 0.68 * scale;
+              const bh = cellH * 0.68 * scale;
+
+              if (maxInf > 0.38) {
+                ctx.fillStyle = pinchedHere
+                  ? 'rgba(248, 195, 0, 0.28)'
+                  : cfg.paletteChoice === 'violet-electric'
+                  ? 'rgba(117, 69, 214, 0.3)'
+                  : 'rgba(50, 107, 255, 0.26)';
+                ctx.fillRect(-bw / 2, -bh / 2, bw, bh);
               }
+              ctx.strokeStyle =
+                maxInf > 0.32
+                  ? pinchedHere
+                    ? '#F8C300'
+                    : paletteColors[0]
+                  : 'rgba(244, 242, 237, 0.28)';
+              ctx.lineWidth = maxInf > 0.32 ? 2.2 : 1;
+              ctx.strokeRect(-bw / 2, -bh / 2, bw, bh);
               ctx.restore();
             }
           }
         } else {
-          // Sculpture & Face HUD
+          // Expressive Mask / Sculpture mode
+          const primary = attractors[0] ?? { x: cx, y: cy, pinched: false };
+          const radius = 56 + (primary.pinched ? 12 : 48) + bass * 0.45 + ml.mouthOpenPct * 0.45;
           ctx.save();
-          ctx.translate(cx, cy);
-          ctx.rotate(tick * 0.015 + effectivePinch * 2.1);
-          const sides = 6;
-          const radius = 38 + effectivePinch * 58 + bass * 0.35;
+          ctx.translate(primary.x, primary.y);
+          ctx.rotate(tick * 0.014);
           ctx.strokeStyle = paletteColors[0];
-          ctx.lineWidth = 2;
+          ctx.lineWidth = 2.4;
           ctx.beginPath();
-          for (let i = 0; i <= sides; i += 1) {
-            const ang = (i / sides) * Math.PI * 2;
+          for (let i = 0; i <= 6; i += 1) {
+            const ang = (i / 6) * Math.PI * 2;
             const px = Math.cos(ang) * radius;
             const py = Math.sin(ang) * radius;
             if (i === 0) ctx.moveTo(px, py);
@@ -1162,50 +1436,122 @@ export const InteractiveMediaLab: React.FC<InteractiveMediaLabProps> = ({
           ctx.restore();
         }
 
-        // Render REAL MediaPipe 21-keypoint hand(s) if detected, else clean synthetic 21-point rig
+        // Render sound ripples triggered by Air Piano / Pinch
+        ripplesRef.current.forEach((rp) => {
+          rp.radius += 3.8;
+          rp.alpha *= 0.92;
+          ctx.save();
+          ctx.strokeStyle = rp.color;
+          ctx.globalAlpha = rp.alpha;
+          ctx.lineWidth = 2.5;
+          ctx.beginPath();
+          ctx.arc(rp.x, rp.y, rp.radius, 0, Math.PI * 2);
+          ctx.stroke();
+          ctx.fillStyle = rp.color;
+          ctx.font = 'bold 15px monospace';
+          ctx.fillText(rp.label, rp.x - 10, rp.y - rp.radius * 0.35);
+          ctx.restore();
+        });
+        ripplesRef.current = ripplesRef.current.filter((rp) => rp.alpha > 0.05 && rp.radius < rp.maxRadius);
+
+        // HUD Overlays: Real 21-Point Hand(s) & Clean Anatomical Face Contour
         if (cfg.showHudOverlay) {
-          if (ml.hands.length > 0) {
-            ml.hands.forEach((hand) => {
+          // A) Clean Face Contour when real face detected
+          if (videoReady && video && cfg.showFaceMesh && ml.face && ml.face.length > 400) {
+            const mappedFace = ml.face.map((pt) =>
+              mapLandmarkToCanvas(pt, video.videoWidth, video.videoHeight, W, H, cfg.isCameraOn)
+            );
+            ctx.save();
+            ctx.strokeStyle = 'rgba(248, 195, 0, 0.72)';
+            ctx.lineWidth = 1.6;
+            drawContourPath(ctx, mappedFace, FACE_OVAL_INDICES);
+            ctx.strokeStyle = 'rgba(244, 242, 237, 0.8)';
+            drawContourPath(ctx, mappedFace, LEFT_BROW_INDICES);
+            drawContourPath(ctx, mappedFace, RIGHT_BROW_INDICES);
+            drawContourPath(ctx, mappedFace, NOSE_BRIDGE_INDICES);
+            ctx.strokeStyle = '#326BFF';
+            ctx.lineWidth = 1.8;
+            drawContourPath(ctx, mappedFace, LEFT_EYE_INDICES);
+            drawContourPath(ctx, mappedFace, RIGHT_EYE_INDICES);
+            ctx.strokeStyle = ml.mouthOpenPct > 28 ? '#F8C300' : '#7545D6';
+            ctx.lineWidth = 2;
+            drawContourPath(ctx, mappedFace, OUTER_LIPS_INDICES);
+            ctx.restore();
+          }
+
+          // B) Real MediaPipe Hand Skeleton(s)
+          if (hasRealHands && video) {
+            ml.hands.forEach((rawHand, hIdx) => {
+              const pts = rawHand.map((pt) =>
+                mapLandmarkToCanvas(pt, video.videoWidth, video.videoHeight, W, H, cfg.isCameraOn)
+              );
+              const isPinched = Boolean(ml.pinchStates[hIdx]);
+
               HAND_CONNECTIONS.forEach(([a, b]) => {
-                const pA = hand[a];
-                const pB = hand[b];
+                const pA = pts[a];
+                const pB = pts[b];
                 if (!pA || !pB) return;
-                ctx.strokeStyle = '#326BFF';
-                ctx.lineWidth = 2.2;
+                ctx.strokeStyle = isPinched ? '#F8C300' : '#326BFF';
+                ctx.lineWidth = 2.6;
                 ctx.beginPath();
-                ctx.moveTo(pA.x * W, pA.y * H);
-                ctx.lineTo(pB.x * W, pB.y * H);
+                ctx.moveTo(pA.x, pA.y);
+                ctx.lineTo(pB.x, pB.y);
                 ctx.stroke();
               });
-              hand.forEach((pt, idx) => {
-                const isTip = idx === 4 || idx === 8 || idx === 12 || idx === 16 || idx === 20;
-                ctx.fillStyle = idx === 4 || idx === 8 ? '#F8C300' : isTip ? '#7545D6' : '#F4F2ED';
+
+              pts.forEach((pt, idx) => {
+                const isPinchTip = idx === 4 || idx === 8;
+                const isTip = idx === 12 || idx === 16 || idx === 20;
+                ctx.fillStyle = isPinchTip ? '#F8C300' : isTip ? '#7545D6' : '#F4F2ED';
                 ctx.beginPath();
-                ctx.arc(pt.x * W, pt.y * H, idx === 4 || idx === 8 ? 5 : 3, 0, Math.PI * 2);
+                ctx.arc(pt.x, pt.y, isPinchTip ? 5.5 : 3.2, 0, Math.PI * 2);
                 ctx.fill();
               });
-              // Pinch line 4 <-> 8
-              if (hand[4] && hand[8]) {
-                ctx.strokeStyle = ml.pinchClosed ? '#F8C300' : '#7545D6';
+
+              if (pts[4] && pts[8]) {
+                const midX = (pts[4].x + pts[8].x) / 2;
+                const midY = (pts[4].y + pts[8].y) / 2;
+                ctx.strokeStyle = isPinched ? '#F8C300' : 'rgba(117, 69, 214, 0.9)';
                 ctx.lineWidth = 2;
                 ctx.setLineDash([4, 4]);
                 ctx.beginPath();
-                ctx.moveTo(hand[4].x * W, hand[4].y * H);
-                ctx.lineTo(hand[8].x * W, hand[8].y * H);
+                ctx.moveTo(pts[4].x, pts[4].y);
+                ctx.lineTo(pts[8].x, pts[8].y);
                 ctx.stroke();
                 ctx.setLineDash([]);
+
+                if (isPinched) {
+                  ctx.strokeStyle = '#F8C300';
+                  ctx.lineWidth = 2.5;
+                  ctx.beginPath();
+                  ctx.arc(midX, midY, 18, 0, Math.PI * 2);
+                  ctx.stroke();
+                }
               }
             });
-          } else {
-            // Clean 21-keypoint hand rig anchored to cursor/centroid
-            const scale = 0.74 + effectivePinch * 0.65;
-            const wrist = { x: cx, y: cy + 52 * scale };
-            const spread = 0.45 + effectivePinch * 0.62;
+          } else if (videoReady && cfg.enableMlTracking && cfg.mlStatus === 'ready') {
+            // IMPORTANT: Do NOT paint a fake hand over the user's face when webcam + MediaPipe is active!
+            ctx.save();
+            ctx.fillStyle = 'rgba(13, 13, 18, 0.72)';
+            ctx.fillRect(16, 16, 336, 32);
+            ctx.strokeStyle = 'rgba(248, 195, 0, 0.65)';
+            ctx.lineWidth = 1;
+            ctx.strokeRect(16, 16, 336, 32);
+            ctx.fillStyle = '#F8C300';
+            ctx.font = 'bold 12px monospace';
+            ctx.fillText('Muestra 1 o 2 manos a la cámara (pinza 4–8)', 26, 36);
+            ctx.restore();
+          } else if (!videoReady) {
+            // Simulator mode (only when NO webcam/video is active)
+            const effPinch = pointerRef.current.down ? 0.16 : cfg.pinchValue;
+            const scale = 0.75 + effPinch * 0.55;
+            const wrist = { x: cx, y: cy + 54 * scale };
+            const spread = 0.45 + effPinch * 0.6;
             const fingers = [
               { angle: -0.75 * spread, len: 50 * scale },
-              { angle: -0.35 * spread, len: 72 * scale },
-              { angle: 0, len: 80 * scale },
-              { angle: 0.32 * spread, len: 72 * scale },
+              { angle: -0.35 * spread, len: 74 * scale },
+              { angle: 0, len: 82 * scale },
+              { angle: 0.32 * spread, len: 74 * scale },
               { angle: 0.65 * spread, len: 58 * scale },
             ];
             const tips: { x: number; y: number }[] = [];
@@ -1214,14 +1560,14 @@ export const InteractiveMediaLab: React.FC<InteractiveMediaLabProps> = ({
               const joints = idx === 0 ? 3 : 4;
               for (let j = 1; j <= joints; j += 1) {
                 const segLen = (f.len / joints) * (1 - j * 0.05);
-                const curl = idx === 1 ? (1 - effectivePinch) * 0.36 : 0;
+                const curl = idx === 1 ? (1 - effPinch) * 0.35 : 0;
                 const ang = -Math.PI / 2 + f.angle + curl * j;
                 const nextPt = {
                   x: prevPt.x + Math.cos(ang) * segLen,
                   y: prevPt.y + Math.sin(ang) * segLen,
                 };
                 ctx.strokeStyle = '#326BFF';
-                ctx.lineWidth = 2;
+                ctx.lineWidth = 2.2;
                 ctx.beginPath();
                 ctx.moveTo(prevPt.x, prevPt.y);
                 ctx.lineTo(nextPt.x, nextPt.y);
@@ -1229,14 +1575,14 @@ export const InteractiveMediaLab: React.FC<InteractiveMediaLabProps> = ({
 
                 ctx.fillStyle = j === joints ? '#F8C300' : '#F4F2ED';
                 ctx.beginPath();
-                ctx.arc(nextPt.x, nextPt.y, j === joints ? 4.2 : 2.8, 0, Math.PI * 2);
+                ctx.arc(nextPt.x, nextPt.y, j === joints ? 4.5 : 3, 0, Math.PI * 2);
                 ctx.fill();
                 prevPt = nextPt;
               }
               tips.push(prevPt);
             });
             if (tips.length >= 2) {
-              ctx.strokeStyle = effectivePinch < 0.35 ? '#F8C300' : '#7545D6';
+              ctx.strokeStyle = effPinch < 0.35 ? '#F8C300' : '#7545D6';
               ctx.setLineDash([4, 4]);
               ctx.beginPath();
               ctx.moveTo(tips[0].x, tips[0].y);
@@ -1245,46 +1591,16 @@ export const InteractiveMediaLab: React.FC<InteractiveMediaLabProps> = ({
               ctx.setLineDash([]);
             }
           }
-
-          // Face tracking HUD (Real 478 landmarks sample or responsive vector rig top-right)
-          if (ml.face && ml.face.length > 400) {
-            ctx.fillStyle = 'rgba(248, 195, 0, 0.72)';
-            for (let i = 0; i < ml.face.length; i += 6) {
-              const pt = ml.face[i];
-              ctx.fillRect(pt.x * W - 1, pt.y * H - 1, 2.2, 2.2);
-            }
-          } else {
-            const fx = W - 76;
-            const fy = 62;
-            const yaw = (pointerRef.current.x - 0.5) * 16;
-            const pitch = (pointerRef.current.y - 0.5) * 12;
-            ctx.strokeStyle = 'rgba(244, 242, 237, 0.45)';
-            ctx.lineWidth = 1.5;
-            ctx.beginPath();
-            ctx.ellipse(fx + yaw * 0.3, fy + pitch * 0.3, 24, 31, 0, 0, Math.PI * 2);
-            ctx.stroke();
-            ctx.fillStyle = '#F8C300';
-            ctx.beginPath();
-            ctx.arc(fx + yaw * 0.5 - 8, fy + pitch * 0.4 - 5, 2.3, 0, Math.PI * 2);
-            ctx.arc(fx + yaw * 0.5 + 8, fy + pitch * 0.4 - 5, 2.3, 0, Math.PI * 2);
-            ctx.fill();
-            const mouthH = Math.max(2, (bass / 100) * 11);
-            ctx.strokeStyle = '#7545D6';
-            ctx.beginPath();
-            ctx.ellipse(fx + yaw * 0.5, fy + pitch * 0.5 + 10, 8, mouthH, 0, 0, Math.PI * 2);
-            ctx.stroke();
-          }
         }
       } else if (cfg.studioMode === 'audio-reactive') {
-        // The Shy Machine 12-faced kinetic polyhedron + AURA 48 radial bars
+        // The Shy Machine 12-faced Kinetic Polyhedron + AURA 48 Radial Bars
         const centerX = W / 2;
         const centerY = H / 2;
         const bars = 48;
-        const baseR = 54 + bass * 0.62;
+        const baseR = 68 + bass * 0.85;
 
-        // Inner 12-sided kinetic shell (opening & closing like The Shy Machine)
         const facets = 12;
-        const shellAperture = 22 + (mids / 100) * 44;
+        const shellAperture = 28 + (mids / 100) * 58 + (bass / 100) * 24;
         ctx.save();
         ctx.translate(centerX, centerY);
         ctx.rotate(-tick * 0.008);
@@ -1292,28 +1608,30 @@ export const InteractiveMediaLab: React.FC<InteractiveMediaLabProps> = ({
           const a = (f / facets) * Math.PI * 2;
           ctx.save();
           ctx.rotate(a);
+          ctx.fillStyle = f % 2 === 0 ? 'rgba(248, 195, 0, 0.14)' : 'rgba(117, 69, 214, 0.14)';
           ctx.strokeStyle = paletteColors[f % 2];
-          ctx.lineWidth = 2;
+          ctx.lineWidth = 2.2;
           ctx.beginPath();
-          ctx.moveTo(14, 0);
-          ctx.lineTo(shellAperture, -10 - treble * 0.14);
-          ctx.lineTo(shellAperture + 12, 0);
-          ctx.lineTo(shellAperture, 10 + treble * 0.14);
+          ctx.moveTo(16, 0);
+          ctx.lineTo(shellAperture, -12 - treble * 0.22);
+          ctx.lineTo(shellAperture + 16, 0);
+          ctx.lineTo(shellAperture, 12 + treble * 0.22);
           ctx.closePath();
+          ctx.fill();
           ctx.stroke();
           ctx.restore();
         }
         ctx.restore();
 
-        // Outer radial harmonic rods (AURA style)
         for (let i = 0; i < bars; i += 1) {
           const angle = (i / bars) * Math.PI * 2 + tick * 0.01;
-          let mag = 16 + Math.sin(tick * 0.1 + i * 0.4) * 12;
+          let mag = 16 + Math.sin(tick * 0.1 + i * 0.4) * 10;
           if (hasAudioSource && freqDataRef.current) {
-            mag = (freqDataRef.current[i % freqDataRef.current.length] / 255) * 96;
+            mag = (freqDataRef.current[i % freqDataRef.current.length] / 255) * 115 * cfg.audioGainBoost;
           } else {
-            mag += pointerRef.current.x * 34;
+            mag += pointerRef.current.x * 36;
           }
+          mag = Math.min(145, mag);
 
           const x1 = centerX + Math.cos(angle) * baseR;
           const y1 = centerY + Math.sin(angle) * baseR;
@@ -1321,53 +1639,88 @@ export const InteractiveMediaLab: React.FC<InteractiveMediaLabProps> = ({
           const y2 = centerY + Math.sin(angle) * (baseR + mag);
 
           ctx.strokeStyle = paletteColors[i % paletteColors.length];
-          ctx.lineWidth = 3;
+          ctx.lineWidth = 3.5;
           ctx.beginPath();
           ctx.moveTo(x1, y1);
           ctx.lineTo(x2, y2);
           ctx.stroke();
         }
 
-        // Bottom waveform trace
+        // Bottom live waveform ribbon
         ctx.strokeStyle = '#F8C300';
-        ctx.lineWidth = 2;
+        ctx.lineWidth = 2.2;
         ctx.beginPath();
-        for (let x = 0; x < W; x += 6) {
+        for (let x = 0; x <= W; x += 8) {
           const idx = Math.floor((x / W) * 64);
           const val =
             hasAudioSource && freqDataRef.current
-              ? (freqDataRef.current[idx] / 255) * 62
-              : Math.sin(x * 0.03 + tick * 0.12) * (12 + mids * 0.3);
-          const py = H - 22 - val;
+              ? Math.min(84, (freqDataRef.current[idx] / 255) * 74 * cfg.audioGainBoost)
+              : Math.sin(x * 0.025 + tick * 0.12) * (14 + mids * 0.32);
+          const py = H - 24 - val;
           if (x === 0) ctx.moveTo(x, py);
           else ctx.lineTo(x, py);
         }
         ctx.stroke();
       } else if (cfg.studioMode === 'video-art') {
-        const folds = cfg.symmetry;
+        // Real Video-Signal Kaleidoscope + Chromatic RGB Echoes
+        const folds = Math.max(2, cfg.symmetry * 2);
         const shift = cfg.rgbShift;
-        const radius = 34 + bass * 0.58 + motionPct * 0.4;
+        const wedgeAngle = (Math.PI * 2) / folds;
+        const radius = Math.hypot(W, H) * 0.56;
 
+        if (videoReady && video && cfg.cameraOpacity > 0.05) {
+          const { sx, sy, sw, sh } = getCoverRect(video.videoWidth, video.videoHeight, W, H);
+          const zoom = 1 + bass * 0.004;
+          ctx.save();
+          ctx.translate(W / 2, H / 2);
+          ctx.rotate(tick * 0.004 + (pointerRef.current.x - 0.5) * 0.8);
+          ctx.globalAlpha = Math.min(0.88, cfg.cameraOpacity);
+          for (let i = 0; i < folds; i += 1) {
+            ctx.save();
+            ctx.rotate(i * wedgeAngle);
+            if (i % 2 === 1) ctx.scale(1, -1);
+            ctx.beginPath();
+            ctx.moveTo(0, 0);
+            ctx.arc(0, 0, radius, 0, wedgeAngle + 0.02);
+            ctx.closePath();
+            ctx.clip();
+            ctx.drawImage(
+              video,
+              sx,
+              sy,
+              sw,
+              sh,
+              (-W / 2) * zoom,
+              (-H / 2) * zoom,
+              W * zoom,
+              H * zoom
+            );
+            ctx.restore();
+          }
+          ctx.restore();
+        }
+
+        // RGB Split Generative Overlay Rings
+        const ringR = 44 + bass * 0.7 + motionPct * 0.4;
         ctx.save();
         ctx.translate(W / 2, H / 2);
-        for (let f = 0; f < folds; f += 1) {
+        for (let f = 0; f < cfg.symmetry; f += 1) {
           ctx.save();
-          ctx.rotate((f / folds) * Math.PI * 2 + tick * 0.012);
-          const ox = (pointerRef.current.x - 0.5) * 175;
-          const oy = (pointerRef.current.y - 0.5) * 108;
+          ctx.rotate((f / cfg.symmetry) * Math.PI * 2 + tick * 0.014);
+          const ox = (pointerRef.current.x - 0.5) * 185;
+          const oy = (pointerRef.current.y - 0.5) * 115;
 
           const channels = [
-            { dx: -shift, color: 'rgba(248, 195, 0, 0.72)' },
-            { dx: 0, color: 'rgba(117, 69, 214, 0.76)' },
-            { dx: shift, color: 'rgba(50, 107, 255, 0.72)' },
+            { dx: -shift, color: 'rgba(248, 195, 0, 0.78)' },
+            { dx: 0, color: 'rgba(117, 69, 214, 0.78)' },
+            { dx: shift, color: 'rgba(50, 107, 255, 0.78)' },
           ];
           channels.forEach((ch) => {
             ctx.strokeStyle = ch.color;
-            ctx.lineWidth = 2;
+            ctx.lineWidth = 2.2;
             ctx.beginPath();
-            ctx.arc(ox + ch.dx, oy, radius, 0, Math.PI * 2);
+            ctx.arc(ox + ch.dx, oy, ringR, 0, Math.PI * 2);
             ctx.stroke();
-            ctx.strokeRect(ox + ch.dx - radius * 0.5, oy - radius * 0.5, radius, radius);
           });
           ctx.restore();
         }
@@ -1375,17 +1728,17 @@ export const InteractiveMediaLab: React.FC<InteractiveMediaLabProps> = ({
       }
 
       if (cfg.artStyle === 'scanline') {
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.16)';
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.22)';
         for (let sy = 0; sy < H; sy += 4) {
           ctx.fillRect(0, sy, W, 1);
         }
       }
 
-      if (tick % 6 === 0) {
+      if (tick % 5 === 0) {
         const noteIdx = Math.floor(
           Math.max(0, Math.min(0.999, pointerRef.current.x)) * AIR_PIANO_NOTES.length
         );
-        const fHz = Math.round(280 + (1 - Math.max(0, Math.min(1, pointerRef.current.y))) * 2500);
+        const fHz = Math.round(320 + (1 - Math.max(0, Math.min(1, pointerRef.current.y))) * 2500);
         setReadout({
           x: Math.round(pointerRef.current.x * 100),
           y: Math.round(pointerRef.current.y * 100),
@@ -1395,9 +1748,11 @@ export const InteractiveMediaLab: React.FC<InteractiveMediaLabProps> = ({
           treble: Math.min(100, Math.round(treble)),
           activeNote: AIR_PIANO_NOTES[noteIdx]?.label || 'C4',
           filterHz: fHz,
-          fingersCount: latestMlRef.current.fingers,
+          fingersCount: latestMlRef.current.fingersTotal,
           mlHandsDetected: latestMlRef.current.hands.length,
           mlFaceDetected: Boolean(latestMlRef.current.face),
+          mouthOpenPct: latestMlRef.current.mouthOpenPct,
+          pinchActive: latestMlRef.current.pinchStates.some(Boolean) || pointerRef.current.down,
         });
       }
 
@@ -1424,7 +1779,8 @@ export const InteractiveMediaLab: React.FC<InteractiveMediaLabProps> = ({
       const idx = Math.floor(Math.max(0, Math.min(0.999, nx)) * AIR_PIANO_NOTES.length);
       if (idx !== lastNoteTriggerRef.current.idx) {
         lastNoteTriggerRef.current = { time: performance.now(), idx };
-        playAirPianoNote(idx, ny);
+        const canvas = canvasRef.current;
+        playAirPianoNote(idx, ny, canvas ? nx * canvas.width : undefined, canvas ? ny * canvas.height : undefined);
       }
     }
   };
@@ -1438,7 +1794,8 @@ export const InteractiveMediaLab: React.FC<InteractiveMediaLabProps> = ({
     if (studioMode === 'hand-face-hud' && gestureSubMode === 'air-piano') {
       const idx = Math.floor(Math.max(0, Math.min(0.999, nx)) * AIR_PIANO_NOTES.length);
       lastNoteTriggerRef.current = { time: performance.now(), idx };
-      playAirPianoNote(idx, ny);
+      const canvas = canvasRef.current;
+      playAirPianoNote(idx, ny, canvas ? nx * canvas.width : undefined, canvas ? ny * canvas.height : undefined);
     }
   };
 
@@ -1452,8 +1809,11 @@ export const InteractiveMediaLab: React.FC<InteractiveMediaLabProps> = ({
   };
 
   const resetLabDefaults = () => {
+    setCameraOpacity(0.78);
+    setAudioGainBoost(1.35);
     applyExperimentPreset(PLAYABLE_EXPERIMENTS[0]);
     particlesRef.current = [];
+    ripplesRef.current = [];
   };
 
   const activeExperiment =
@@ -1471,7 +1831,7 @@ export const InteractiveMediaLab: React.FC<InteractiveMediaLabProps> = ({
       ``,
       `2. ARQUITECTURA ENTRADA → PROCESAMIENTO → SALIDA`,
       `- ENTRADA (Sensor): ${bpSensor}`,
-      `- PROCESAMIENTO: Suavizado exponencial de coordenadas (lerp), detección de gestos o bandas FFT y procesamiento 100% local en el navegador (sin enviar video ni audio a servidores externos).`,
+      `- PROCESAMIENTO: Suavizado exponencial de coordenadas (lerp), detección gestual normalizada por tamaño de palma o bandas FFT y procesamiento 100% local en navegador.`,
       `- TRANSFORMACIÓN Y SALIDA VISUAL: ${bpEngine}`,
       ``,
       `3. TECNOLOGÍA E INTERFAZ`,
@@ -1518,10 +1878,10 @@ export const InteractiveMediaLab: React.FC<InteractiveMediaLabProps> = ({
           </h1>
           <p className="text-sm sm:text-base text-[#4A4A55] dark:text-[#B4B2AC] leading-relaxed">
             Activa tu cámara, micrófono o sube un video/audio de prueba para experimentar con{' '}
-            <strong>tracking gestual (21 puntos estilo MuGeVI)</strong>,{' '}
-            <strong>cuadrícula reactiva (IPD)</strong>,{' '}
-            <strong>esculturas audioreactivas FFT</strong> y{' '}
-            <strong>referentes latinoamericanos y globales</strong>.
+            <strong>tracking real de 2 manos (21 pts · MuGeVI)</strong>,{' '}
+            <strong>malla facial anatómica (478 pts)</strong>,{' '}
+            <strong>cuadrícula reactiva (IPD)</strong> y{' '}
+            <strong>caleidoscopio de video en vivo</strong>.
           </p>
         </div>
 
@@ -1532,7 +1892,7 @@ export const InteractiveMediaLab: React.FC<InteractiveMediaLabProps> = ({
           id="live-sensory-workbench"
           className="rounded-2xl bg-white dark:bg-[#16161C] border border-[#DEDAD0] dark:border-[#26262E] overflow-hidden scroll-mt-24"
         >
-          {/* Off-screen non-hidden media elements (prevents display:none decoder suspension) */}
+          {/* Off-screen non-hidden media elements */}
           <video
             ref={videoRef}
             autoPlay
@@ -1561,12 +1921,11 @@ export const InteractiveMediaLab: React.FC<InteractiveMediaLabProps> = ({
                 1. Mesa de Pruebas Sensoriales en Tiempo Real
               </h2>
               <p className="text-xs text-[#5B5B66] dark:text-[#A09E97]">
-                Procesamiento local en navegador. Si no conectas sensores físicos, toca el lienzo o
-                usa teclas <span className="font-mono-code font-bold">A–K</span>.
+                Procesamiento 100% local en navegador. También puedes tocar el lienzo o usar teclas{' '}
+                <span className="font-mono-code font-bold">A–K</span>.
               </p>
             </div>
 
-            {/* Clean single-row wraps gracefully on mobile */}
             <div className="flex flex-wrap items-center gap-2">
               <button
                 type="button"
@@ -1617,14 +1976,12 @@ export const InteractiveMediaLab: React.FC<InteractiveMediaLabProps> = ({
                 }`}
               >
                 <Upload className="w-4 h-4" />
-                <span>
-                  {uploadedMediaName ? 'Cambiar Video/Audio' : 'Subir Video / Audio'}
-                </span>
+                <span>{uploadedMediaName ? 'Cambiar Video/Audio' : 'Subir Video / Audio'}</span>
               </button>
             </div>
           </div>
 
-          {/* Device selector bar when permissions unlocked */}
+          {/* Device selector bar when unlocked */}
           {(videoDevices.length > 1 || audioDevices.length > 1 || isUploadedVideoOn || isUploadedAudioOn) && (
             <div className="px-4 sm:px-5 py-2.5 bg-[#F4F2ED]/70 dark:bg-[#101014]/70 border-b border-[#DEDAD0] dark:border-[#26262E] flex flex-wrap items-center gap-3 text-xs">
               {videoDevices.length > 1 && (
@@ -1682,7 +2039,7 @@ export const InteractiveMediaLab: React.FC<InteractiveMediaLabProps> = ({
             </div>
           )}
 
-          {/* Diagnostic & Recovery Banner on Permission Block */}
+          {/* Diagnostic & Recovery Banner */}
           {(cameraError || micError) && (
             <div className="px-4 sm:px-5 py-3 bg-[#F8C300]/15 border-b border-[#F8C300]/40 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
               <p className="font-mono-code text-[#101014] dark:text-[#F8C300]">
@@ -1709,7 +2066,7 @@ export const InteractiveMediaLab: React.FC<InteractiveMediaLabProps> = ({
             </div>
           )}
 
-          {/* Primary Modes + 1-Click Presets */}
+          {/* Primary Modes + Clean Single-Row Experiments Strip */}
           <div className="px-4 sm:px-5 pt-4 space-y-3">
             <div className="flex flex-wrap gap-2">
               {[
@@ -1750,28 +2107,27 @@ export const InteractiveMediaLab: React.FC<InteractiveMediaLabProps> = ({
               ))}
             </div>
 
-            {/* 5 Playable Experiment Presets Strip */}
-            <div className="p-2.5 rounded-xl bg-[#F4F2ED] dark:bg-[#101014] border border-[#DEDAD0] dark:border-[#26262E] flex flex-col lg:flex-row lg:items-center justify-between gap-2.5">
-              <div className="flex flex-wrap items-center gap-1.5">
-                <span className="text-[11px] font-mono-code font-bold uppercase text-[#5B5B66] dark:text-[#A09E97] mr-1">
-                  Experimentos:
+            <div className="p-2.5 rounded-xl bg-[#F4F2ED] dark:bg-[#101014] border border-[#DEDAD0] dark:border-[#26262E] space-y-2">
+              <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5">
+                <span className="text-[11px] font-mono-code font-bold uppercase text-[#5B5B66] dark:text-[#A09E97] mr-1 whitespace-nowrap shrink-0">
+                  Presets:
                 </span>
                 {PLAYABLE_EXPERIMENTS.map((preset) => (
                   <button
                     key={preset.id}
                     type="button"
                     onClick={() => applyExperimentPreset(preset)}
-                    className={`px-2.5 py-1.5 min-h-[34px] text-xs font-semibold rounded-md border transition-colors whitespace-nowrap shrink-0 ${
+                    className={`px-3 py-1.5 min-h-[34px] text-xs font-semibold rounded-md border transition-colors whitespace-nowrap shrink-0 ${
                       activePresetId === preset.id
                         ? 'bg-[#7545D6] text-white border-[#7545D6]'
                         : 'bg-white dark:bg-[#16161C] border-[#DEDAD0] dark:border-[#26262E] hover:border-[#7545D6]'
                     }`}
                   >
-                    {preset.title.split('·')[0].trim()}
+                    {EXPERIMENT_SHORT_LABELS[preset.id]}
                   </button>
                 ))}
               </div>
-              <p className="text-[11px] text-[#4A4A55] dark:text-[#B4B2AC] leading-snug lg:text-right max-w-xl">
+              <p className="text-xs text-[#4A4A55] dark:text-[#B4B2AC] leading-snug">
                 {activeExperiment.interactionHint}
               </p>
             </div>
@@ -1779,13 +2135,13 @@ export const InteractiveMediaLab: React.FC<InteractiveMediaLabProps> = ({
 
           {/* 2-Zone Sandbox: 16:9 Stage + Balanced Tabbed Dock */}
           <div className="p-4 sm:p-5 grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
-            {/* LEFT: 16:9 Viewport + Playable Musical Strip + Telemetry */}
+            {/* LEFT: 16:9 Crisp Viewport + Playable Bar + Telemetry */}
             <div className="lg:col-span-8 space-y-3">
-              <div className="rounded-xl overflow-hidden bg-[#101014] border border-[#2C2C36]">
+              <div className="rounded-xl overflow-hidden bg-[#0D0D12] border border-[#2C2C36]">
                 <canvas
                   ref={canvasRef}
-                  width={720}
-                  height={405}
+                  width={960}
+                  height={540}
                   onPointerMove={handleCanvasPointerMove}
                   onPointerDown={handleCanvasPointerDown}
                   onPointerUp={() => {
@@ -1797,12 +2153,12 @@ export const InteractiveMediaLab: React.FC<InteractiveMediaLabProps> = ({
                   className="w-full aspect-video h-auto block cursor-crosshair touch-none"
                 />
 
-                {/* Playable 8-key Air Piano Bar in Hand/Face Mode */}
+                {/* Playable 8-key Air Piano Bar */}
                 {studioMode === 'hand-face-hud' && gestureSubMode === 'air-piano' && (
                   <div className="px-3 py-2 bg-[#16161C] border-t border-[#26262E] flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                     <div className="flex items-center gap-1.5 overflow-x-auto">
                       <span className="text-[11px] font-mono-code text-[#B4B2AC] mr-1 whitespace-nowrap">
-                        Tocar Notas:
+                        Notas:
                       </span>
                       {AIR_PIANO_NOTES.map((note, idx) => (
                         <button
@@ -1825,7 +2181,7 @@ export const InteractiveMediaLab: React.FC<InteractiveMediaLabProps> = ({
                   </div>
                 )}
 
-                {/* Audio Spectrum Meter Bar */}
+                {/* Crisp Telemetry Footer */}
                 <div className="px-3 py-2 bg-[#101014] border-t border-[#26262E] flex flex-wrap items-center justify-between gap-2 text-[11px] font-mono-code text-[#D8D5CD] tabular-nums">
                   <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
                     <span>
@@ -1835,7 +2191,7 @@ export const InteractiveMediaLab: React.FC<InteractiveMediaLabProps> = ({
                           ? 'Webcam Real'
                           : isUploadedVideoOn
                           ? 'Archivo Video'
-                          : 'Cursor / Touch'}
+                          : 'Simulador'}
                       </strong>
                     </span>
                     <span>
@@ -1844,38 +2200,39 @@ export const InteractiveMediaLab: React.FC<InteractiveMediaLabProps> = ({
                         {isMicOn
                           ? 'Micrófono Real'
                           : isUploadedAudioOn
-                          ? 'Audio MP3/WAV'
+                          ? 'Audio Local'
                           : isDroneOn
                           ? 'Dron FFT'
                           : soundEnabled
-                          ? 'Air Piano Synth'
-                          : 'Silenciado'}
+                          ? 'Air Piano'
+                          : 'Silencio'}
                       </strong>
                     </span>
                     {(isCameraOn || isUploadedVideoOn) && (
                       <span>
-                        MediaPipe:{' '}
+                        Tracking:{' '}
                         <strong className="text-[#326BFF]">
                           {mlStatus === 'ready'
-                            ? `${readout.mlHandsDetected} mano(s) · ${readout.fingersCount} dedos`
+                            ? `${readout.mlHandsDetected} mano(s) · ${readout.fingersCount} dedos${
+                                readout.mlFaceDetected ? ' · Rostro OK' : ''
+                              }`
                             : mlStatus === 'loading'
-                            ? 'Cargando...'
+                            ? 'Cargando MediaPipe...'
                             : 'Flujo Óptico'}
                         </strong>
                       </span>
                     )}
                   </div>
                   <div>
-                    XY ({readout.x}%, {readout.y}%) · Mov {readout.motionPct}% · G/M/A{' '}
-                    {readout.bass}/{readout.mids}/{readout.treble}%
+                    Mov {readout.motionPct}% · G/M/A {readout.bass}/{readout.mids}/{readout.treble}%
+                    {readout.pinchActive ? ' · PINZA' : ''}
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* RIGHT: Tabbed Parameter Dock (Fits cleanly alongside canvas without vertical clipping) */}
+            {/* RIGHT: Tabbed Parameter Dock */}
             <div className="lg:col-span-4 p-4 rounded-xl bg-[#F4F2ED] dark:bg-[#101014] border border-[#DEDAD0] dark:border-[#26262E] space-y-4">
-              {/* Header + Quick Snapshot/Reset */}
               <div className="flex items-center justify-between gap-2">
                 <span className="text-xs font-mono-code font-bold uppercase text-[#7545D6] dark:text-[#F8C300] flex items-center gap-1.5">
                   <Sliders className="w-3.5 h-3.5" />
@@ -1901,7 +2258,6 @@ export const InteractiveMediaLab: React.FC<InteractiveMediaLabProps> = ({
                 </div>
               </div>
 
-              {/* 3 Compact Dock Tabs */}
               <div className="grid grid-cols-3 gap-1 p-1 rounded-lg bg-white dark:bg-[#16161C] border border-[#DEDAD0] dark:border-[#26262E]">
                 {(
                   [
@@ -1925,7 +2281,7 @@ export const InteractiveMediaLab: React.FC<InteractiveMediaLabProps> = ({
                 ))}
               </div>
 
-              {/* TAB 1: INTERACCIÓN & TRACKING */}
+              {/* TAB 1: TRACKING */}
               {dockTab === 'interaccion' && (
                 <div className="space-y-3.5">
                   {studioMode === 'hand-face-hud' && (
@@ -1971,10 +2327,10 @@ export const InteractiveMediaLab: React.FC<InteractiveMediaLabProps> = ({
                     />
                   </div>
 
-                  {studioMode === 'hand-face-hud' && (
+                  {studioMode === 'hand-face-hud' && !isCameraOn && !isUploadedVideoOn && (
                     <div className="space-y-1">
                       <div className="flex justify-between text-xs font-mono-code tabular-nums">
-                        <span>Apertura pinza (Pulgar–Índice)</span>
+                        <span>Apertura pinza (Simulador)</span>
                         <span>{Math.round(pinchValue * 100)}%</span>
                       </div>
                       <input
@@ -1989,7 +2345,7 @@ export const InteractiveMediaLab: React.FC<InteractiveMediaLabProps> = ({
                     </div>
                   )}
 
-                  <div className="space-y-2 pt-1 border-t border-[#DEDAD0] dark:border-[#26262E]">
+                  <div className="space-y-2 pt-2 border-t border-[#DEDAD0] dark:border-[#26262E]">
                     <label className="flex items-center gap-2 text-xs font-semibold cursor-pointer">
                       <input
                         type="checkbox"
@@ -1997,7 +2353,17 @@ export const InteractiveMediaLab: React.FC<InteractiveMediaLabProps> = ({
                         onChange={(e) => setShowHudOverlay(e.target.checked)}
                         className="accent-[#F8C300] w-4 h-4"
                       />
-                      <span>Mostrar malla 21 pts & rostro (HUD)</span>
+                      <span>Mostrar esqueleto 21 pts (HUD)</span>
+                    </label>
+
+                    <label className="flex items-center gap-2 text-xs font-semibold cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={showFaceMesh}
+                        onChange={(e) => setShowFaceMesh(e.target.checked)}
+                        className="accent-[#7545D6] w-4 h-4"
+                      />
+                      <span>Contorno facial anatómico (478 pts)</span>
                     </label>
 
                     <label className="flex items-center gap-2 text-xs font-semibold cursor-pointer">
@@ -2012,19 +2378,44 @@ export const InteractiveMediaLab: React.FC<InteractiveMediaLabProps> = ({
                         }}
                         className="accent-[#326BFF] w-4 h-4"
                       />
-                      <span>Motor IA MediaPipe (con cámara/video)</span>
+                      <span>Motor IA MediaPipe (Manos + Cara)</span>
                     </label>
                   </div>
                 </div>
               )}
 
-              {/* TAB 2: AUDIO & SYNTH */}
+              {/* TAB 2: AUDIO */}
               {dockTab === 'audio' && (
                 <div className="space-y-3.5">
+                  {/* Live 3-Band EQ Signal Bars */}
+                  <div className="p-2.5 rounded-lg bg-white dark:bg-[#16161C] border border-[#DEDAD0] dark:border-[#26262E] space-y-2">
+                    <div className="text-[11px] font-mono-code font-bold uppercase text-[#5B5B66] dark:text-[#A09E97]">
+                      Nivel Espectral en Vivo (FFT)
+                    </div>
+                    {[
+                      { label: 'Graves', val: readout.bass, color: 'bg-[#F8C300]' },
+                      { label: 'Medios', val: readout.mids, color: 'bg-[#7545D6]' },
+                      { label: 'Agudos', val: readout.treble, color: 'bg-[#326BFF]' },
+                    ].map((band) => (
+                      <div key={band.label} className="space-y-0.5">
+                        <div className="flex justify-between text-[11px] font-mono-code tabular-nums">
+                          <span>{band.label}</span>
+                          <span>{band.val}%</span>
+                        </div>
+                        <div className="h-1.5 rounded bg-[#E6E2D8] dark:bg-[#26262E] overflow-hidden">
+                          <div
+                            className={`h-full ${band.color} transition-all duration-75`}
+                            style={{ width: `${Math.min(100, band.val)}%` }}
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
                   <div className="flex items-center justify-between p-2.5 rounded-lg bg-white dark:bg-[#16161C] border border-[#DEDAD0] dark:border-[#26262E]">
                     <span className="text-xs font-semibold flex items-center gap-1.5">
                       <Music className="w-3.5 h-3.5 text-[#7545D6] dark:text-[#F8C300]" />
-                      <span>Audio Air Piano (Web Audio)</span>
+                      <span>Audio Air Piano</span>
                     </span>
                     <button
                       type="button"
@@ -2037,6 +2428,22 @@ export const InteractiveMediaLab: React.FC<InteractiveMediaLabProps> = ({
                     >
                       {soundEnabled ? 'Activo' : 'Silencio'}
                     </button>
+                  </div>
+
+                  <div className="space-y-1">
+                    <div className="flex justify-between text-xs font-mono-code tabular-nums">
+                      <span>Ganancia Mic / FFT</span>
+                      <span>{audioGainBoost.toFixed(2)}x</span>
+                    </div>
+                    <input
+                      type="range"
+                      min={0.6}
+                      max={2.4}
+                      step={0.05}
+                      value={audioGainBoost}
+                      onChange={(e) => setAudioGainBoost(Number(e.target.value))}
+                      className="w-full accent-[#326BFF]"
+                    />
                   </div>
 
                   <div className="space-y-1">
@@ -2070,28 +2477,10 @@ export const InteractiveMediaLab: React.FC<InteractiveMediaLabProps> = ({
                       className="w-full accent-[#F8C300]"
                     />
                   </div>
-
-                  <div className="grid grid-cols-2 gap-2 pt-1">
-                    <button
-                      type="button"
-                      onClick={() => playAirPianoNote(Math.floor(Math.random() * 8), pointerRef.current.y)}
-                      className="px-3 py-2 min-h-[38px] text-xs font-bold rounded-lg bg-[#7545D6] text-white inline-flex items-center justify-center gap-1.5"
-                    >
-                      <Play className="w-3.5 h-3.5" />
-                      <span>Disparar Nota</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={toggleDroneSynth}
-                      className="px-3 py-2 min-h-[38px] text-xs font-bold rounded-lg bg-white dark:bg-[#16161C] border border-[#DEDAD0] dark:border-[#26262E]"
-                    >
-                      {isDroneOn ? 'Apagar Dron' : 'Encender Dron'}
-                    </button>
-                  </div>
                 </div>
               )}
 
-              {/* TAB 3: ESTÉTICA & VIDEOARTE */}
+              {/* TAB 3: ESTÉTICA */}
               {dockTab === 'estetica' && (
                 <div className="space-y-3.5">
                   <div className="space-y-1.5">
@@ -2099,7 +2488,7 @@ export const InteractiveMediaLab: React.FC<InteractiveMediaLabProps> = ({
                     <div className="grid grid-cols-2 gap-1.5">
                       {(
                         [
-                          { id: 'particles', label: 'Partículas' },
+                          { id: 'particles', label: 'Nítido / Partículas' },
                           { id: 'feedback', label: 'Eco Feedback' },
                           { id: 'scanline', label: 'Scanline CRT' },
                           { id: 'duotone', label: 'Duotono' },
@@ -2109,7 +2498,7 @@ export const InteractiveMediaLab: React.FC<InteractiveMediaLabProps> = ({
                           key={st.id}
                           type="button"
                           onClick={() => setArtStyle(st.id)}
-                          className={`px-2.5 py-2 text-[11px] font-semibold rounded-lg border transition-colors ${
+                          className={`px-2 py-2 text-[11px] font-semibold rounded-lg border transition-colors ${
                             artStyle === st.id
                               ? 'bg-[#F8C300] text-[#101014] border-[#F8C300]'
                               : 'bg-white dark:bg-[#16161C] border-[#DEDAD0] dark:border-[#26262E]'
@@ -2149,13 +2538,29 @@ export const InteractiveMediaLab: React.FC<InteractiveMediaLabProps> = ({
 
                   <div className="space-y-1">
                     <div className="flex justify-between text-xs font-mono-code tabular-nums">
+                      <span>Visibilidad Cámara (0% Proyección)</span>
+                      <span>{Math.round(cameraOpacity * 100)}%</span>
+                    </div>
+                    <input
+                      type="range"
+                      min={0}
+                      max={1}
+                      step={0.05}
+                      value={cameraOpacity}
+                      onChange={(e) => setCameraOpacity(Number(e.target.value))}
+                      className="w-full accent-[#326BFF]"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <div className="flex justify-between text-xs font-mono-code tabular-nums">
                       <span>Persistencia Feedback</span>
                       <span>{Math.round(feedbackAmount * 100)}%</span>
                     </div>
                     <input
                       type="range"
-                      min={0.74}
-                      max={0.97}
+                      min={0.72}
+                      max={0.96}
                       step={0.01}
                       value={feedbackAmount}
                       onChange={(e) => setFeedbackAmount(Number(e.target.value))}

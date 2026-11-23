@@ -16,6 +16,7 @@ const DESKTOP_NAV_ITEMS: { id: AppSectionId; label: string; href: string }[] = [
   { id: 'galeria', label: 'Galería', href: '#galeria' },
   { id: 'biblioteca', label: 'Biblioteca', href: '#biblioteca' },
   { id: 'laboratorios', label: 'Laboratorios', href: '#laboratorios' },
+  { id: 'experiencias', label: 'Experiencias', href: '#experiencias' },
   { id: 'film-director', label: 'Planificador', href: '#film-director' },
   { id: 'academia', label: 'Apps IA', href: '#herramientas-academia' },
   { id: 'etica-ia', label: 'Ética IA', href: '#etica-ia' },
@@ -53,6 +54,12 @@ const MOBILE_NAV_ITEMS: { id: AppSectionId; label: string; subtitle: string; hre
     label: 'Laboratorios Creativos (8 Estudios)',
     subtitle: 'Mi Primera Imagen, Dibujo, Restauración, Producto, Web IA, Interactivo/Videoarte, Simuladores y JSON',
     href: '#laboratorios',
+  },
+  {
+    id: 'experiencias',
+    label: 'Nuevos Laboratorios, Retos & Experimentos',
+    subtitle: '26 labs guiados (A–F), 10 Retos Express, 8 Desafíos, 8 Experimentos Abiertos y Galería',
+    href: '#experiencias',
   },
   {
     id: 'film-director',
