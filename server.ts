@@ -370,7 +370,7 @@ Tono estético: "${tone}"`;
   }
 });
 
-const DEFAULT_OG_ORIGIN = 'https://ais-pre-tbldyjlea2vhfyyffftzu5-586043043701.us-east1.run.app';
+const DEFAULT_OG_ORIGIN = 'https://prompt-lab-eight-sigma.vercel.app';
 
 function resolvePublicOrigin(req: Request): string {
   const rawHost = (req.headers['x-forwarded-host'] || req.headers.host || '')
