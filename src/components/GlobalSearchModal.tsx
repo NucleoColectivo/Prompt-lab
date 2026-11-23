@@ -8,6 +8,8 @@ import {
   Terminal,
   BookOpen,
   Sliders,
+  FlaskConical,
+  PlayCircle,
 } from 'lucide-react';
 import { ResilientImage } from './ResilientImage';
 import {
@@ -31,8 +33,23 @@ import {
   EXTENDED_LIBRARY_ENTRIES,
   EXTENDED_MODULES_META,
 } from '../data/extendedModulesData';
+import {
+  CREATIVE_LAB_EXPERIENCES,
+  type CreativeLabExperience,
+} from '../data/creativeExperiencesData';
+import {
+  STEP_BY_STEP_TUTORIALS,
+  type StepByStepTutorial,
+} from '../data/resourcesTutorialsData';
 
-type SearchTab = 'all' | 'gallery' | 'modules' | 'commands' | 'recipes';
+type SearchTab =
+  | 'all'
+  | 'gallery'
+  | 'experiences'
+  | 'modules'
+  | 'tutorials'
+  | 'commands'
+  | 'recipes';
 
 interface GlobalSearchModalProps {
   isOpen: boolean;
@@ -44,12 +61,12 @@ interface GlobalSearchModalProps {
   onAddCommandToBuilder: (cmd: CommandItem) => void;
   onSelectCommandForModal: (cmd: CommandItem) => void;
   onLoadRecipeToBuilder: (recipeId: string) => void;
+  onOpenExperiences?: () => void;
+  onOpenTutorials?: () => void;
+  onSendStarterPromptToBuilder?: (prompt: string, styleTitle: string) => void;
 }
 
-const ALL_MODULES_META = [
-  ...MODULES_META,
-  ...EXTENDED_MODULES_META,
-];
+const ALL_MODULES_META = [...MODULES_META, ...EXTENDED_MODULES_META];
 
 const ALL_LIBRARY_ENTRIES: LibraryEntry[] = [
   ...MODULES_01_TO_05_ENTRIES,
@@ -67,6 +84,9 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({
   onAddCommandToBuilder,
   onSelectCommandForModal,
   onLoadRecipeToBuilder,
+  onOpenExperiences,
+  onOpenTutorials,
+  onSendStarterPromptToBuilder,
 }) => {
   const [query, setQuery] = useState('');
   const [activeTab, setActiveTab] = useState<SearchTab>('all');
@@ -85,7 +105,9 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({
     if (!q) {
       return {
         gallery: GALLERY_VISUAL_ITEMS.slice(0, 4),
+        experiences: CREATIVE_LAB_EXPERIENCES.slice(0, 4),
         modules: ALL_LIBRARY_ENTRIES.slice(0, 4),
+        tutorials: STEP_BY_STEP_TUTORIALS.slice(0, 4),
         commands: MASTER_COMMANDS.slice(0, 6),
         recipes: RECIPES.slice(0, 4),
       };
@@ -97,12 +119,23 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({
         g.collection.toLowerCase().includes(q) ||
         g.style.toLowerCase().includes(q) ||
         g.technique.toLowerCase().includes(q) ||
+        g.toolReference.toLowerCase().includes(q) ||
         g.specs.camera.toLowerCase().includes(q) ||
         g.specs.lens.toLowerCase().includes(q) ||
         g.specs.lighting.toLowerCase().includes(q) ||
         g.tags.some((t) => t.toLowerCase().includes(q)) ||
         g.promptEs.toLowerCase().includes(q) ||
         g.promptEn.toLowerCase().includes(q)
+    );
+
+    const experiences = CREATIVE_LAB_EXPERIENCES.filter(
+      (exp: CreativeLabExperience) =>
+        exp.title.toLowerCase().includes(q) ||
+        exp.code.toLowerCase().includes(q) ||
+        exp.description.toLowerCase().includes(q) ||
+        exp.exercise.toLowerCase().includes(q) ||
+        exp.starterPrompt.toLowerCase().includes(q) ||
+        exp.tools.some((t) => t.toLowerCase().includes(q))
     );
 
     const modules = ALL_LIBRARY_ENTRIES.filter(
@@ -113,6 +146,15 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({
         entry.explanation.toLowerCase().includes(q) ||
         entry.tags.some((t) => t.toLowerCase().includes(q)) ||
         entry.prompt_examples.es.toLowerCase().includes(q)
+    );
+
+    const tutorials = STEP_BY_STEP_TUTORIALS.filter(
+      (tut: StepByStepTutorial) =>
+        tut.title.toLowerCase().includes(q) ||
+        tut.tool.toLowerCase().includes(q) ||
+        tut.category.toLowerCase().includes(q) ||
+        tut.summary.toLowerCase().includes(q) ||
+        tut.practicalExercise.title.toLowerCase().includes(q)
     );
 
     const commands = MASTER_COMMANDS.filter(
@@ -132,7 +174,7 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({
         r.commands.some((c) => c.toLowerCase().includes(q))
     );
 
-    return { gallery, modules, commands, recipes };
+    return { gallery, experiences, modules, tutorials, commands, recipes };
   }, [query]);
 
   if (!isOpen) return null;
@@ -140,7 +182,9 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({
   const limit = activeTab === 'all' ? 4 : 18;
   const totalCount =
     results.gallery.length +
+    results.experiences.length +
     results.modules.length +
+    results.tutorials.length +
     results.commands.length +
     results.recipes.length;
 
@@ -148,14 +192,14 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({
 
   return (
     <div
-      className="fixed inset-0 z-50 bg-[#101014]/75 backdrop-blur-sm flex items-start justify-center p-4 pt-12 sm:pt-20"
+      className="fixed inset-0 z-50 bg-[#101014]/75 backdrop-blur-sm flex items-start justify-center p-4 pt-10 sm:pt-16"
       role="dialog"
       aria-modal="true"
       aria-label="Buscador global del laboratorio"
       onClick={onClose}
     >
       <div
-        className="w-full max-w-3xl bg-[#F4F2ED] dark:bg-[#16161C] border border-[#DEDAD0] dark:border-[#26262E] rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[82vh]"
+        className="w-full max-w-3xl bg-[#F4F2ED] dark:bg-[#16161C] border border-[#DEDAD0] dark:border-[#26262E] rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[84vh]"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Search Input Header */}
@@ -166,7 +210,7 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({
             autoFocus
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Buscar en 40 láminas, 130 fichas de 26 módulos, 47 comandos y 8 recetas..."
+            placeholder="Buscar en galería, 26 experiencias, 26 módulos, 12 tutoriales, comandos y recetas..."
             className="flex-1 bg-transparent text-sm text-[#101014] dark:text-[#F4F2ED] placeholder:text-[#787670] focus:outline-none"
           />
           {query && (
@@ -194,7 +238,9 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({
             [
               { id: 'all', label: `Todos (${totalCount})` },
               { id: 'gallery', label: `Galería (${results.gallery.length})` },
-              { id: 'modules', label: `26 Módulos (${results.modules.length})` },
+              { id: 'experiences', label: `Experiencias (${results.experiences.length})` },
+              { id: 'modules', label: `Módulos (${results.modules.length})` },
+              { id: 'tutorials', label: `Tutoriales (${results.tutorials.length})` },
               { id: 'commands', label: `Comandos (${results.commands.length})` },
               { id: 'recipes', label: `Recetas (${results.recipes.length})` },
             ] as const
@@ -223,10 +269,10 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({
               </p>
               <p className="text-xs text-[#5B5B66] dark:text-[#A09E97]">
                 Prueba con términos como <span className="font-mono-code">Rembrandt</span>,{' '}
-                <span className="font-mono-code">85mm</span>,{' '}
-                <span className="font-mono-code">anamorphic</span>,{' '}
-                <span className="font-mono-code">storyboard</span> o{' '}
-                <span className="font-mono-code">Kodak</span>.
+                <span className="font-mono-code">Midjourney</span>,{' '}
+                <span className="font-mono-code">cartel</span>,{' '}
+                <span className="font-mono-code">Runway</span> o{' '}
+                <span className="font-mono-code">85mm</span>.
               </p>
             </div>
           ) : (
@@ -300,7 +346,134 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({
                 </div>
               )}
 
-              {/* 2. Fichas de la Biblioteca (26 Módulos) */}
+              {/* 2. Experiencias y Laboratorios Guiados (26) */}
+              {(activeTab === 'all' || activeTab === 'experiences') &&
+                results.experiences.length > 0 && (
+                  <div className="space-y-2.5">
+                    <div className="flex items-center justify-between">
+                      <div className="text-[11px] font-mono-code font-bold uppercase tracking-wider text-[#326BFF] dark:text-[#F8C300] flex items-center gap-1.5">
+                        <FlaskConical className="w-3.5 h-3.5" />
+                        <span>Experiencias y Laboratorios ({results.experiences.length})</span>
+                      </div>
+                      {activeTab === 'all' && results.experiences.length > 4 && (
+                        <button
+                          type="button"
+                          onClick={() => setActiveTab('experiences')}
+                          className="text-[11px] font-mono-code text-[#326BFF] hover:underline"
+                        >
+                          Ver todas →
+                        </button>
+                      )}
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                      {results.experiences.slice(0, limit).map((exp) => (
+                        <div
+                          key={exp.id}
+                          className="p-3 rounded-xl bg-white dark:bg-[#101014] border border-[#DEDAD0] dark:border-[#26262E] hover:border-[#326BFF] transition-colors flex flex-col justify-between gap-2"
+                        >
+                          <div>
+                            <div className="text-[10px] font-mono-code text-[#7545D6] dark:text-[#F8C300] font-semibold">
+                              {exp.code} · {exp.level} · {exp.duration}
+                            </div>
+                            <div className="text-xs font-bold text-[#101014] dark:text-[#F4F2ED] mt-0.5 truncate">
+                              {exp.title}
+                            </div>
+                            <p className="text-[11px] text-[#5B5B66] dark:text-[#A09E97] line-clamp-2 mt-1">
+                              {exp.exercise}
+                            </p>
+                          </div>
+                          <div className="flex items-center gap-2 pt-1">
+                            {onOpenExperiences && (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  onClose();
+                                  onOpenExperiences();
+                                }}
+                                className="text-[10px] font-mono-code font-semibold text-[#326BFF] hover:underline inline-flex items-center gap-1"
+                              >
+                                <span>Ir a Experiencias</span>
+                                <ArrowRight className="w-2.5 h-2.5" />
+                              </button>
+                            )}
+                            {onSendStarterPromptToBuilder && (
+                              <>
+                                <span className="text-[#DEDAD0] dark:text-[#2C2C36]">·</span>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    onClose();
+                                    onSendStarterPromptToBuilder(exp.starterPrompt, exp.title);
+                                  }}
+                                  className="text-[10px] font-mono-code font-bold text-[#101014] dark:text-[#F8C300] hover:underline"
+                                >
+                                  Abrir en Constructor
+                                </button>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+              {/* 3. Tutoriales Paso a Paso (12) */}
+              {(activeTab === 'all' || activeTab === 'tutorials') &&
+                results.tutorials.length > 0 && (
+                  <div className="space-y-2.5">
+                    <div className="flex items-center justify-between">
+                      <div className="text-[11px] font-mono-code font-bold uppercase tracking-wider text-[#7545D6] dark:text-[#F8C300] flex items-center gap-1.5">
+                        <PlayCircle className="w-3.5 h-3.5" />
+                        <span>Tutoriales en Video ({results.tutorials.length})</span>
+                      </div>
+                      {activeTab === 'all' && results.tutorials.length > 4 && (
+                        <button
+                          type="button"
+                          onClick={() => setActiveTab('tutorials')}
+                          className="text-[11px] font-mono-code text-[#326BFF] hover:underline"
+                        >
+                          Ver todos →
+                        </button>
+                      )}
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                      {results.tutorials.slice(0, limit).map((tut) => (
+                        <div
+                          key={tut.id}
+                          className="p-3 rounded-xl bg-white dark:bg-[#101014] border border-[#DEDAD0] dark:border-[#26262E] hover:border-[#F8C300] transition-colors flex flex-col justify-between gap-2"
+                        >
+                          <div>
+                            <div className="text-[10px] font-mono-code text-[#326BFF] dark:text-[#F8C300] font-semibold">
+                              {tut.tool} · {tut.level} · {tut.duration}
+                            </div>
+                            <div className="text-xs font-bold text-[#101014] dark:text-[#F4F2ED] mt-0.5 line-clamp-1">
+                              {tut.title}
+                            </div>
+                            <p className="text-[11px] text-[#5B5B66] dark:text-[#A09E97] line-clamp-2 mt-1">
+                              {tut.summary}
+                            </p>
+                          </div>
+                          {onOpenTutorials && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                onClose();
+                                onOpenTutorials();
+                              }}
+                              className="text-[10px] font-mono-code font-semibold text-[#326BFF] hover:underline inline-flex items-center gap-1 self-start"
+                            >
+                              <span>Ver guía en video</span>
+                              <ArrowRight className="w-2.5 h-2.5" />
+                            </button>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+              {/* 4. Fichas de la Biblioteca (26 Módulos) */}
               {(activeTab === 'all' || activeTab === 'modules') && results.modules.length > 0 && (
                 <div className="space-y-2.5">
                   <div className="flex items-center justify-between">
@@ -365,7 +538,7 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({
                 </div>
               )}
 
-              {/* 3. Comandos Maestros */}
+              {/* 5. Comandos Maestros */}
               {(activeTab === 'all' || activeTab === 'commands') && results.commands.length > 0 && (
                 <div className="space-y-2.5">
                   <div className="flex items-center justify-between">
@@ -420,7 +593,7 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({
                 </div>
               )}
 
-              {/* 4. Recetas Maestras */}
+              {/* 6. Recetas Maestras */}
               {(activeTab === 'all' || activeTab === 'recipes') && results.recipes.length > 0 && (
                 <div className="space-y-2.5">
                   <div className="text-[11px] font-mono-code font-bold uppercase tracking-wider text-[#4A4A55] dark:text-[#A09E97] flex items-center gap-1.5">
@@ -460,8 +633,8 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({
 
         {/* Footer tip */}
         <div className="px-4 py-2.5 border-t border-[#DEDAD0] dark:border-[#26262E] bg-white dark:bg-[#101014] flex items-center justify-between text-[11px] font-mono-code text-[#5B5B66] dark:text-[#A09E97]">
-          <span>Esc para cerrar</span>
-          <span>Búsqueda local instantánea sin API</span>
+          <span>Esc para cerrar · ⌘K / Ctrl+K para abrir</span>
+          <span>Búsqueda unificada en toda la plataforma</span>
         </div>
       </div>
     </div>

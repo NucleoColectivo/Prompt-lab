@@ -26,7 +26,11 @@ import {
   Clapperboard,
   FlaskConical,
   FileText,
+  Award,
+  Flame,
+  Repeat2,
 } from 'lucide-react';
+import { RecreateImageModal } from './RecreateImageModal';
 import {
   GALLERY_COLLECTIONS,
   GALLERY_VISUAL_ITEMS,
@@ -92,12 +96,14 @@ export const VisualGalleryView: React.FC<VisualGalleryViewProps> = ({
   const [mediaFilter, setMediaFilter] = useState<'all' | 'image' | 'video'>('all');
   const [activeTag, setActiveTag] = useState<string>('');
   const [onlyFavorites, setOnlyFavorites] = useState(false);
+  const [curationFilter, setCurationFilter] = useState<'all' | 'editorial' | 'trending'>('all');
   const [sortBy, setSortBy] = useState<SortOption>('curated');
   const [layoutMode, setLayoutMode] = useState<LayoutMode>('masonry');
 
   const [promptLang, setPromptLang] = useState<'es' | 'en'>('es');
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [lightboxItem, setLightboxItem] = useState<GalleryVisualItem | null>(null);
+  const [recreateTarget, setRecreateTarget] = useState<GalleryVisualItem | null>(null);
   const [lightboxDraftPrompt, setLightboxDraftPrompt] = useState('');
   const [appliedVariationPatch, setAppliedVariationPatch] =
     useState<PromptVariationOption['patch'] | null>(null);
@@ -150,6 +156,33 @@ export const VisualGalleryView: React.FC<VisualGalleryViewProps> = ({
     [normalizedActiveCollection]
   );
 
+  const editorialPickIds = useMemo(() => {
+    const picked = new Set<string>();
+    const perCollection: Record<string, number> = {};
+    for (const item of GALLERY_VISUAL_ITEMS) {
+      const count = perCollection[item.collection] || 0;
+      if (count < 2) {
+        picked.add(item.id);
+        perCollection[item.collection] = count + 1;
+      }
+    }
+    return picked;
+  }, []);
+
+  const trendingIds = useMemo(() => {
+    const trends = new Set<string>();
+    for (const item of GALLERY_VISUAL_ITEMS) {
+      const text = `${item.style} ${item.technique} ${item.tags.join(' ')}`.toLowerCase();
+      if (
+        item.mediaType === 'video' ||
+        /brutalist|3d|generativ|anamorph|noir|híbrid|splash|macro|json|editorial/.test(text)
+      ) {
+        trends.add(item.id);
+      }
+    }
+    return trends;
+  }, []);
+
   const filteredItems = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
     const list = GALLERY_VISUAL_ITEMS.filter((item) => {
@@ -160,12 +193,17 @@ export const VisualGalleryView: React.FC<VisualGalleryViewProps> = ({
       const matchMedia = mediaFilter === 'all' || item.mediaType === mediaFilter;
       const matchTag = !activeTag || item.tags.includes(activeTag);
       const matchFav = !onlyFavorites || favorites.includes(item.id);
+      const matchCuration =
+        curationFilter === 'all' ||
+        (curationFilter === 'editorial' && editorialPickIds.has(item.id)) ||
+        (curationFilter === 'trending' && trendingIds.has(item.id));
       const matchQuery =
         !q ||
         item.code.toLowerCase().includes(q) ||
         item.title.toLowerCase().includes(q) ||
         item.description.toLowerCase().includes(q) ||
         item.technicalExplanation.toLowerCase().includes(q) ||
+        item.toolReference.toLowerCase().includes(q) ||
         item.promptEs.toLowerCase().includes(q) ||
         item.promptEn.toLowerCase().includes(q) ||
         item.specs.camera.toLowerCase().includes(q) ||
@@ -179,6 +217,7 @@ export const VisualGalleryView: React.FC<VisualGalleryViewProps> = ({
         matchMedia &&
         matchTag &&
         matchFav &&
+        matchCuration &&
         matchQuery
       );
     });
@@ -201,6 +240,9 @@ export const VisualGalleryView: React.FC<VisualGalleryViewProps> = ({
     mediaFilter,
     activeTag,
     onlyFavorites,
+    curationFilter,
+    editorialPickIds,
+    trendingIds,
     favorites,
     searchQuery,
     sortBy,
@@ -213,6 +255,7 @@ export const VisualGalleryView: React.FC<VisualGalleryViewProps> = ({
     mediaFilter !== 'all' ||
     activeTag !== '' ||
     onlyFavorites ||
+    curationFilter !== 'all' ||
     searchQuery.trim() !== '';
 
   const resetAllFilters = () => {
@@ -222,6 +265,7 @@ export const VisualGalleryView: React.FC<VisualGalleryViewProps> = ({
     setMediaFilter('all');
     setActiveTag('');
     setOnlyFavorites(false);
+    setCurationFilter('all');
     setSearchQuery('');
     setSortBy('curated');
   };
@@ -767,6 +811,36 @@ export const VisualGalleryView: React.FC<VisualGalleryViewProps> = ({
 
               <button
                 type="button"
+                onClick={() =>
+                  setCurationFilter((prev) => (prev === 'editorial' ? 'all' : 'editorial'))
+                }
+                className={`px-3 py-1.5 text-xs font-semibold rounded-lg border transition-colors inline-flex items-center gap-1.5 ${
+                  curationFilter === 'editorial'
+                    ? 'bg-[#101014] dark:bg-[#F8C300] text-[#F4F2ED] dark:text-[#101014] border-transparent font-bold'
+                    : 'bg-[#F4F2ED] dark:bg-[#101014] text-[#4A4A55] dark:text-[#B4B2AC] border-[#DEDAD0] dark:border-[#26262E] hover:border-[#F8C300]'
+                }`}
+              >
+                <Award className="w-3 h-3" />
+                <span>Selección Editorial ({editorialPickIds.size})</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() =>
+                  setCurationFilter((prev) => (prev === 'trending' ? 'all' : 'trending'))
+                }
+                className={`px-3 py-1.5 text-xs font-semibold rounded-lg border transition-colors inline-flex items-center gap-1.5 ${
+                  curationFilter === 'trending'
+                    ? 'bg-[#F8C300] text-[#101014] border-[#F8C300] font-bold'
+                    : 'bg-[#F4F2ED] dark:bg-[#101014] text-[#4A4A55] dark:text-[#B4B2AC] border-[#DEDAD0] dark:border-[#26262E] hover:border-[#F8C300]'
+                }`}
+              >
+                <Flame className="w-3 h-3" />
+                <span>Tendencias ({trendingIds.size})</span>
+              </button>
+
+              <button
+                type="button"
                 onClick={() => setOnlyFavorites((prev) => !prev)}
                 className={`px-3 py-1.5 text-xs font-semibold rounded-lg border transition-colors inline-flex items-center gap-1.5 ${
                   onlyFavorites
@@ -942,6 +1016,12 @@ export const VisualGalleryView: React.FC<VisualGalleryViewProps> = ({
                           <strong className="text-[#101014] dark:text-[#F4F2ED]">Luz:</strong>{' '}
                           {item.specs.lighting}
                         </div>
+                        <div>
+                          <strong className="text-[#101014] dark:text-[#F4F2ED]">Herramienta:</strong>{' '}
+                          <span className="font-mono-code text-[#326BFF] dark:text-[#F8C300]">
+                            {item.toolReference}
+                          </span>
+                        </div>
                       </div>
 
                       {/* Prompt Snippet */}
@@ -998,19 +1078,29 @@ export const VisualGalleryView: React.FC<VisualGalleryViewProps> = ({
                   <div className="px-5 pb-5 pt-3 border-t border-[#DEDAD0] dark:border-[#26262E] flex flex-wrap items-center gap-2">
                     <button
                       type="button"
-                      onClick={() => sendItemToBuilder(item)}
+                      onClick={() => setRecreateTarget(item)}
                       className="flex-1 py-2.5 px-3 text-xs font-bold bg-[#F8C300] hover:bg-[#e5b400] text-[#101014] rounded-lg transition-colors flex items-center justify-center gap-1.5 whitespace-nowrap"
                     >
-                      <Sparkles className="w-3.5 h-3.5" />
-                      <span>Probar en Constructor</span>
+                      <Repeat2 className="w-3.5 h-3.5" />
+                      <span>Recrear imagen</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => sendItemToBuilder(item)}
+                      className="py-2.5 px-3 text-xs font-semibold rounded-lg border border-[#D4D0C5] dark:border-[#2C2C36] hover:border-[#326BFF] text-[#101014] dark:text-[#F4F2ED] transition-colors inline-flex items-center gap-1.5 whitespace-nowrap"
+                      title="Abrir parámetros en el Constructor Modular"
+                    >
+                      <Sparkles className="w-3.5 h-3.5 text-[#326BFF] dark:text-[#F8C300]" />
+                      <span>Constructor</span>
                     </button>
                     <button
                       type="button"
                       onClick={() => openLightbox(item, 'lighting')}
-                      className="py-2.5 px-3 text-xs font-semibold rounded-lg border border-[#D4D0C5] dark:border-[#2C2C36] hover:border-[#326BFF] text-[#101014] dark:text-[#F4F2ED] transition-colors inline-flex items-center gap-1.5 whitespace-nowrap"
+                      className="py-2.5 px-3 text-xs font-semibold rounded-lg border border-[#D4D0C5] dark:border-[#2C2C36] hover:border-[#7545D6] text-[#101014] dark:text-[#F4F2ED] transition-colors inline-flex items-center gap-1.5 whitespace-nowrap"
+                      title="Abrir ficha e investigación de 5 caminos"
                     >
                       <FlaskConical className="w-3.5 h-3.5 text-[#7545D6] dark:text-[#F8C300]" />
-                      <span>Investigar (5 caminos)</span>
+                      <span>5 caminos</span>
                     </button>
                   </div>
                 </article>
@@ -1579,6 +1669,19 @@ export const VisualGalleryView: React.FC<VisualGalleryViewProps> = ({
                 <div className="pt-1 grid grid-cols-1 sm:flex sm:flex-wrap items-center gap-2.5">
                   <button
                     type="button"
+                    onClick={() => {
+                      const target = lightboxItem;
+                      setLightboxItem(null);
+                      setRecreateTarget(target);
+                    }}
+                    className="sm:flex-1 py-3 px-4 min-h-[44px] text-xs sm:text-sm font-bold bg-[#F8C300] hover:bg-[#e5b400] text-[#101014] rounded-xl transition-colors flex items-center justify-center gap-2 whitespace-nowrap"
+                  >
+                    <Repeat2 className="w-4 h-4 shrink-0" />
+                    <span>Recrear esta imagen</span>
+                  </button>
+
+                  <button
+                    type="button"
                     onClick={() =>
                       sendItemToBuilder(
                         lightboxItem,
@@ -1587,10 +1690,10 @@ export const VisualGalleryView: React.FC<VisualGalleryViewProps> = ({
                         false
                       )
                     }
-                    className="sm:flex-1 py-3 px-4 min-h-[44px] text-xs sm:text-sm font-bold bg-[#F8C300] hover:bg-[#e5b400] text-[#101014] rounded-xl transition-colors flex items-center justify-center gap-2 whitespace-nowrap"
+                    className="py-3 px-4 min-h-[44px] text-xs font-bold bg-[#101014] dark:bg-[#F4F2ED] text-[#F4F2ED] dark:text-[#101014] hover:opacity-90 rounded-xl transition-opacity inline-flex items-center justify-center gap-1.5 whitespace-nowrap"
                   >
-                    <Sparkles className="w-4 h-4 shrink-0" />
-                    <span>Probar en Constructor</span>
+                    <Sparkles className="w-3.5 h-3.5 shrink-0" />
+                    <span>Constructor</span>
                   </button>
 
                   <button
@@ -1603,7 +1706,7 @@ export const VisualGalleryView: React.FC<VisualGalleryViewProps> = ({
                     className="py-3 px-3.5 min-h-[44px] text-xs font-semibold rounded-xl border border-[#D4D0C5] dark:border-[#2C2C36] bg-white dark:bg-[#101014] hover:border-[#326BFF] inline-flex items-center justify-center gap-1.5 whitespace-nowrap"
                   >
                     <BookOpen className="w-3.5 h-3.5 text-[#326BFF]" />
-                    <span>Ver Módulo</span>
+                    <span>Módulo</span>
                   </button>
 
                   {onAnalyzeInJsonLab && liveJsonProfile && (
@@ -1627,6 +1730,14 @@ export const VisualGalleryView: React.FC<VisualGalleryViewProps> = ({
           </div>
         </div>
       )}
+
+      {/* Recreate This Image Workflow Modal */}
+      <RecreateImageModal
+        item={recreateTarget}
+        initialLang={promptLang}
+        onClose={() => setRecreateTarget(null)}
+        onSendToBuilder={onExperimentInBuilder}
+      />
     </section>
   );
 };
