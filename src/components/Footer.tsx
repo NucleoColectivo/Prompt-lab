@@ -1,6 +1,7 @@
 import React from 'react';
 import { ArrowUp } from 'lucide-react';
 import type { AppSectionId } from '../types/navigation';
+import { PLATFORM_METRICS } from '../data/platformMetrics';
 
 interface FooterProps {
   onNavigateSection: (section: AppSectionId, subTab?: string) => void;
@@ -37,7 +38,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavigateSection }) => {
               Plataforma cultural, artística y tecnológica que integra arte, tecnología, inteligencia artificial, comunidad y experimentación creativa. Dirección de arte y diseño por Manuel.
             </p>
             <div className="text-[11px] font-mono-code text-[#5B5B66] dark:text-[#8E8C85]">
-              8 Colecciones · 26 Módulos · 6 Labs + JSON · 31 Apps IA
+              {PLATFORM_METRICS.galleryPlates} Láminas · {PLATFORM_METRICS.modules} Módulos · {PLATFORM_METRICS.labsCount} Laboratorios · {PLATFORM_METRICS.aiTools} Apps IA
             </div>
           </div>
 
@@ -94,11 +95,29 @@ export const Footer: React.FC<FooterProps> = ({ onNavigateSection }) => {
               </li>
               <li>
                 <a
+                  href="#moodboard"
+                  onClick={(e) => handleLink(e, 'laboratorios', 'moodboard')}
+                  className="hover:text-[#326BFF] dark:hover:text-[#F8C300] transition-colors font-semibold text-[#101014] dark:text-[#F4F2ED]"
+                >
+                  Moodboard Builder · Dirección de Arte
+                </a>
+              </li>
+              <li>
+                <a
+                  href="#iluminacion"
+                  onClick={(e) => handleLink(e, 'laboratorios', 'iluminacion')}
+                  className="hover:text-[#326BFF] dark:hover:text-[#F8C300] transition-colors font-semibold text-[#101014] dark:text-[#F4F2ED]"
+                >
+                  Simulador de Iluminación (9 Parámetros)
+                </a>
+              </li>
+              <li>
+                <a
                   href="#laboratorios"
                   onClick={(e) => handleLink(e, 'laboratorios', 'labs')}
                   className="hover:text-[#326BFF] dark:hover:text-[#F8C300] transition-colors"
                 >
-                  5 Simuladores Creativos & Lab JSON Visual
+                  {PLATFORM_METRICS.labsCount} Laboratorios Creativos &amp; Lab JSON Visual
                 </a>
               </li>
               <li>
@@ -107,7 +126,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavigateSection }) => {
                   onClick={(e) => handleLink(e, 'experiencias')}
                   className="hover:text-[#326BFF] dark:hover:text-[#F8C300] transition-colors font-semibold text-[#101014] dark:text-[#F4F2ED]"
                 >
-                  Nuevos Laboratorios (26), Retos Express & Experimentos
+                  Experiencias Guiadas ({PLATFORM_METRICS.experiences}), Retos Express &amp; Experimentos
                 </a>
               </li>
               <li>
@@ -125,7 +144,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavigateSection }) => {
                   onClick={(e) => handleLink(e, 'builder')}
                   className="hover:text-[#326BFF] dark:hover:text-[#F8C300] transition-colors"
                 >
-                  Constructor de Prompts (12 Módulos) & Exportador PDF/PNG
+                  Constructor Modular ({PLATFORM_METRICS.disciplines} Disciplinas) &amp; Exportador
                 </a>
               </li>
               <li>
@@ -161,7 +180,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavigateSection }) => {
                   onClick={(e) => handleLink(e, 'favoritos')}
                   className="hover:text-[#7545D6] dark:hover:text-[#F8C300] transition-colors font-semibold text-[#101014] dark:text-[#F4F2ED]"
                 >
-                  Favoritos y Colecciones Guardadas
+                  Mis Proyectos, Bitácora Creativa y Moodboards
                 </a>
               </li>
               <li>

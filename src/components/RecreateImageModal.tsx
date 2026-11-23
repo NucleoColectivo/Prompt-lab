@@ -247,8 +247,20 @@ export const RecreateImageModal: React.FC<RecreateImageModalProps> = ({
     const variation =
       selectedVariationIdx !== null ? item.variations[selectedVariationIdx] : null;
     const ctx = CONTEXT_OVERRIDES.find((c) => c.id === contextId);
+    const isVideo = platform === 'runway' || item.mediaType === 'video';
+    const categoryMap: Record<GalleryCollectionId, NonNullable<PromptBuilderState['category']>> = {
+      Retrato: 'photo',
+      Paisaje: 'architecture',
+      Producto: 'branding',
+      'Arte Digital': 'experimental',
+      Moda: 'photo',
+      Cine: 'photo',
+      'Macro y Naturaleza': 'photo',
+      'Motion y Video': 'video',
+    };
     onSendToBuilder({
-      mode: platform === 'runway' || item.mediaType === 'video' ? 'video' : 'photo',
+      mode: isVideo ? 'video' : 'photo',
+      category: isVideo ? 'video' : categoryMap[item.collection] || 'photo',
       subject: customSubject.trim() || item.title,
       setting: ctx && ctx.id !== 'keep' ? ctx.es : item.description,
       composition: item.specs.composition,
@@ -259,12 +271,14 @@ export const RecreateImageModal: React.FC<RecreateImageModalProps> = ({
       colorPalette: variation?.patch?.colorPalette || item.specs.color,
       atmosphere: item.specs.atmosphere,
       texture: item.specs.texture,
+      materials: item.specs.texture,
       visualStyle: item.style,
       aspectRatio: variation?.patch?.aspectRatio || item.aspectRatio,
       negativeAvoid: item.negativePrompt
         .split(',')
         .map((s) => s.trim())
         .filter(Boolean),
+      customNotes: `Galería · Recreación de ${item.code} (${item.title})`,
     });
     onClose();
   };

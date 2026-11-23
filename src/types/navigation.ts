@@ -24,6 +24,8 @@ export type PrimaryNavAxis =
   | 'favoritos';
 
 export type LabSubSection =
+  | 'moodboard'
+  | 'iluminacion'
   | 'principiante'
   | 'dibujo'
   | 'restauracion'

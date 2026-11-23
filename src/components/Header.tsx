@@ -6,6 +6,7 @@ import {
   type PrimaryNavAxis,
   type ResourceSubSection,
 } from '../types/navigation';
+import { PLATFORM_METRICS } from '../data/platformMetrics';
 
 interface HeaderProps {
   activeSection: AppSectionId;
@@ -51,8 +52,8 @@ const MOBILE_AXIS_GROUPS: {
       },
       {
         section: 'galeria',
-        label: 'Galería Visual (48 láminas)',
-        subtitle: '8 colecciones, Recrear esta imagen y 5 caminos',
+        label: `Galería Visual (${PLATFORM_METRICS.galleryPlates} láminas)`,
+        subtitle: `${PLATFORM_METRICS.galleryCollections} colecciones, Recrear esta imagen y 5 caminos`,
         href: '#galeria',
       },
     ],
@@ -63,14 +64,28 @@ const MOBILE_AXIS_GROUPS: {
     items: [
       {
         section: 'builder',
-        label: 'Constructor Modular (8 disciplinas)',
+        label: `Constructor Modular (${PLATFORM_METRICS.disciplines} disciplinas)`,
         subtitle: 'Fotografía, cine, diseño gráfico, branding, ilustración, web y 3D',
         href: '#builder',
       },
       {
         section: 'laboratorios',
+        subTab: 'moodboard',
+        label: 'Moodboard Builder',
+        subtitle: 'Tableros de dirección de arte, paletas cromáticas y prompt directo',
+        href: '#moodboard',
+      },
+      {
+        section: 'laboratorios',
+        subTab: 'iluminacion',
+        label: 'Simulador de Iluminación',
+        subtitle: '9 parámetros de luz, diagrama cenital y prompt técnico',
+        href: '#iluminacion',
+      },
+      {
+        section: 'laboratorios',
         subTab: 'labs',
-        label: 'Laboratorios y Estudios (8)',
+        label: `Laboratorios y Estudios (${PLATFORM_METRICS.labsCount})`,
         subtitle: 'Primera imagen, dibujo, restauración, producto, web, videoarte y JSON',
         href: '#laboratorios',
       },
@@ -157,8 +172,8 @@ const MOBILE_AXIS_GROUPS: {
     items: [
       {
         section: 'favoritos',
-        label: 'Mis proyectos y guardados',
-        subtitle: 'Prompts, láminas, fichas, perfiles JSON y storyboards',
+        label: 'Mis proyectos y Bitácora Creativa',
+        subtitle: 'Bitácora de procesos, moodboards, prompts, láminas y exportaciones',
         href: '#favoritos',
       },
     ],

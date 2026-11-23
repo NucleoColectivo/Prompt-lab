@@ -1,5 +1,6 @@
 import React from 'react';
 import { Sparkles, Images, ArrowRight } from 'lucide-react';
+import { PLATFORM_METRICS } from '../data/platformMetrics';
 
 interface HeroProps {
   onOpenGallery: () => void;
@@ -95,37 +96,37 @@ export const Hero: React.FC<HeroProps> = ({
         <div className="pt-6 border-t border-white/15 grid grid-cols-2 md:grid-cols-4 gap-6 text-[#D8D5CD]">
           <div>
             <div className="text-xl sm:text-2xl font-bold font-mono-code text-[#F8C300] tabular-nums">
-              48 láminas
+              {PLATFORM_METRICS.galleryPlates} láminas
             </div>
             <div className="text-xs text-[#F4F2ED] font-medium mt-0.5">
-              Galería en 8 colecciones
+              Galería en {PLATFORM_METRICS.galleryCollections} colecciones
             </div>
           </div>
 
           <div>
             <div className="text-xl sm:text-2xl font-bold font-mono-code text-[#F4F2ED] tabular-nums">
-              8 disciplinas
+              {PLATFORM_METRICS.disciplines} disciplinas
             </div>
             <div className="text-xs text-[#F4F2ED] font-medium mt-0.5">
-              Constructor y 8 estudios
+              Constructor y {PLATFORM_METRICS.labsCount} laboratorios
             </div>
           </div>
 
           <div>
             <div className="text-xl sm:text-2xl font-bold font-mono-code text-[#F4F2ED] tabular-nums">
-              26 módulos
+              {PLATFORM_METRICS.modules} módulos
             </div>
             <div className="text-xs text-[#F4F2ED] font-medium mt-0.5">
-              130 fichas + 12 tutoriales
+              {PLATFORM_METRICS.fichas} fichas + {PLATFORM_METRICS.tutorials} tutoriales
             </div>
           </div>
 
           <div>
             <div className="text-xl sm:text-2xl font-bold font-mono-code text-[#F4F2ED] tabular-nums">
-              26 experiencias
+              {PLATFORM_METRICS.experiences} experiencias
             </div>
             <div className="text-xs text-[#F4F2ED] font-medium mt-0.5">
-              Laboratorios guiados y retos
+              Ejercicios guiados y retos
             </div>
           </div>
         </div>

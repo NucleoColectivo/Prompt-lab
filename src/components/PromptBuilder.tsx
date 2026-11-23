@@ -764,6 +764,28 @@ export const PromptBuilder: React.FC<PromptBuilderProps> = ({
             <p className="text-sm text-[#4A4A55] dark:text-[#A09E97] mt-1 max-w-2xl leading-relaxed">
               Elige tu disciplina creativa, ajusta variables especializadas paso a paso y adapta la sintaxis final al ecosistema de IA que vas a usar.
             </p>
+            {builderState.customNotes &&
+              /^(Galería|Moodboard|Simulador de Iluminación|Bitácora|Guardado)\s·/.test(
+                builderState.customNotes
+              ) && (
+                <div className="mt-3 inline-flex flex-wrap items-center gap-2.5 px-3.5 py-2 rounded-xl bg-[#326BFF]/10 dark:bg-[#326BFF]/20 border border-[#326BFF]/30 text-xs text-[#101014] dark:text-[#F4F2ED]">
+                  <span className="font-mono-code font-bold text-[#326BFF] dark:text-[#8FB0FF]">
+                    Referencia conectada:
+                  </span>
+                  <span className="font-medium">{builderState.customNotes}</span>
+                  <span className="text-black/50 dark:text-white/50 hidden sm:inline">
+                    — modifica sujeto, escenario, luz, óptica o formato abajo.
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setBuilderState((prev) => ({ ...prev, customNotes: '' }))}
+                    className="ml-1 p-0.5 rounded hover:bg-black/10 dark:hover:bg-white/10 text-black/60 dark:text-white/70 cursor-pointer"
+                    aria-label="Ocultar aviso de referencia conectada"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              )}
           </div>
 
           {/* Clean single-row toolbar (no orphan wrapped icon) */}

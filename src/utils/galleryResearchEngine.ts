@@ -356,6 +356,27 @@ export function buildCombinedExperimentPrompt(
   return `${base} — [${deltas.join(' · ')}]`;
 }
 
+export function mapGalleryCollectionToCategory(
+  collection: GalleryVisualItem['collection'],
+  mediaType: GalleryVisualItem['mediaType']
+): NonNullable<PromptBuilderState['category']> {
+  if (mediaType === 'video' || collection === 'Motion y Video') return 'video';
+  switch (collection) {
+    case 'Producto':
+      return 'branding';
+    case 'Arte Digital':
+      return 'experimental';
+    case 'Paisaje':
+      return 'architecture';
+    case 'Cine':
+    case 'Retrato':
+    case 'Moda':
+    case 'Macro y Naturaleza':
+    default:
+      return 'photo';
+  }
+}
+
 export function buildCombinedBuilderPatch(
   item: GalleryVisualItem,
   lang: 'es' | 'en',
@@ -372,11 +393,14 @@ export function buildCombinedBuilderPatch(
     selectedContext
   );
 
+  const isVideo = Boolean(videoPreset) || item.mediaType === 'video';
   const basePatch: Partial<PromptBuilderState> = {
-    mode: videoPreset ? 'video' : item.mediaType === 'video' ? 'video' : 'photo',
+    mode: isVideo ? 'video' : 'photo',
+    category: isVideo ? 'video' : mapGalleryCollectionToCategory(item.collection, item.mediaType),
     subject: videoPreset
       ? `${promptText} — [${lang === 'es' ? videoPreset.promptSuffixEs : videoPreset.promptSuffixEn}]`
       : promptText,
+    setting: selectedContext?.patch.setting || item.description,
     composition: selectedLens?.patch.composition || item.specs.composition,
     camera: item.specs.camera,
     lens: selectedLens?.patch.lens || item.specs.lens,
@@ -389,8 +413,8 @@ export function buildCombinedBuilderPatch(
       selectedContext?.patch.atmosphere ||
       selectedLighting?.patch.atmosphere ||
       item.specs.atmosphere,
-    setting: selectedContext?.patch.setting,
     texture: item.specs.texture,
+    materials: item.specs.texture,
     visualStyle: item.style,
     aspectRatio: item.aspectRatio,
     motion: videoPreset
@@ -404,6 +428,7 @@ export function buildCombinedBuilderPatch(
       .split(',')
       .map((s) => s.trim())
       .filter(Boolean),
+    customNotes: `Galería · ${item.code} (${item.title}) · ${item.toolReference}`,
   };
 
   return basePatch;

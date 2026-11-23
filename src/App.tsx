@@ -15,6 +15,8 @@ import {
   Wrench,
   SlidersHorizontal,
   PlayCircle,
+  Palette,
+  Sun,
 } from 'lucide-react';
 import { Header } from './components/Header';
 import { SectionSubNav } from './components/SectionSubNav';
@@ -89,6 +91,16 @@ const DrawingToImageLab = lazy(() =>
 const InteractiveMediaLab = lazy(() =>
   import('./components/studios/InteractiveMediaLab').then((m) => ({
     default: m.InteractiveMediaLab,
+  }))
+);
+const MoodboardBuilderLab = lazy(() =>
+  import('./components/studios/MoodboardBuilderLab').then((m) => ({
+    default: m.MoodboardBuilderLab,
+  }))
+);
+const LightingSimulatorLab = lazy(() =>
+  import('./components/studios/LightingSimulatorLab').then((m) => ({
+    default: m.LightingSimulatorLab,
   }))
 );
 const PromptBuilder = lazy(() =>
@@ -178,6 +190,7 @@ function resolveRouteFromHash(hashValue: string): {
     case 'favoritos':
     case 'mis-proyectos':
     case 'proyectos':
+    case 'bitacora':
       return { section: 'favoritos' };
     case 'fundamentos':
       return { section: 'fundamentos' };
@@ -203,6 +216,13 @@ function resolveRouteFromHash(hashValue: string): {
     case 'tracking':
     case 'sensores':
       return { section: 'laboratorios', labSub: 'interactivo' };
+    case 'moodboard':
+    case 'tablero':
+      return { section: 'laboratorios', labSub: 'moodboard' };
+    case 'iluminacion':
+    case 'simulador-luz':
+    case 'simulador-iluminacion':
+      return { section: 'laboratorios', labSub: 'iluminacion' };
     case 'laboratorios':
       return { section: 'laboratorios', labSub: 'labs' };
     case 'json-lab':
@@ -414,6 +434,8 @@ export default function App() {
         'producto',
         'web',
         'interactivo',
+        'moodboard',
+        'iluminacion',
         'labs',
         'json',
       ];
@@ -428,6 +450,8 @@ export default function App() {
         producto: 'producto-lab',
         web: 'web-lab',
         interactivo: 'interactivo',
+        moodboard: 'moodboard',
+        iluminacion: 'iluminacion',
         labs: 'laboratorios',
         json: 'json-lab',
       };
@@ -474,10 +498,23 @@ export default function App() {
   const scrollToDictionary = () => navigateToSection('biblioteca');
 
   const handleApplyGalleryItemToBuilder = (item: GalleryVisualItem) => {
+    const isVideo = item.mediaType === 'video' || item.collection === 'Motion y Video';
+    const mappedCategory = isVideo
+      ? 'video'
+      : item.collection === 'Producto'
+      ? 'branding'
+      : item.collection === 'Arte Digital'
+      ? 'experimental'
+      : item.collection === 'Paisaje'
+      ? 'architecture'
+      : 'photo';
+
     setBuilderState((prev) => ({
       ...prev,
-      mode: item.mediaType === 'video' ? 'video' : 'photo',
+      mode: isVideo ? 'video' : 'photo',
+      category: mappedCategory,
       subject: item.promptEs,
+      setting: item.description,
       composition: item.specs.composition,
       camera: item.specs.camera,
       lens: item.specs.lens,
@@ -486,12 +523,14 @@ export default function App() {
       colorPalette: item.specs.color,
       atmosphere: item.specs.atmosphere,
       texture: item.specs.texture,
+      materials: item.specs.texture,
       visualStyle: item.style,
       aspectRatio: item.aspectRatio,
       negativeAvoid: item.negativePrompt
         .split(',')
         .map((s) => s.trim())
         .filter(Boolean),
+      customNotes: `Galería · ${item.code} (${item.title})`,
     }));
     navigateToSection('builder');
   };
@@ -713,6 +752,7 @@ export default function App() {
       <SectionSubNav
         axis={currentAxis}
         activeSection={activeSection}
+        activeLabSub={activeLabSub}
         activeResourceSub={activeResourceSub}
         onNavigateSection={(sec, sub) => navigateToSection(sec, sub)}
       />
@@ -785,16 +825,26 @@ export default function App() {
             />
           )}
 
-          {/* 4. SECCIÓN LABORATORIOS (8 Estudios Especializados) */}
+          {/* 4. SECCIÓN LABORATORIOS (10 Estudios Especializados) */}
           {activeSection === 'laboratorios' && (
             <div>
               <div className="bg-white dark:bg-[#16161C] border-b border-[#DEDAD0] dark:border-[#26262E]">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 space-y-3">
                   <div className="flex items-center justify-between gap-2 text-xs font-mono-code uppercase tracking-wider text-[#4A4A55] dark:text-[#A09E97] font-bold">
-                    <span>ESTACIÓN DE LABORATORIOS Y ESTUDIOS CREATIVOS</span>
+                    <span>ESTACIÓN DE LABORATORIOS Y ESTUDIOS CREATIVOS (10)</span>
                   </div>
                   <div className="grid grid-cols-1 min-[360px]:grid-cols-2 sm:flex sm:flex-wrap gap-2">
                     {[
+                      {
+                        id: 'moodboard' as LabSubSection,
+                        label: 'Moodboard Builder',
+                        icon: <Palette className="w-3.5 h-3.5 shrink-0" />,
+                      },
+                      {
+                        id: 'iluminacion' as LabSubSection,
+                        label: 'Simulador de Luz',
+                        icon: <Sun className="w-3.5 h-3.5 shrink-0" />,
+                      },
                       {
                         id: 'principiante' as LabSubSection,
                         label: 'Mi Primera Imagen',
@@ -929,6 +979,29 @@ export default function App() {
                 />
               )}
 
+              {activeLabSub === 'moodboard' && (
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10">
+                  <MoodboardBuilderLab
+                    onApplyToBuilder={(patch) => {
+                      setBuilderState((prev) => ({ ...prev, ...patch }));
+                      navigateToSection('builder');
+                    }}
+                    onOpenProjects={() => navigateToSection('favoritos')}
+                  />
+                </div>
+              )}
+
+              {activeLabSub === 'iluminacion' && (
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10">
+                  <LightingSimulatorLab
+                    onApplyToBuilder={(patch) => {
+                      setBuilderState((prev) => ({ ...prev, ...patch }));
+                      navigateToSection('builder');
+                    }}
+                  />
+                </div>
+              )}
+
               {activeLabSub === 'json' && (
                 <JsonVisualLab
                   externalProfile={externalJsonProfile}
@@ -1001,9 +1074,14 @@ export default function App() {
                 setBuilderState(state);
                 navigateToSection('builder');
               }}
+              onApplyPromptPatchToBuilder={(patch) => {
+                setBuilderState((prev) => ({ ...prev, ...patch }));
+                navigateToSection('builder');
+              }}
               onApplyJsonStyleToBuilder={handleApplyJsonStyleToBuilder}
               onOpenJsonLab={() => navigateToSection('laboratorios', 'json')}
               onOpenInteractiveLabs={() => navigateToSection('laboratorios', 'labs')}
+              onOpenMoodboard={() => navigateToSection('laboratorios', 'moodboard')}
             />
           )}
 

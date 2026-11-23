@@ -15,10 +15,13 @@ import {
   Wrench,
   Scale,
   Film,
+  Palette,
+  Sun,
 } from 'lucide-react';
 import type { AppSectionId } from '../types/navigation';
 import { VISUAL_LIBRARY_PATHS } from '../data/visualLibraryRegistry';
 import { STUDIO_MEDIA_ASSETS } from '../data/creativeStudiosData';
+import { PLATFORM_METRICS } from '../data/platformMetrics';
 import ethicsCardSesgos from '../assets/images/ethics_card_sesgos_1795400896612.jpg';
 import { ResilientImage } from './ResilientImage';
 import type { PromptBuilderState } from './PromptBuilder';
@@ -107,31 +110,30 @@ const THREE_PATHWAYS: {
   {
     number: '01',
     title: 'Crear',
-    subtitle: 'Constructor · 8 Laboratorios · Cine IA',
+    subtitle: `Constructor · ${PLATFORM_METRICS.labsCount} Laboratorios · Cine IA`,
     description:
-      'Construye prompts profesionales por disciplina, transforma bocetos, restaura fotografías, diseña productos o planifica secuencias audiovisuales.',
+      'Construye prompts por disciplina, arma Moodboards de dirección de arte, simula esquemas de iluminación, transforma bocetos o planifica secuencias audiovisuales.',
     image: VISUAL_LIBRARY_PATHS.adLuxury,
     imageAlt: 'Estudio de creación visual y dirección de arte para producto y cine',
     primaryCta: 'Abrir Constructor Modular',
     primaryTarget: { section: 'builder' },
     quickLinks: [
-      { label: '8 Laboratorios prácticos', section: 'laboratorios', subTab: 'labs' },
-      { label: 'Planificador Audiovisual', section: 'film-director' },
-      { label: 'JSON Visual Lab', section: 'laboratorios', subTab: 'json' },
+      { label: 'Moodboard Builder (Dirección de Arte)', section: 'laboratorios', subTab: 'moodboard' },
+      { label: 'Simulador de Iluminación (9 parámetros)', section: 'laboratorios', subTab: 'iluminacion' },
+      { label: `${PLATFORM_METRICS.labsCount} Laboratorios prácticos`, section: 'laboratorios', subTab: 'labs' },
     ],
   },
   {
     number: '02',
     title: 'Explorar',
-    subtitle: 'Galería · Recrear Imagen · Cultura IA',
-    description:
-      'Descubre 48 láminas curadas en 8 colecciones, usa «Recrear esta imagen» para adaptar cualquier estilo a tu idea y explora Cine y Ética IA.',
+    subtitle: `Galería (${PLATFORM_METRICS.galleryPlates}) · Recrear Imagen · Cultura IA`,
+    description: `Descubre ${PLATFORM_METRICS.galleryPlates} láminas curadas en ${PLATFORM_METRICS.galleryCollections} colecciones, usa «Recrear esta imagen» para adaptar cualquier estilo a tu idea y explora Cine y Ética IA.`,
     image: VISUAL_LIBRARY_PATHS.photoNeoNoir,
     imageAlt: 'Fotografía editorial nocturna de la Galería Visual Experimental',
     primaryCta: 'Entrar a la Galería',
     primaryTarget: { section: 'galeria' },
     quickLinks: [
-      { label: 'Experiencias y Retos (26)', section: 'experiencias' },
+      { label: `Experiencias y Retos (${PLATFORM_METRICS.experiences})`, section: 'experiencias' },
       { label: 'Ética y Sesgos IA', section: 'etica-ia' },
       { label: 'Cine y Documentales IA', section: 'movies-ia' },
     ],
@@ -139,17 +141,16 @@ const THREE_PATHWAYS: {
   {
     number: '03',
     title: 'Aprender',
-    subtitle: '26 Módulos · Tutoriales · Recetas',
-    description:
-      'Domina iluminación, lentes, composición y narrativa visual con 130 fichas técnicas, 12 tutoriales paso a paso en video y plantillas listas para talleres.',
+    subtitle: `${PLATFORM_METRICS.modules} Módulos · ${PLATFORM_METRICS.tutorials} Tutoriales · Bitácora`,
+    description: `Domina iluminación, lentes, composición y narrativa visual con ${PLATFORM_METRICS.fichas} fichas técnicas, ${PLATFORM_METRICS.tutorials} tutoriales paso a paso en video y tu Bitácora Creativa.`,
     image: VISUAL_LIBRARY_PATHS.focalComparison,
     imageAlt: 'Comparativa técnica de lentes y composición de la Biblioteca Visual',
     primaryCta: 'Abrir Biblioteca Visual',
     primaryTarget: { section: 'biblioteca' },
     quickLinks: [
-      { label: '12 Tutoriales en Video', section: 'recursos', subTab: 'tutoriales' },
+      { label: `${PLATFORM_METRICS.tutorials} Tutoriales en Video`, section: 'recursos', subTab: 'tutoriales' },
       { label: 'Recetas y Plantillas', section: 'recursos', subTab: 'recetas' },
-      { label: 'Fundamentos desde cero', section: 'fundamentos' },
+      { label: 'Mis proyectos y Bitácora Creativa', section: 'favoritos' },
     ],
   },
 ];
@@ -221,6 +222,22 @@ const PRACTICAL_STUDIOS: {
   section: AppSectionId;
   subTab?: string;
 }[] = [
+  {
+    title: 'Moodboard Builder',
+    detail: 'Tableros de dirección de arte, paletas y prompt directo',
+    image: VISUAL_LIBRARY_PATHS.colorDuotone,
+    icon: <Palette className="w-4 h-4 text-[#7545D6] dark:text-[#F8C300]" />,
+    section: 'laboratorios',
+    subTab: 'moodboard',
+  },
+  {
+    title: 'Simulador de iluminación',
+    detail: '9 parámetros de luz + diagrama cenital de estudio',
+    image: VISUAL_LIBRARY_PATHS.lightRembrandt,
+    icon: <Sun className="w-4 h-4 text-[#F8C300]" />,
+    section: 'laboratorios',
+    subTab: 'iluminacion',
+  },
   {
     title: 'Mi primera imagen',
     detail: '6 pasos guiados sin tecnicismos',
@@ -407,7 +424,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
               className="px-4 py-2.5 min-h-[42px] text-xs font-bold bg-[#F8C300] hover:bg-[#e5b400] text-[#101014] rounded-lg transition-colors inline-flex items-center gap-2 self-start sm:self-auto whitespace-nowrap shrink-0"
             >
               <Images className="w-4 h-4" />
-              <span>Abrir Galería (48 láminas)</span>
+              <span>Abrir Galería ({PLATFORM_METRICS.galleryPlates} láminas)</span>
               <ArrowRight className="w-3.5 h-3.5" />
             </button>
           </div>
@@ -565,12 +582,12 @@ export const HomeView: React.FC<HomeViewProps> = ({
               onClick={() => onNavigateSection('experiencias')}
               className="text-xs font-semibold text-[#101014] dark:text-[#F4F2ED] hover:text-[#326BFF] dark:hover:text-[#F8C300] inline-flex items-center gap-1.5 self-start sm:self-auto whitespace-nowrap"
             >
-              <span>Ver los 26 laboratorios guiados</span>
+              <span>Ver las {PLATFORM_METRICS.experiences} experiencias guiadas</span>
               <ArrowRight className="w-3.5 h-3.5" />
             </button>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {PRACTICAL_STUDIOS.map((studio) => (
               <button
                 key={studio.title}

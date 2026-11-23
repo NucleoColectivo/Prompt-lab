@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { PLATFORM_METRICS } from '../data/platformMetrics';
 import {
   BookOpen,
   Sparkles,
@@ -150,7 +151,7 @@ export const PromptFundamentals: React.FC<PromptFundamentalsProps> = ({
             </div>
 
             <div className="text-xs font-mono-code text-stone-500 dark:text-stone-400 shrink-0">
-              Guía Núcleo Colectivo · 26 Módulos + 6 Labs
+              Guía Núcleo Colectivo · {PLATFORM_METRICS.modules} Módulos + {PLATFORM_METRICS.labsCount} Laboratorios
             </div>
           </div>
 

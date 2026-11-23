@@ -11,12 +11,21 @@ import {
   Scale,
   Film,
   FlaskConical,
+  Palette,
+  Sun,
 } from 'lucide-react';
-import type { AppSectionId, PrimaryNavAxis, ResourceSubSection } from '../types/navigation';
+import type {
+  AppSectionId,
+  LabSubSection,
+  PrimaryNavAxis,
+  ResourceSubSection,
+} from '../types/navigation';
+import { PLATFORM_METRICS } from '../data/platformMetrics';
 
 interface SectionSubNavProps {
   axis: PrimaryNavAxis;
   activeSection: AppSectionId;
+  activeLabSub?: LabSubSection;
   activeResourceSub: ResourceSubSection;
   onNavigateSection: (section: AppSectionId, subTab?: string) => void;
 }
@@ -27,7 +36,7 @@ interface SubNavItem {
   section: AppSectionId;
   subTab?: string;
   icon: React.ReactNode;
-  isActive: (sec: AppSectionId, resSub: ResourceSubSection) => boolean;
+  isActive: (sec: AppSectionId, resSub: ResourceSubSection, labSub?: LabSubSection) => boolean;
 }
 
 const SUBNAV_CONFIG: Partial<Record<PrimaryNavAxis, { axisLabel: string; items: SubNavItem[] }>> = {
@@ -42,12 +51,29 @@ const SUBNAV_CONFIG: Partial<Record<PrimaryNavAxis, { axisLabel: string; items: 
         isActive: (sec) => sec === 'builder',
       },
       {
+        id: 'moodboard',
+        label: 'Moodboard Builder',
+        section: 'laboratorios',
+        subTab: 'moodboard',
+        icon: <Palette className="w-3.5 h-3.5 shrink-0" />,
+        isActive: (sec, _res, lab) => sec === 'laboratorios' && lab === 'moodboard',
+      },
+      {
+        id: 'iluminacion',
+        label: 'Simulador de Luz',
+        section: 'laboratorios',
+        subTab: 'iluminacion',
+        icon: <Sun className="w-3.5 h-3.5 shrink-0" />,
+        isActive: (sec, _res, lab) => sec === 'laboratorios' && lab === 'iluminacion',
+      },
+      {
         id: 'laboratorios',
-        label: 'Laboratorios y Estudios (8)',
+        label: `Laboratorios (${PLATFORM_METRICS.labsCount})`,
         section: 'laboratorios',
         subTab: 'labs',
         icon: <Sliders className="w-3.5 h-3.5 shrink-0" />,
-        isActive: (sec) => sec === 'laboratorios',
+        isActive: (sec, _res, lab) =>
+          sec === 'laboratorios' && lab !== 'moodboard' && lab !== 'iluminacion',
       },
       {
         id: 'film-director',
@@ -184,6 +210,7 @@ const SUBNAV_CONFIG: Partial<Record<PrimaryNavAxis, { axisLabel: string; items: 
 export const SectionSubNav: React.FC<SectionSubNavProps> = ({
   axis,
   activeSection,
+  activeLabSub,
   activeResourceSub,
   onNavigateSection,
 }) => {
@@ -202,7 +229,7 @@ export const SectionSubNav: React.FC<SectionSubNavProps> = ({
           className="flex items-center gap-1.5 overflow-x-auto pb-0.5 sm:pb-0"
         >
           {config.items.map((item) => {
-            const active = item.isActive(activeSection, activeResourceSub);
+            const active = item.isActive(activeSection, activeResourceSub, activeLabSub);
             return (
               <button
                 key={item.id}

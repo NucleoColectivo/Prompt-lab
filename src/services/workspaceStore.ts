@@ -1,6 +1,7 @@
 /**
- * Unified non-destructive persistence reader/helper over existing nc_* localStorage keys.
- * Preserves 100% compatibility with previously saved user data in browsers.
+ * Unified non-destructive persistence layer over nc_* localStorage keys.
+ * Preserves 100% compatibility with previously saved user data in browsers
+ * and adds typed storage for Moodboards (Fase 4) and Bitácora Creativa (Fase 5).
  */
 
 export const STORAGE_KEYS = {
@@ -19,7 +20,49 @@ export const STORAGE_KEYS = {
   expCompletedExpress: 'nc_exp_completed_express_v1',
   resourcesDrills: 'nc_resources_drills_completed_v1',
   resourcesTutorials: 'nc_resources_tutorials_done_v1',
+  moodboards: 'nc_moodboards_v1',
+  creativeJournal: 'nc_creative_journal_v1',
 } as const;
+
+export interface MoodboardReferenceItem {
+  id: string;
+  title: string;
+  image: string;
+  role: 'Composición' | 'Iluminación' | 'Color' | 'Textura' | 'Sujeto' | 'Atmósfera';
+  note: string;
+  source: 'galeria' | 'archivo';
+}
+
+export interface SavedMoodboard {
+  id: string;
+  title: string;
+  concept: string;
+  discipline: string;
+  paletteName: string;
+  colors: string[];
+  styles: string[];
+  keywords: string[];
+  references: MoodboardReferenceItem[];
+  creativeSummary: string;
+  generatedPrompt: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreativeJournalEntry {
+  id: string;
+  projectName: string;
+  objective: string;
+  discipline: string;
+  originalPrompt: string;
+  variations: string[];
+  results: string;
+  tools: string[];
+  date: string;
+  observations: string;
+  learnings: string;
+  updatedAt: string;
+}
 
 export interface WorkspaceSummary {
   favoritesTotal: number;
@@ -28,6 +71,8 @@ export interface WorkspaceSummary {
   libraryFichasCount: number;
   jsonStylesCount: number;
   storyboardScenesCount: number;
+  moodboardsCount: number;
+  journalEntriesCount: number;
   completedActivitiesCount: number;
 }
 
@@ -42,6 +87,17 @@ function safeReadJson<T>(key: string, fallback: T): T {
   }
 }
 
+function safeWriteJson(key: string, value: unknown): boolean {
+  if (typeof window === 'undefined') return false;
+  try {
+    window.localStorage.setItem(key, JSON.stringify(value));
+    window.dispatchEvent(new Event('nc-favorites-updated'));
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export function safeArrayLength(key: string): number {
   const val = safeReadJson<unknown>(key, []);
   return Array.isArray(val) ? val.length : 0;
@@ -53,13 +109,51 @@ export function readGalleryFavorites(): string[] {
 }
 
 export function writeGalleryFavorites(ids: string[]): void {
-  if (typeof window === 'undefined') return;
-  try {
-    window.localStorage.setItem(STORAGE_KEYS.galleryFavorites, JSON.stringify(ids));
-    window.dispatchEvent(new Event('nc-favorites-updated'));
-  } catch {
-    // Ignore storage quota or restricted iframe errors
-  }
+  safeWriteJson(STORAGE_KEYS.galleryFavorites, ids);
+}
+
+export function readMoodboards(): SavedMoodboard[] {
+  const parsed = safeReadJson<unknown>(STORAGE_KEYS.moodboards, []);
+  return Array.isArray(parsed) ? (parsed as SavedMoodboard[]) : [];
+}
+
+export function saveMoodboard(board: SavedMoodboard): SavedMoodboard[] {
+  const existing = readMoodboards();
+  const idx = existing.findIndex((b) => b.id === board.id);
+  const next =
+    idx >= 0
+      ? existing.map((b, i) => (i === idx ? board : b))
+      : [board, ...existing].slice(0, 40);
+  safeWriteJson(STORAGE_KEYS.moodboards, next);
+  return next;
+}
+
+export function deleteMoodboard(id: string): SavedMoodboard[] {
+  const next = readMoodboards().filter((b) => b.id !== id);
+  safeWriteJson(STORAGE_KEYS.moodboards, next);
+  return next;
+}
+
+export function readCreativeJournal(): CreativeJournalEntry[] {
+  const parsed = safeReadJson<unknown>(STORAGE_KEYS.creativeJournal, []);
+  return Array.isArray(parsed) ? (parsed as CreativeJournalEntry[]) : [];
+}
+
+export function saveJournalEntry(entry: CreativeJournalEntry): CreativeJournalEntry[] {
+  const existing = readCreativeJournal();
+  const idx = existing.findIndex((e) => e.id === entry.id);
+  const next =
+    idx >= 0
+      ? existing.map((e, i) => (i === idx ? entry : e))
+      : [entry, ...existing].slice(0, 100);
+  safeWriteJson(STORAGE_KEYS.creativeJournal, next);
+  return next;
+}
+
+export function deleteJournalEntry(id: string): CreativeJournalEntry[] {
+  const next = readCreativeJournal().filter((e) => e.id !== id);
+  safeWriteJson(STORAGE_KEYS.creativeJournal, next);
+  return next;
 }
 
 export function saveRecreatedPromptToVault(entry: {
@@ -75,16 +169,14 @@ export function saveRecreatedPromptToVault(entry: {
     const nextItem = {
       id: `recreate-${Date.now()}`,
       title: entry.title,
-      project: entry.project || 'Recreaciones de Galería',
+      projectName: entry.project || 'Recreaciones de Galería',
       mode: 'photo',
-      prompt: entry.prompt,
+      promptText: entry.prompt,
       createdAt: new Date().toISOString(),
       source: `${entry.sourceCode} · ${entry.platform}`,
     };
     const nextList = [nextItem, ...(Array.isArray(existing) ? existing : [])].slice(0, 120);
-    window.localStorage.setItem(STORAGE_KEYS.savedPrompts, JSON.stringify(nextList));
-    window.dispatchEvent(new Event('nc-favorites-updated'));
-    return true;
+    return safeWriteJson(STORAGE_KEYS.savedPrompts, nextList);
   } catch {
     return false;
   }
@@ -99,6 +191,8 @@ export function getWorkspaceSummary(galleryFavoritesOverride?: string[]): Worksp
   const jsonStylesCount =
     safeArrayLength(STORAGE_KEYS.jsonStyles) || safeArrayLength(STORAGE_KEYS.jsonStylesLegacy);
   const storyboardScenesCount = safeArrayLength(STORAGE_KEYS.storyboard);
+  const moodboardsCount = safeArrayLength(STORAGE_KEYS.moodboards);
+  const journalEntriesCount = safeArrayLength(STORAGE_KEYS.creativeJournal);
 
   const completedActivitiesCount =
     safeArrayLength(STORAGE_KEYS.expCompletedLabs) +
@@ -109,12 +203,19 @@ export function getWorkspaceSummary(galleryFavoritesOverride?: string[]): Worksp
 
   return {
     favoritesTotal:
-      galleryFavoritesCount + libraryFichasCount + savedPromptsCount + jsonStylesCount,
+      galleryFavoritesCount +
+      libraryFichasCount +
+      savedPromptsCount +
+      jsonStylesCount +
+      moodboardsCount +
+      journalEntriesCount,
     galleryFavoritesCount,
     savedPromptsCount,
     libraryFichasCount,
     jsonStylesCount,
     storyboardScenesCount,
+    moodboardsCount,
+    journalEntriesCount,
     completedActivitiesCount,
   };
 }
