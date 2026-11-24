@@ -29,6 +29,7 @@ import {
   Award,
   Flame,
   Repeat2,
+  Palette,
 } from 'lucide-react';
 import { RecreateImageModal } from './RecreateImageModal';
 import {
@@ -75,6 +76,7 @@ export interface VisualGalleryViewProps {
   onOpenTechnicalModule: (moduleId: ModuleId) => void;
   onAnalyzeInJsonLab?: (item: GalleryVisualItem, customProfile?: JsonStyleProfile) => void;
   onAddToStoryboard?: (scene: StoryboardSceneItem) => void;
+  onSendToMoodboard?: (item: GalleryVisualItem) => void;
   onOpenLabs?: () => void;
 }
 
@@ -155,6 +157,7 @@ export const VisualGalleryView: React.FC<VisualGalleryViewProps> = ({
   onOpenTechnicalModule,
   onAnalyzeInJsonLab,
   onAddToStoryboard,
+  onSendToMoodboard,
   onOpenLabs,
 }) => {
   const normalizedActiveCollection = useMemo(
@@ -1866,6 +1869,21 @@ export const VisualGalleryView: React.FC<VisualGalleryViewProps> = ({
                     >
                       <Braces className="w-3.5 h-3.5 text-[#7545D6] dark:text-[#F8C300]" />
                       <span>JSON Lab</span>
+                    </button>
+                  )}
+
+                  {onSendToMoodboard && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const target = lightboxItem;
+                        setLightboxItem(null);
+                        onSendToMoodboard(target);
+                      }}
+                      className="py-3 px-3.5 min-h-[44px] text-xs font-semibold rounded-xl border border-[#D4D0C5] dark:border-[#2C2C36] bg-white dark:bg-[#101014] hover:border-[#F8C300] inline-flex items-center justify-center gap-1.5 whitespace-nowrap"
+                    >
+                      <Palette className="w-3.5 h-3.5 text-[#7545D6] dark:text-[#F8C300]" />
+                      <span>Moodboard</span>
                     </button>
                   )}
                 </div>

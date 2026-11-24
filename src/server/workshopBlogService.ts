@@ -1,6 +1,7 @@
 import crypto from 'crypto';
 import fs from 'fs/promises';
 import path from 'path';
+import { verifyFirebaseIdToken } from './workshopUploadService';
 
 export type WorkshopContentType = 'image' | 'pdf' | 'video' | 'link';
 
@@ -86,16 +87,29 @@ const uploadRateLog = new Map<string, number[]>();
 const RATE_WINDOW_MS = 15 * 60 * 1000;
 const RATE_MAX_UPLOADS = 10;
 
+export function isVercelEphemeralEnv(): boolean {
+  return process.env.VERCEL === '1' || process.env.VERCEL === 'true';
+}
+
 export function checkUploadRateLimit(clientKey: string): boolean {
   const now = Date.now();
-  const prev = uploadRateLog.get(clientKey) || [];
+  const key = (clientKey || 'anon').slice(0, 128);
+  const prev = uploadRateLog.get(key) || [];
   const recent = prev.filter((ts) => now - ts < RATE_WINDOW_MS);
   if (recent.length >= RATE_MAX_UPLOADS) {
-    uploadRateLog.set(clientKey, recent);
+    uploadRateLog.set(key, recent);
     return false;
   }
   recent.push(now);
-  uploadRateLog.set(clientKey, recent);
+  uploadRateLog.set(key, recent);
+
+  if (uploadRateLog.size > 1000) {
+    for (const [k, timestamps] of uploadRateLog.entries()) {
+      const valid = timestamps.filter((ts) => now - ts < RATE_WINDOW_MS);
+      if (valid.length === 0) uploadRateLog.delete(k);
+      else uploadRateLog.set(k, valid);
+    }
+  }
   return true;
 }
 
@@ -134,9 +148,28 @@ function isPrivateOrLocalHostname(hostname: string): boolean {
   if (
     lower === 'localhost' ||
     lower === '::1' ||
+    lower === '::' ||
     lower === '0.0.0.0' ||
+    lower === 'metadata.google.internal' ||
     lower.endsWith('.local') ||
-    lower.endsWith('.internal')
+    lower.endsWith('.internal') ||
+    lower.endsWith('.localhost')
+  ) {
+    return true;
+  }
+  // Block numeric-only, hex, or octal IP obfuscations (e.g. 2130706433, 0x7f000001, 0177.0.0.1)
+  if (/^\d+$/.test(lower) || /^0x[0-9a-f]+$/i.test(lower) || /^0\d+\./.test(lower)) {
+    return true;
+  }
+  // Block IPv6 private (ULA fc00::/7), link-local (fe80::/10), and IPv4-mapped loopback/private
+  if (
+    lower.startsWith('fc') ||
+    lower.startsWith('fd') ||
+    lower.startsWith('fe8') ||
+    lower.startsWith('fe9') ||
+    lower.startsWith('fea') ||
+    lower.startsWith('feb') ||
+    lower.startsWith('::ffff:')
   ) {
     return true;
   }
@@ -144,6 +177,7 @@ function isPrivateOrLocalHostname(hostname: string): boolean {
   if (/^10\./.test(lower)) return true;
   if (/^192\.168\./.test(lower)) return true;
   if (/^169\.254\./.test(lower)) return true;
+  if (/^100\.(6[4-9]|[7-9]\d|1[01]\d|12[0-7])\./.test(lower)) return true;
   const match172 = lower.match(/^172\.(\d+)\./);
   if (match172) {
     const secondOctet = Number(match172[1]);
@@ -273,6 +307,7 @@ async function readPostsFromGitHub(): Promise<{ posts: WorkshopBlogPost[]; sha?:
 }
 
 async function readLocalPreviewPosts(): Promise<WorkshopBlogPost[]> {
+  if (isVercelEphemeralEnv()) return [];
   try {
     const raw = await fs.readFile(LOCAL_POSTS_FILE, 'utf-8');
     const parsed = JSON.parse(raw);
@@ -324,7 +359,8 @@ async function uploadFileToGitHub(
 
   if (!res.ok) {
     const errText = await res.text().catch(() => '');
-    throw new Error(`No se pudo guardar el archivo en GitHub (${res.status}): ${errText.slice(0, 180)}`);
+    console.error(`[workshopBlog/github-upload] HTTP ${res.status}:`, errText.slice(0, 300));
+    throw new Error('No se pudo guardar el archivo en el repositorio configurado.');
   }
 
   const data = (await res.json()) as {
@@ -367,7 +403,8 @@ async function appendPostToGitHubIndex(
 
   if (!res.ok) {
     const errText = await res.text().catch(() => '');
-    throw new Error(`No se pudo actualizar el índice del blog en GitHub (${res.status}): ${errText.slice(0, 180)}`);
+    console.error(`[workshopBlog/github-index] HTTP ${res.status}:`, errText.slice(0, 300));
+    throw new Error('No se pudo actualizar el índice de publicaciones en el repositorio.');
   }
 }
 
@@ -403,9 +440,20 @@ export async function listWorkshopBlogPosts(): Promise<{
 
 export async function createWorkshopBlogPost(
   body: WorkshopBlogSubmission,
-  clientKey: string
+  clientKey: string,
+  authHeader?: string
 ): Promise<{ status: number; payload: Record<string, unknown> }> {
-  if (!checkUploadRateLimit(clientKey)) {
+  const verifiedUser = await verifyFirebaseIdToken(authHeader);
+  if (!verifiedUser || !verifiedUser.emailVerified) {
+    return {
+      status: 401,
+      payload: {
+        error: 'Se requiere una sesión verificada con Google para publicar contenido.',
+      },
+    };
+  }
+
+  if (!checkUploadRateLimit(`${verifiedUser.uid}:${clientKey}`)) {
     return {
       status: 429,
       payload: {
@@ -484,9 +532,12 @@ export async function createWorkshopBlogPost(
       };
     }
 
-    const base64Body = rawFileBase64.includes(',')
-      ? rawFileBase64.split(',')[1]
-      : rawFileBase64;
+    const base64Body = (
+      rawFileBase64.includes(',') ? rawFileBase64.split(',')[1] : rawFileBase64
+    ).replace(/\s+/g, '');
+    if (!base64Body || !/^[A-Za-z0-9+/=]+$/.test(base64Body)) {
+      return { status: 400, payload: { error: 'El archivo codificado no tiene un formato base64 válido.' } };
+    }
     const buffer = Buffer.from(base64Body, 'base64');
 
     if (buffer.length === 0) {
@@ -521,7 +572,9 @@ export async function createWorkshopBlogPost(
 
   const cfg = getGitHubConfig();
   const postId = `wb-${Date.now()}-${crypto.randomBytes(4).toString('hex')}`;
-  const commitAuthorSummary = `${sanitizeCommitSegment(authorName, 50)} (${sanitizeCommitSegment(authorEmail, 70)})`;
+  const maskedEmail = maskEmail(authorEmail);
+  // Privacy guard: never expose raw attendee emails in public Git commit messages
+  const commitAuthorSummary = `${sanitizeCommitSegment(authorName, 50)} (${sanitizeCommitSegment(maskedEmail, 50)})`;
   const commitTitleSummary = sanitizeCommitSegment(title, 70);
 
   let mediaUrl: string | undefined;
@@ -545,7 +598,7 @@ export async function createWorkshopBlogPost(
       title,
       description,
       authorName,
-      authorEmailMasked: maskEmail(authorEmail),
+      authorEmailMasked: maskedEmail,
       category,
       contentType,
       ...(mediaUrl ? { mediaUrl } : {}),
@@ -573,7 +626,18 @@ export async function createWorkshopBlogPost(
     };
   }
 
-  // Preview fallback mode (when GITHUB_TOKEN is not yet configured in environment secrets)
+  // Vercel serverless filesystems are read-only/ephemeral and must not be used for permanent storage
+  if (isVercelEphemeralEnv()) {
+    return {
+      status: 503,
+      payload: {
+        error:
+          'El almacenamiento persistente en GitHub no está configurado en este entorno serverless. Usa el Blog en tiempo real con Firebase o configura GITHUB_TOKEN.',
+      },
+    };
+  }
+
+  // Local dev/preview fallback mode (when GITHUB_TOKEN is not yet configured in environment secrets)
   if (fileBuffer && safeGeneratedName) {
     mediaUrl = await writeLocalPreviewFile(safeGeneratedName, fileBuffer);
   }

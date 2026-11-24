@@ -186,8 +186,13 @@ export const FavoritesVaultView: React.FC<FavoritesVaultViewProps> = ({
     ])
   );
   const [savedJsonProfiles, setSavedJsonProfiles] = useState<JsonStyleProfile[]>(() => {
-    const primary = safeParseArray<JsonStyleProfile>('nc_fav_json_styles_v1');
-    if (primary.length > 0) return primary;
+    try {
+      if (localStorage.getItem('nc_fav_json_styles_v1') !== null) {
+        return safeParseArray<JsonStyleProfile>('nc_fav_json_styles_v1');
+      }
+    } catch {
+      // Fallback to legacy read below
+    }
     return safeParseArray<JsonStyleProfile>('nc_fav_json_v1');
   });
   const [storyboardScenes] = useState<StoryboardSceneItem[]>(() =>
@@ -263,7 +268,6 @@ export const FavoritesVaultView: React.FC<FavoritesVaultViewProps> = ({
     setSavedJsonProfiles(next);
     try {
       localStorage.setItem('nc_fav_json_styles_v1', JSON.stringify(next));
-      localStorage.removeItem('nc_fav_json_v1');
       notifyFavoritesChanged();
     } catch {
       // ignore storage errors

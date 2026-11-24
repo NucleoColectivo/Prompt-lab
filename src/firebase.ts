@@ -1,15 +1,39 @@
 import { initializeApp } from 'firebase/app';
+import { initializeAppCheck, ReCaptchaV3Provider } from 'firebase/app-check';
 import { getAuth, GoogleAuthProvider } from 'firebase/auth';
 import { doc, getDocFromServer, getFirestore } from 'firebase/firestore';
 import firebaseConfig from '../firebase-applet-config.json';
 
 export const WORKSHOP_ADMIN_EMAIL = 'nucleo.colectivo.art@gmail.com';
+export const FIREBASE_PROJECT_ID = firebaseConfig.projectId;
+export const FIREBASE_APP_ID = firebaseConfig.appId;
 
 const app = initializeApp(firebaseConfig);
+
+const recaptchaSiteKey =
+  (typeof firebaseConfig.recaptchaSiteKey === 'string' && firebaseConfig.recaptchaSiteKey.trim()) ||
+  (typeof import.meta.env?.VITE_FIREBASE_RECAPTCHA_SITE_KEY === 'string'
+    ? import.meta.env.VITE_FIREBASE_RECAPTCHA_SITE_KEY.trim()
+    : '');
+
+export const HAS_APP_CHECK_SITE_KEY = Boolean(recaptchaSiteKey);
+
+if (recaptchaSiteKey && typeof window !== 'undefined') {
+  try {
+    initializeAppCheck(app, {
+      provider: new ReCaptchaV3Provider(recaptchaSiteKey),
+      isTokenAutoRefreshEnabled: true,
+    });
+  } catch (err) {
+    console.warn('No se pudo inicializar Firebase App Check:', err);
+  }
+}
 
 export const db = getFirestore(app, firebaseConfig.firestoreDatabaseId);
 export const auth = getAuth(app);
 export const googleProvider = new GoogleAuthProvider();
+googleProvider.addScope('email');
+googleProvider.addScope('profile');
 googleProvider.setCustomParameters({ prompt: 'select_account' });
 
 export enum OperationType {

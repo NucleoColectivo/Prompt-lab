@@ -83,15 +83,28 @@ export async function verifyFirebaseIdToken(
   }
 }
 
+function isVercelServerless(): boolean {
+  return process.env.VERCEL === '1' || process.env.VERCEL === 'true';
+}
+
 function checkRateLimit(uid: string): boolean {
   const now = Date.now();
-  const timestamps = (uploadRateMap.get(uid) || []).filter((ts) => now - ts < RATE_WINDOW_MS);
+  const key = (uid || 'anon').slice(0, 128);
+  const timestamps = (uploadRateMap.get(key) || []).filter((ts) => now - ts < RATE_WINDOW_MS);
   if (timestamps.length >= RATE_MAX_UPLOADS) {
-    uploadRateMap.set(uid, timestamps);
+    uploadRateMap.set(key, timestamps);
     return false;
   }
   timestamps.push(now);
-  uploadRateMap.set(uid, timestamps);
+  uploadRateMap.set(key, timestamps);
+
+  if (uploadRateMap.size > 1000) {
+    for (const [k, list] of uploadRateMap.entries()) {
+      const valid = list.filter((ts) => now - ts < RATE_WINDOW_MS);
+      if (valid.length === 0) uploadRateMap.delete(k);
+      else uploadRateMap.set(k, valid);
+    }
+  }
   return true;
 }
 
@@ -184,6 +197,16 @@ export async function handleWorkshopBinaryUpload(params: {
     return { status: 400, payload: { error: 'Nombre de archivo inválido.' } };
   }
 
+  if (isVercelServerless()) {
+    return {
+      status: 503,
+      payload: {
+        error:
+          'La carga directa de PDF/video al disco local no está disponible en Vercel (sistema de archivos efímero). Comparte un enlace de Google Drive, YouTube o Vimeo.',
+      },
+    };
+  }
+
   await fs.mkdir(UPLOAD_DIR, { recursive: true });
   const targetPath = path.resolve(UPLOAD_DIR, storedFileName);
   if (!targetPath.startsWith(UPLOAD_DIR + path.sep)) {
@@ -223,6 +246,13 @@ export async function handleWorkshopBinaryDelete(params: {
 
   if (!isOwner && !isAdmin) {
     return { status: 403, payload: { error: 'No tienes permiso para eliminar este archivo.' } };
+  }
+
+  if (isVercelServerless()) {
+    return {
+      status: 503,
+      payload: { error: 'Operación no disponible en almacenamiento efímero serverless.' },
+    };
   }
 
   const targetPath = path.resolve(UPLOAD_DIR, fileName);

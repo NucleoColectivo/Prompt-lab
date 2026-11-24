@@ -44,6 +44,7 @@ app.use((_req, res, next) => {
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
   res.setHeader('Permissions-Policy', 'camera=(self), microphone=(self)');
+  res.setHeader('Cross-Origin-Opener-Policy', 'same-origin-allow-popups');
   next();
 });
 
@@ -100,10 +101,10 @@ app.get('/api/workshop-blog/posts', async (_req: Request, res: Response) => {
   try {
     const data = await listWorkshopBlogPosts();
     res.json(data);
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error leyendo blog del taller:', error);
     res.status(500).json({
-      error: error?.message || 'No se pudieron cargar las publicaciones del taller.',
+      error: 'No se pudieron cargar las publicaciones del taller.',
     });
   }
 });
@@ -116,12 +117,16 @@ app.post('/api/workshop-blog/posts', async (req: Request, res: Response) => {
         .split(',')[0]
         .trim()
     );
-    const result = await createWorkshopBlogPost(req.body || {}, clientKey);
+    const result = await createWorkshopBlogPost(
+      req.body || {},
+      clientKey,
+      req.headers.authorization
+    );
     res.status(result.status).json(result.payload);
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error publicando en blog del taller:', error);
     res.status(500).json({
-      error: error?.message || 'No se pudo publicar el contenido en el blog del taller.',
+      error: 'No se pudo publicar el contenido en el blog del taller.',
     });
   }
 });

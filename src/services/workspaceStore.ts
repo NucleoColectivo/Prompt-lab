@@ -183,12 +183,49 @@ export function safeReadArray<T>(key: string, fallback: T[] = []): T[] {
   }
 }
 
+export interface StorageErrorDetail {
+  key: string;
+  reason: 'quota' | 'restricted' | 'unknown';
+  message: string;
+  timestamp: string;
+}
+
+let lastStorageError: StorageErrorDetail | null = null;
+
+export function getLastStorageError(): StorageErrorDetail | null {
+  return lastStorageError;
+}
+
+export function clearLastStorageError(): void {
+  lastStorageError = null;
+}
+
 export function safeWriteJson(key: string, value: unknown): boolean {
   if (typeof window === 'undefined') return false;
   try {
     window.localStorage.setItem(key, JSON.stringify(value));
     return true;
-  } catch {
+  } catch (err: unknown) {
+    const errName = (err as { name?: string })?.name || '';
+    const errCode = (err as { code?: number })?.code;
+    const isQuota =
+      errName === 'QuotaExceededError' ||
+      errName === 'NS_ERROR_DOM_QUOTA_REACHED' ||
+      errCode === 22 ||
+      errCode === 1014;
+    const isRestricted = errName === 'SecurityError';
+    const detail: StorageErrorDetail = {
+      key,
+      reason: isQuota ? 'quota' : isRestricted ? 'restricted' : 'unknown',
+      message: isQuota
+        ? 'Espacio de almacenamiento local lleno. Exporta o elimina algunos moodboards o archivos pesados para seguir guardando.'
+        : isRestricted
+        ? 'Tu navegador bloquea el almacenamiento local en esta vista.'
+        : 'No se pudo guardar la información en el almacenamiento local del navegador.',
+      timestamp: new Date().toISOString(),
+    };
+    lastStorageError = detail;
+    window.dispatchEvent(new CustomEvent('nc-storage-error', { detail }));
     return false;
   }
 }
@@ -263,8 +300,8 @@ export function deleteMoodboard(id: string): SavedMoodboard[] {
   return next;
 }
 
-function mapMoodboardDisciplineToCategory(discipline: string): BuilderCategoryId {
-  const norm = discipline.toLowerCase();
+function mapMoodboardDisciplineToCategory(discipline?: string): BuilderCategoryId {
+  const norm = (discipline || '').toLowerCase();
   if (norm.includes('cine') || norm.includes('video')) return 'video';
   if (norm.includes('gráfico') || norm.includes('editorial') || norm.includes('cartel')) return 'graphic';
   if (norm.includes('producto') || norm.includes('branding') || norm.includes('publicidad')) return 'branding';
@@ -285,15 +322,33 @@ export function buildMoodboardBuilderPatch(
     'title' | 'concept' | 'discipline' | 'paletteName' | 'colors' | 'styles' | 'keywords' | 'references'
   >
 ): Partial<PromptBuilderState> {
-  const category = mapMoodboardDisciplineToCategory(board.discipline);
+  const safeRefs = Array.isArray(board.references) ? board.references : [];
+  const safeStyles = Array.isArray(board.styles) ? board.styles : [];
+  const safeColors = Array.isArray(board.colors) ? board.colors : [];
+  const safeKeywords = Array.isArray(board.keywords) ? board.keywords : [];
+  const safeTitle = (board.title || '').trim();
+  const safeConcept = (board.concept || '').trim();
+  const safeDiscipline = (board.discipline || 'Fotografía').trim();
+  const safePaletteName = (board.paletteName || 'Paleta personalizada').trim();
+
+  const category = mapMoodboardDisciplineToCategory(safeDiscipline);
   const isVideo = category === 'video';
 
   const findRefByRole = (role: MoodboardReferenceItem['role']) =>
-    board.references.find((r) => r.role === role);
+    safeRefs.find((r) => r.role === role);
 
   const findGalleryForRef = (ref?: MoodboardReferenceItem) => {
-    if (!ref?.galleryId) return undefined;
-    return GALLERY_VISUAL_ITEMS.find((g) => g.id === ref.galleryId);
+    if (!ref) return undefined;
+    if (ref.galleryId) {
+      return GALLERY_VISUAL_ITEMS.find((g) => g.id === ref.galleryId);
+    }
+    // Backwards-compatibility recovery for moodboards saved before galleryId was persisted
+    if (ref.source === 'galeria' || ref.source === 'gallery') {
+      return GALLERY_VISUAL_ITEMS.find(
+        (g) => ref.id === `ref-${g.id}` || ref.id.startsWith(`ref-${g.id}-`) || ref.image === g.image
+      );
+    }
+    return undefined;
   };
 
   const lightingRef = findRefByRole('Iluminación');
@@ -305,7 +360,7 @@ export function buildMoodboardBuilderPatch(
     findGalleryForRef(subjectRef) ||
     findGalleryForRef(compositionRef) ||
     findGalleryForRef(lightingRef) ||
-    findGalleryForRef(board.references[0]);
+    findGalleryForRef(safeRefs[0]);
 
   const lightingGallery = findGalleryForRef(lightingRef);
   const compositionGallery = findGalleryForRef(compositionRef);
@@ -316,25 +371,25 @@ export function buildMoodboardBuilderPatch(
     mode: isVideo ? 'video' : 'photo',
     category,
     subject:
-      board.concept.trim() ||
+      safeConcept ||
       subjectRef?.note?.trim() ||
-      `${board.title.trim()} (${board.discipline})`,
+      `${safeTitle || 'Moodboard'} (${safeDiscipline})`,
     setting: atmosphereRef?.note?.trim() || primaryGallery?.description,
-    visualStyle: board.styles.join(', ') || primaryGallery?.style || 'Editorial Contemporáneo',
-    colorPalette: `${board.paletteName} (${board.colors.join(', ')})`,
+    visualStyle: safeStyles.join(', ') || primaryGallery?.style || 'Editorial Contemporáneo',
+    colorPalette: safeColors.length > 0 ? `${safePaletteName} (${safeColors.join(', ')})` : safePaletteName,
     lighting: lightingRef?.note?.trim() || lightingGallery?.specs.lighting,
     composition: compositionRef?.note?.trim() || compositionGallery?.specs.composition,
     texture: textureRef?.note?.trim() || textureGallery?.specs.texture,
     materials: textureRef?.note?.trim() || textureGallery?.specs.texture,
     atmosphere:
-      [atmosphereRef?.note?.trim(), atmosphereGallery?.specs.atmosphere, ...board.keywords]
+      [atmosphereRef?.note?.trim(), atmosphereGallery?.specs.atmosphere, ...safeKeywords]
         .filter(Boolean)
         .join(', ') || undefined,
     camera: primaryGallery?.specs.camera,
     lens: primaryGallery?.specs.lens,
     aperture: primaryGallery?.specs.aperture,
     aspectRatio: primaryGallery?.aspectRatio,
-    customNotes: `Moodboard · ${board.title} (${board.references.length} refs · ${board.colors.join(', ')})`,
+    customNotes: `Moodboard · ${safeTitle || 'Sin título'} (${safeRefs.length} refs · ${safeColors.join(', ')})`,
   };
 
   // Strip undefined properties so existing builder state fields are preserved cleanly
@@ -462,8 +517,10 @@ export function saveUnifiedProject(project: UnifiedCreativeProject): UnifiedCrea
   const idx = existing.findIndex((p) => p.id === project.id);
   const normalized: UnifiedCreativeProject = {
     ...project,
-    sourceModules: Array.from(new Set(project.sourceModules)),
-    tools: Array.from(new Set(project.tools.filter(Boolean))),
+    sourceModules: Array.from(new Set(Array.isArray(project.sourceModules) ? project.sourceModules : [])),
+    tools: Array.from(new Set((Array.isArray(project.tools) ? project.tools : []).filter(Boolean))),
+    prompts: Array.isArray(project.prompts) ? project.prompts : [],
+    references: Array.isArray(project.references) ? project.references : [],
     updatedAt: new Date().toISOString(),
   };
   const next =
@@ -590,9 +647,19 @@ export function getWorkspaceSummary(galleryFavoritesOverride?: string[]): Worksp
     : readGalleryFavorites().length;
   const fichasCount = safeReadArray(STORAGE_KEYS.fichaFavorites).length;
   const promptsCount = safeReadArray(STORAGE_KEYS.savedPrompts).length;
+  const hasPrimaryJsonKey =
+    typeof window !== 'undefined' &&
+    (() => {
+      try {
+        return window.localStorage.getItem(STORAGE_KEYS.jsonStyles) !== null;
+      } catch {
+        return false;
+      }
+    })();
   const jsonPrimary = safeReadArray(STORAGE_KEYS.jsonStyles);
-  const jsonStylesCount =
-    jsonPrimary.length > 0 ? jsonPrimary.length : safeReadArray(STORAGE_KEYS.jsonStylesLegacy).length;
+  const jsonStylesCount = hasPrimaryJsonKey
+    ? jsonPrimary.length
+    : safeReadArray(STORAGE_KEYS.jsonStylesLegacy).length;
   const moodboardsCount = readMoodboards().length;
   const lightingSetupsCount = readLightingSetups().length;
   const unifiedProjectsCount = readUnifiedProjects().length;

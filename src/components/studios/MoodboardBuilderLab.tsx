@@ -1,4 +1,4 @@
-import React, { useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   ArrowDown,
   ArrowUp,
@@ -36,6 +36,8 @@ import {
 interface MoodboardBuilderLabProps {
   onApplyToBuilder: (patch: Partial<PromptBuilderState>) => void;
   onOpenProjects?: () => void;
+  externalGallerySeed?: GalleryVisualItem | null;
+  onConsumeExternalSeed?: () => void;
 }
 
 interface PalettePreset {
@@ -191,6 +193,8 @@ function downloadFile(filename: string, content: string, mime: string) {
 export const MoodboardBuilderLab: React.FC<MoodboardBuilderLabProps> = ({
   onApplyToBuilder,
   onOpenProjects,
+  externalGallerySeed,
+  onConsumeExternalSeed,
 }) => {
   const [boardId, setBoardId] = useState<string>(() => `mb-${Date.now()}`);
   const [title, setTitle] = useState('Dirección de Arte · Serie Editorial');
@@ -216,6 +220,7 @@ export const MoodboardBuilderLab: React.FC<MoodboardBuilderLabProps> = ({
     const defaultRoles: MoodboardReferenceItem['role'][] = ['Iluminación', 'Composición', 'Textura'];
     return initial.map((item, idx) => ({
       id: `ref-${item.id}`,
+      galleryId: item.id,
       title: `${item.code} · ${item.title}`,
       image: item.image,
       role: defaultRoles[idx] || 'Atmósfera',
@@ -223,6 +228,36 @@ export const MoodboardBuilderLab: React.FC<MoodboardBuilderLabProps> = ({
       source: 'galeria',
     }));
   });
+
+  useEffect(() => {
+    if (!externalGallerySeed) return;
+    setReferences((prev) => {
+      if (prev.some((r) => r.galleryId === externalGallerySeed.id)) {
+        return prev;
+      }
+      const seededRef: MoodboardReferenceItem = {
+        id: `ref-${externalGallerySeed.id}-${Date.now()}`,
+        galleryId: externalGallerySeed.id,
+        title: `${externalGallerySeed.code} · ${externalGallerySeed.title}`,
+        image: externalGallerySeed.image,
+        role: 'Iluminación',
+        note: `${externalGallerySeed.specs.lighting} · ${externalGallerySeed.specs.color}`,
+        source: 'galeria',
+      };
+      return [seededRef, ...prev].slice(0, 8);
+    });
+    setTitle((prev) =>
+      prev === 'Dirección de Arte · Serie Editorial'
+        ? `Moodboard · ${externalGallerySeed.title}`
+        : prev
+    );
+    setSelectedStyles((prev) =>
+      prev.includes(externalGallerySeed.style)
+        ? prev
+        : [externalGallerySeed.style, ...prev].slice(0, 6)
+    );
+    onConsumeExternalSeed?.();
+  }, [externalGallerySeed, onConsumeExternalSeed]);
 
   const [showGalleryPicker, setShowGalleryPicker] = useState(false);
   const [gallerySearch, setGallerySearch] = useState('');
@@ -349,6 +384,7 @@ export const MoodboardBuilderLab: React.FC<MoodboardBuilderLabProps> = ({
     if (references.length >= 8) return;
     const newRef: MoodboardReferenceItem = {
       id: `ref-${item.id}-${Date.now()}`,
+      galleryId: item.id,
       title: `${item.code} · ${item.title}`,
       image: item.image,
       role: 'Composición',

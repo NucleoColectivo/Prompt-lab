@@ -27,11 +27,13 @@ import {
   ListChecks,
   Plus,
   X,
+  BookOpen,
 } from 'lucide-react';
 import { RECIPES } from '../data/promptData';
 import {
   appendPromptVersionToProject,
   readUnifiedProjects,
+  saveJournalEntry,
   saveUnifiedProject,
 } from '../services/workspaceStore';
 import {
@@ -237,6 +239,7 @@ export const PromptBuilder: React.FC<PromptBuilderProps> = ({
   });
   const [activeProject, setActiveProject] = useState<string>('Proyecto General');
   const [newProjectInput, setNewProjectInput] = useState('');
+  const [journalSaved, setJournalSaved] = useState(false);
 
   // Derive active category gracefully from state
   const activeCategoryId: BuilderCategoryId =
@@ -643,6 +646,48 @@ export const PromptBuilder: React.FC<PromptBuilderProps> = ({
         updatedAt: nowIso,
       });
     }
+  };
+
+  const handleSaveToJournal = () => {
+    const title =
+      builderState.subject.trim().slice(0, 60) ||
+      `${activeCategory.label} · ${activeProject}`;
+    const disciplineMap: Record<BuilderCategoryId, string> = {
+      photo: 'Fotografía & Retrato',
+      video: 'Cine & Video',
+      graphic: 'Diseño Gráfico & Cartel',
+      branding: 'Publicidad & Producto',
+      illustration: 'Ilustración & Concept Art',
+      architecture: 'Arquitectura & Espacios',
+      'web-ui': 'Diseño Web & UI',
+      experimental: 'Arte Digital & Experimental',
+    };
+    const nowIso = new Date().toISOString();
+    saveJournalEntry({
+      id: `journal-builder-${Date.now()}`,
+      projectName: `${activeProject} · ${title}`,
+      objective:
+        (builderState.setting || '').trim() ||
+        `Prompt modular (${platformTarget} · ${outputMode} · AR ${builderState.aspectRatio})`,
+      discipline: disciplineMap[activeCategory.id] || 'Fotografía & Retrato',
+      originalPrompt: currentPrompt,
+      variations: [],
+      results: '',
+      tools: ['Constructor Modular', platformTarget],
+      date: nowIso.slice(0, 10),
+      observations: [
+        builderState.camera ? `Cámara: ${builderState.camera}` : '',
+        builderState.lens ? `Óptica: ${builderState.lens}` : '',
+        builderState.lighting ? `Luz: ${builderState.lighting}` : '',
+        builderState.customNotes || '',
+      ]
+        .filter(Boolean)
+        .join(' · '),
+      learnings: '',
+      updatedAt: nowIso,
+    });
+    setJournalSaved(true);
+    setTimeout(() => setJournalSaved(false), 2400);
   };
 
   const handleAddProject = () => {
@@ -2196,7 +2241,25 @@ export const PromptBuilder: React.FC<PromptBuilderProps> = ({
                   </button>
                 </div>
 
-                <div className="grid grid-cols-3 gap-2">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                  <button
+                    type="button"
+                    onClick={handleSaveToJournal}
+                    className="min-h-[36px] py-1.5 px-2 text-[11px] font-mono-code font-semibold text-[#E5E3DC] bg-[#1A1A24] hover:bg-[#232332] border border-white/12 hover:border-[#F8C300] rounded-lg flex items-center justify-center gap-1 cursor-pointer transition-colors"
+                    title="Enviar prompt actual a tu Bitácora Creativa"
+                  >
+                    {journalSaved ? (
+                      <>
+                        <Check className="w-3.5 h-3.5 text-[#34D399]" />
+                        <span className="text-[#34D399]">Bitácora</span>
+                      </>
+                    ) : (
+                      <>
+                        <BookOpen className="w-3.5 h-3.5 text-[#F8C300]" />
+                        <span>Bitácora</span>
+                      </>
+                    )}
+                  </button>
                   <button
                     type="button"
                     onClick={handleExportTxt}

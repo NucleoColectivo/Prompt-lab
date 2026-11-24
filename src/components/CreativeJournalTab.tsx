@@ -302,11 +302,17 @@ export const CreativeJournalTab: React.FC<CreativeJournalTabProps> = ({
   const handleSendToBuilder = (entry: CreativeJournalEntry) => {
     if (!onSendPromptToBuilder) return;
     const disc = JOURNAL_DISCIPLINES.find((d) => d.label === entry.discipline);
+    const notesParts = [
+      `Bitácora · ${entry.projectName}`,
+      entry.tools.length > 0 ? `Herramientas: ${entry.tools.join(', ')}` : '',
+      entry.observations ? `Obs: ${entry.observations.slice(0, 180)}` : '',
+    ].filter(Boolean);
     onSendPromptToBuilder({
       mode: disc?.category === 'video' ? 'video' : 'photo',
       category: disc?.category || 'photo',
       subject: entry.originalPrompt,
-      customNotes: `Bitácora · ${entry.projectName}`,
+      ...(entry.objective ? { setting: entry.objective } : {}),
+      customNotes: notesParts.join(' · '),
     });
   };
 

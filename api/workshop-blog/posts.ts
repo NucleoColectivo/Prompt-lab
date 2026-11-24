@@ -24,15 +24,20 @@ export default async function handler(req: any, res: any) {
           .toString()
           .split(',')[0]
           .trim();
-      const result = await createWorkshopBlogPost(req.body || {}, clientKey);
+      const result = await createWorkshopBlogPost(
+        req.body || {},
+        clientKey,
+        typeof req.headers?.authorization === 'string' ? req.headers.authorization : undefined
+      );
       return res.status(result.status).json(result.payload);
     }
 
-    return res.status(405).json({ error: 'Method not allowed' });
-  } catch (error: any) {
+    res.setHeader('Allow', 'GET, POST');
+    return res.status(405).json({ error: 'Método no permitido.' });
+  } catch (error: unknown) {
     console.error('Error en /api/workshop-blog/posts:', error);
     return res.status(500).json({
-      error: error?.message || 'Error al procesar las publicaciones del blog del taller.',
+      error: 'Error al procesar las publicaciones del blog del taller.',
     });
   }
 }

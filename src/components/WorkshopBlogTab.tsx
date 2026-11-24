@@ -24,6 +24,7 @@ import {
   X,
 } from 'lucide-react';
 import {
+  browserPopupRedirectResolver,
   onAuthStateChanged,
   signInWithPopup,
   signOut,
@@ -43,8 +44,11 @@ import {
 import {
   auth,
   db,
+  FIREBASE_APP_ID,
+  FIREBASE_PROJECT_ID,
   googleProvider,
   handleFirestoreError,
+  HAS_APP_CHECK_SITE_KEY,
   OperationType,
   WORKSHOP_ADMIN_EMAIL,
 } from '../firebase';
@@ -79,6 +83,113 @@ interface WorkshopContactRecord {
   authorEmail: string;
   postTitle: string;
   createdAtMs: number;
+}
+
+interface AuthErrorInfo {
+  title: string;
+  detail?: string;
+  code?: string;
+  consoleUrl?: string;
+  consoleLabel?: string;
+  suggestNewTab?: boolean;
+}
+
+function describeGoogleAuthError(err: unknown): AuthErrorInfo {
+  const code = typeof (err as { code?: unknown })?.code === 'string'
+    ? (err as { code: string }).code
+    : '';
+  const rawMessage = err instanceof Error ? err.message : String(err || '');
+  const hostname = typeof window !== 'undefined' ? window.location.hostname : '';
+  const isAppCheckError =
+    code.includes('app-check') ||
+    /app\s*check/i.test(rawMessage) ||
+    /firebase-app-check/i.test(rawMessage);
+
+  if (isAppCheckError) {
+    return {
+      title: 'Firebase App Check está bloqueando el inicio de sesión con Google.',
+      detail: `El proyecto "${FIREBASE_PROJECT_ID}" exige verificación App Check para Authentication, pero esta app web (${FIREBASE_APP_ID}) no está registrada. Desactiva "Enforce" en Authentication dentro de Firebase App Check o registra la app con reCAPTCHA v3.`,
+      code: code || 'auth/firebase-app-check-token-is-invalid',
+      consoleUrl: `https://console.firebase.google.com/project/${FIREBASE_PROJECT_ID}/appcheck/products`,
+      consoleLabel: 'Abrir Firebase App Check',
+    };
+  }
+
+  if (code === 'auth/popup-closed-by-user' || code === 'auth/cancelled-popup-request') {
+    return {
+      title: 'Cerraste la ventana de Google antes de completar el ingreso.',
+      detail: 'Haz clic nuevamente en "Entrar con Google" y selecciona tu cuenta para continuar.',
+      code,
+    };
+  }
+
+  if (code === 'auth/popup-blocked') {
+    return {
+      title: 'Tu navegador bloqueó la ventana emergente de Google.',
+      detail: 'Permite popups para este sitio o abre la aplicación en una pestaña independiente y vuelve a intentarlo.',
+      code,
+      suggestNewTab: true,
+    };
+  }
+
+  if (code === 'auth/unauthorized-domain' || code === 'auth/unauthorized-continue-uri') {
+    return {
+      title: `El dominio "${hostname || 'actual'}" no está autorizado en Firebase Authentication.`,
+      detail: 'Agrégalo en Firebase Console → Authentication → Settings → Authorized domains.',
+      code,
+      consoleUrl: `https://console.firebase.google.com/project/${FIREBASE_PROJECT_ID}/authentication/settings`,
+      consoleLabel: 'Abrir dominios autorizados',
+    };
+  }
+
+  if (code === 'auth/operation-not-allowed') {
+    return {
+      title: 'El acceso con Google no está habilitado en Firebase Authentication.',
+      detail: 'Activa el proveedor Google en Firebase Console → Authentication → Sign-in method.',
+      code,
+      consoleUrl: `https://console.firebase.google.com/project/${FIREBASE_PROJECT_ID}/authentication/providers`,
+      consoleLabel: 'Habilitar proveedor Google',
+    };
+  }
+
+  if (code === 'auth/network-request-failed') {
+    return {
+      title: 'Error de red al conectar con Google y Firebase.',
+      detail: 'Verifica tu conexión o desactiva temporalmente bloqueadores de scripts/cookies de terceros e intenta de nuevo.',
+      code,
+    };
+  }
+
+  if (code === 'auth/web-storage-unsupported' || code === 'auth/operation-not-supported-in-this-environment') {
+    return {
+      title: 'Tu navegador bloquea el almacenamiento necesario para iniciar sesión dentro de esta vista.',
+      detail: 'Abre la plataforma en una pestaña nueva con cookies habilitadas para completar el ingreso con Google.',
+      code,
+      suggestNewTab: true,
+    };
+  }
+
+  if (code === 'auth/internal-error') {
+    return {
+      title: 'Firebase devolvió un error interno al iniciar el flujo de Google.',
+      detail: !HAS_APP_CHECK_SITE_KEY
+        ? `Esto ocurre habitualmente cuando Firebase App Check está en modo "Enforce" para Authentication en "${FIREBASE_PROJECT_ID}" sin registrar esta app (${FIREBASE_APP_ID}), o cuando el navegador restringe popups en vista embebida.`
+        : 'Prueba abrir la plataforma en una pestaña nueva o verifica la configuración de Authentication y App Check en Firebase Console.',
+      code,
+      consoleUrl: `https://console.firebase.google.com/project/${FIREBASE_PROJECT_ID}/appcheck/products`,
+      consoleLabel: 'Revisar App Check en Firebase',
+      suggestNewTab: true,
+    };
+  }
+
+  return {
+    title: 'No se pudo iniciar sesión con Google.',
+    detail: code
+      ? `Verifica la configuración de Firebase Authentication e intenta de nuevo.`
+      : rawMessage || 'Intenta de nuevo o abre la aplicación en una pestaña independiente.',
+    code: code || undefined,
+    suggestNewTab: true,
+  };
 }
 
 interface WorkshopBlogTabProps {
@@ -360,7 +471,7 @@ export const WorkshopBlogTab: React.FC<WorkshopBlogTabProps> = ({
   const [currentUser, setCurrentUser] = useState<FirebaseUser | null>(null);
   const [authReady, setAuthReady] = useState(false);
   const [signingIn, setSigningIn] = useState(false);
-  const [authError, setAuthError] = useState<string | null>(null);
+  const [authError, setAuthError] = useState<AuthErrorInfo | null>(null);
 
   // Real-time posts state
   const [posts, setPosts] = useState<WorkshopBlogPost[]>([]);
@@ -550,23 +661,18 @@ export const WorkshopBlogTab: React.FC<WorkshopBlogTabProps> = ({
   }, [authReady, isAdmin, showAdminContacts]);
 
   const handleGoogleSignIn = async () => {
+    if (signingIn) return;
     setAuthError(null);
     setSigningIn(true);
     try {
-      const result = await signInWithPopup(auth, googleProvider);
+      const result = await signInWithPopup(auth, googleProvider, browserPopupRedirectResolver);
       if (result.user) {
         setAuthorName((prev) => prev || result.user.displayName || '');
         setAuthorEmail((prev) => prev || result.user.email || '');
       }
     } catch (err: unknown) {
-      const code = (err as { code?: string })?.code || '';
-      if (code === 'auth/popup-closed-by-user') {
-        setAuthError('Cerraste la ventana de Google antes de completar el ingreso.');
-      } else if (code === 'auth/popup-blocked') {
-        setAuthError('Tu navegador bloqueó la ventana emergente. Permite popups para iniciar sesión.');
-      } else {
-        setAuthError('No se pudo iniciar sesión con Google. Intenta de nuevo.');
-      }
+      console.error('Google Sign-In error:', err);
+      setAuthError(describeGoogleAuthError(err));
     } finally {
       setSigningIn(false);
     }
@@ -991,9 +1097,57 @@ export const WorkshopBlogTab: React.FC<WorkshopBlogTabProps> = ({
       {authError && (
         <div
           role="alert"
-          className="p-3.5 rounded-xl bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900/60 text-xs font-medium text-red-800 dark:text-red-200"
+          className="p-4 rounded-xl bg-red-50 dark:bg-red-950/35 border border-red-200 dark:border-red-900/60 text-xs text-red-900 dark:text-red-100 space-y-2"
         >
-          {authError}
+          <div className="flex items-start justify-between gap-3">
+            <div className="space-y-1">
+              <p className="font-bold text-red-900 dark:text-red-100">{authError.title}</p>
+              {authError.detail && (
+                <p className="text-red-800/90 dark:text-red-200/90 leading-relaxed">
+                  {authError.detail}
+                </p>
+              )}
+              {authError.code && (
+                <p className="font-mono-code text-[11px] text-red-700/80 dark:text-red-300/80">
+                  Código: {authError.code}
+                </p>
+              )}
+            </div>
+            <button
+              type="button"
+              onClick={() => setAuthError(null)}
+              className="p-1 rounded-md text-red-700 dark:text-red-300 hover:bg-red-100 dark:hover:bg-red-900/50 cursor-pointer shrink-0"
+              aria-label="Cerrar aviso de inicio de sesión"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+          {(authError.consoleUrl || authError.suggestNewTab) && (
+            <div className="flex flex-wrap items-center gap-2 pt-1">
+              {authError.consoleUrl && (
+                <a
+                  href={authError.consoleUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="min-h-[34px] px-3 py-1.5 rounded-lg text-xs font-semibold bg-red-700 hover:bg-red-800 text-white inline-flex items-center gap-1.5 transition-colors"
+                >
+                  <ExternalLink className="w-3.5 h-3.5" />
+                  <span>{authError.consoleLabel || 'Abrir Firebase Console'}</span>
+                </a>
+              )}
+              {authError.suggestNewTab && typeof window !== 'undefined' && (
+                <a
+                  href={window.location.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="min-h-[34px] px-3 py-1.5 rounded-lg text-xs font-semibold bg-white dark:bg-[#16161C] border border-red-300 dark:border-red-800 text-red-900 dark:text-red-100 hover:bg-red-100/60 dark:hover:bg-red-950/60 inline-flex items-center gap-1.5 transition-colors"
+                >
+                  <ExternalLink className="w-3.5 h-3.5" />
+                  <span>Abrir en pestaña nueva</span>
+                </a>
+              )}
+            </div>
+          )}
         </div>
       )}
 

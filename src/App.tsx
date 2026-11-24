@@ -45,6 +45,7 @@ import {
   getWorkspaceSummary,
   readGalleryFavorites,
   STORAGE_KEYS,
+  type StorageErrorDetail,
   writeGalleryFavorites,
 } from './services/workspaceStore';
 import { LAB_HASH_BY_SUB, resolveRouteFromHash } from './utils/hashRouting';
@@ -219,6 +220,8 @@ export default function App() {
     []
   );
   const [externalJsonProfile, setExternalJsonProfile] = useState<JsonStyleProfile | null>(null);
+  const [externalMoodboardSeed, setExternalMoodboardSeed] = useState<GalleryVisualItem | null>(null);
+  const [storageWarning, setStorageWarning] = useState<StorageErrorDetail | null>(null);
 
   useEffect(() => {
     writeGalleryFavorites(galleryFavorites);
@@ -226,11 +229,17 @@ export default function App() {
 
   useEffect(() => {
     const handleSync = () => setFavoritesRevision((r) => r + 1);
+    const handleStorageError = (evt: Event) => {
+      const detail = (evt as CustomEvent<StorageErrorDetail>).detail;
+      if (detail?.message) setStorageWarning(detail);
+    };
     window.addEventListener('nc-favorites-updated', handleSync);
     window.addEventListener('storage', handleSync);
+    window.addEventListener('nc-storage-error', handleStorageError);
     return () => {
       window.removeEventListener('nc-favorites-updated', handleSync);
       window.removeEventListener('storage', handleSync);
+      window.removeEventListener('nc-storage-error', handleStorageError);
     };
   }, []);
 
@@ -294,17 +303,21 @@ export default function App() {
     }
   }, [isDarkMode]);
 
-  // Listen to browser hash changes (Back/Forward support)
+  // Listen to browser hash & history changes (Back/Forward support)
   useEffect(() => {
-    const onHashChange = () => {
+    const syncFromHash = () => {
       const resolved = resolveRouteFromHash(window.location.hash);
       setActiveSection(resolved.section);
       if (resolved.labSub) setActiveLabSub(resolved.labSub);
       if (resolved.resourceSub) setActiveResourceSub(resolved.resourceSub);
       if (resolved.academySub) setAcademyTab(resolved.academySub);
     };
-    window.addEventListener('hashchange', onHashChange);
-    return () => window.removeEventListener('hashchange', onHashChange);
+    window.addEventListener('hashchange', syncFromHash);
+    window.addEventListener('popstate', syncFromHash);
+    return () => {
+      window.removeEventListener('hashchange', syncFromHash);
+      window.removeEventListener('popstate', syncFromHash);
+    };
   }, []);
 
   const toggleTheme = () => {
@@ -370,8 +383,12 @@ export default function App() {
     }
 
     if (typeof window !== 'undefined') {
-      window.history.replaceState(null, '', `#${hashTarget}`);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      const nextHash = `#${hashTarget}`;
+      if (window.location.hash !== nextHash) {
+        window.history.pushState({ section, subTab, hashTarget }, '', nextHash);
+      }
+      const prefersReducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+      window.scrollTo({ top: 0, behavior: prefersReducedMotion ? 'auto' : 'smooth' });
     }
   }, []);
 
@@ -603,6 +620,13 @@ export default function App() {
   return (
     <MotionConfig reducedMotion="user">
     <div className="min-h-screen flex flex-col bg-[#F4F2ED] text-[#101014] dark:bg-[#101014] dark:text-[#F4F2ED] transition-colors">
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[100] focus:px-4 focus:py-2 focus:rounded-lg focus:bg-[#F8C300] focus:text-[#101014] focus:font-bold focus:text-xs focus:shadow-lg"
+      >
+        Saltar al contenido principal
+      </a>
+
       {/* Top Bar Navigation (6 Clean Axes) */}
       <Header
         activeSection={activeSection}
@@ -623,8 +647,26 @@ export default function App() {
         onNavigateSection={(sec, sub) => navigateToSection(sec, sub)}
       />
 
+      {storageWarning && (
+        <div
+          role="alert"
+          className="bg-amber-50 dark:bg-amber-950/60 border-b border-amber-300 dark:border-amber-800 px-4 py-2.5 text-xs text-amber-950 dark:text-amber-100"
+        >
+          <div className="max-w-7xl mx-auto flex items-center justify-between gap-3">
+            <span>{storageWarning.message}</span>
+            <button
+              type="button"
+              onClick={() => setStorageWarning(null)}
+              className="px-2.5 py-1 rounded-md font-bold border border-amber-400/60 hover:bg-amber-100 dark:hover:bg-amber-900/50 cursor-pointer shrink-0"
+            >
+              Entendido
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Active Workspace Section View */}
-      <main className="flex-1">
+      <main id="main-content" tabIndex={-1} className="flex-1 outline-none">
         <SectionTransition transitionKey={viewTransitionKey}>
         {/* 0. HOME EDITORIAL (Eager loaded for instant FCP) */}
         {activeSection === 'home' && (
@@ -668,6 +710,10 @@ export default function App() {
               }}
               onAnalyzeInJsonLab={handleSendGalleryItemToJsonLab}
               onAddToStoryboard={handleAddGalleryShotToStoryboard}
+              onSendToMoodboard={(item) => {
+                setExternalMoodboardSeed(item);
+                navigateToSection('laboratorios', 'moodboard');
+              }}
               onOpenLabs={() => navigateToSection('laboratorios', 'labs')}
             />
           )}
@@ -933,6 +979,8 @@ export default function App() {
               {activeLabSub === 'moodboard' && (
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10">
                   <MoodboardBuilderLab
+                    externalGallerySeed={externalMoodboardSeed}
+                    onConsumeExternalSeed={() => setExternalMoodboardSeed(null)}
                     onApplyToBuilder={(patch) => {
                       setBuilderState((prev) => ({ ...prev, ...patch }));
                       navigateToSection('builder');
